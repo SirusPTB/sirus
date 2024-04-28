@@ -1,46 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESP32 OTA Update via BLE</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Communication</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #connectionContainer {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #connectButton {
+            background-color: #3498db;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .connection-icon {
+            font-size: 24px;
+        }
+
+        #saveButton, #loadButton {
+            background-color: #4CAF50;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .chart-label {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .load-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .load-list-item {
+            cursor: pointer;
+            padding: 5px;
+            margin-bottom: 5px;
+            background-color: #333;
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+
+        .load-list-item:hover {
+            background-color: #555;
+        }
+
+        #loadPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
-  <h1>ESP32 OTA Update via BLE</h1>
-  <input type="file" id="fileInput" accept=".bin"><br>
-  <button onclick="sendOTA()">Send OTA Update</button>
+    <div class="container">
+        <div id="connectionContainer">
+            <button id="connectButton" onclick="connect()">Connect</button>
+            <div class="connection-icon" id="connectionIcon">&#x274C;</div>
+            <button id="saveButton" onclick="saveCharts()">Save Charts</button>
+            <button id="loadButton" onclick="showLoadList()">Load Saved Graph</button>
+        </div>
+        <div class="chart-label" id="chartLabel1">0 C</div>
+        <div class="chart-container">
+            <canvas id="dataChart1"></canvas>
+        </div>
+        <div class="chart-label" id="chartLabel2">0 bar</div>
+        <div class="chart-container">
+            <canvas id="dataChart2"></canvas>
+        </div>
+        <div id="loadPopup">
+            <ul id="loadList" class="load-list"></ul>
+        </div>
+    </div>
 
-  <script>
-    async function sendOTA() {
-      const fileInput = document.getElementById('fileInput');
-      const file = fileInput.files[0];
-      
-      if (!file) {
-        alert('Please select a firmware file');
-        return;
-      }
+    <script>
+        let receiveCharacteristic;
+        let serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        let receiveCharacteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26aa"; // Changed UUID
+        let bluetoothDevice;
+        let dataChart1;
+        let dataChart2;
+        let labels = [];
+        let data1 = [];
+        let data2 = [];
 
-      try {
-        const device = await navigator.bluetooth.requestDevice({
-          filters: [{
-            name: 'OTA_ESP32' // Change to match the name of your ESP32 BLE device
-          }],
-          optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b'] // Change to match the service UUID of your ESP32 BLE service
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
         });
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b'); // Change to match the service UUID of your ESP32 BLE service
-        const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8'); // Change to match the RX characteristic UUID of your ESP32 BLE service
+        async function connect() {
+            try {
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'ESP32_BLE_Server' }],
+                    optionalServices: [serviceUuid]
+                });
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService(serviceUuid);
+                receiveCharacteristic = await service.getCharacteristic(receiveCharacteristicUuid);
+                console.log("Connected to BLE device");
 
-        const firmware = await file.arrayBuffer();
-        await characteristic.writeValue(firmware);
+                receiveCharacteristic.addEventListener('characteristicvaluechanged', handleData);
+                await receiveCharacteristic.startNotifications();
+                updateConnectionStatus(true);
+            } catch (error) {
+                console.error("Bluetooth connection error:", error);
+                updateConnectionStatus(false);
+            }
+        }
 
-        alert('OTA Update sent successfully');
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to send OTA Update');
-      }
-    }
-  </script>
+        function updateConnectionStatus(connected) {
+            const connectionIcon = document.getElementById("connectionIcon");
+            if (connected) {
+                connectionIcon.innerHTML = "&#x2714;"; // Change icon to connected (checkmark)
+                connectionIcon.style.color = "#4CAF50"; // Change color to green
+            } else {
+                connectionIcon.innerHTML = "	&#x274C;"; // Change icon to disconnected (warning)
+                connectionIcon.style.color = "#ff0000"; // Change color to red
+            }
+        }
+
+        function initializeCharts() {
+            const ctx1 = document.getElementById('dataChart1').getContext('2d');
+            dataChart1 = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Temperatue',
+                        data: data1,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#555'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#555'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctx2 = document.getElementById('dataChart2').getContext('2d');
+            dataChart2 = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Pressure',
+                        data: data2,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#555'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#555'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function handleData(event) {
+            console.log("Received data event:", event);
+            let receivedData = event.target.value;
+            console.log("Raw received data:", receivedData);
+            let decoder = new TextDecoder('utf-8');
+            let decodedStrings = decoder.decode(receivedData).split(','); // Split the received data by comma
+            console.log("Decoded strings:", decodedStrings);
+            updateCharts(Number(decodedStrings[0]), Number(decodedStrings[1])); // Convert the received strings to numbers and update the charts
+        }
+
+        function updateCharts(receivedNumber1, receivedNumber2) {
+            labels.push(labels.length + 1);
+            data1.push(receivedNumber1);
+            data2.push(receivedNumber2);
+            dataChart1.data.labels = labels;
+            dataChart1.data.datasets[0].data = data1;
+            dataChart1.update();
+            document.getElementById('chartLabel1').innerText = `${receivedNumber1} C`;
+
+            dataChart2.data.labels = labels;
+            dataChart2.data.datasets[0].data = data2;
+            dataChart2.update();
+            document.getElementById('chartLabel2').innerText = `${receivedNumber2} bar`;
+        }
+
+        async function sendData() {
+            // This function remains the same as in the original code
+            // Add your code here if you want to send data to ESP32
+        }
+
+        function saveCharts() {
+            const defaultFileName = getDefaultFileName();
+            const fileName = prompt("Enter file name:", defaultFileName);
+            if (!fileName) {
+                alert("No file name provided. Charts were not saved.");
+                return;
+            }
+            const data = {
+                labels: labels,
+                data1: data1,
+                data2: data2
+            };
+            const jsonData = JSON.stringify(data);
+            localStorage.setItem(fileName, jsonData);
+            alert("Charts saved successfully!");
+        }
+
+        function showLoadList() {
+            const loadPopup = document.getElementById('loadPopup');
+            const loadList = document.getElementById('loadList');
+            loadList.innerHTML = ''; // Clear previous items
+            const savedCharts = Object.keys(localStorage);
+            if (savedCharts.length === 0) {
+                alert("No saved charts found.");
+                return;
+            }
+            savedCharts.forEach(chart => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('load-list-item');
+                listItem.textContent = chart;
+                listItem.addEventListener('click', () => {
+                    loadChart(chart);
+                    loadPopup.style.display = 'none'; // Hide the load popup after a chart is loaded
+                });
+                loadList.appendChild(listItem);
+            });
+            loadPopup.style.display = 'block'; // Show the load popup
+        }
+
+        function loadChart(selectedChart) {
+            const jsonData = localStorage.getItem(selectedChart);
+            const data = JSON.parse(jsonData);
+            if (!data) {
+                alert("Error loading chart data.");
+                return;
+            }
+            labels = data.labels;
+            data1 = data.data1;
+            data2 = data.data2;
+            updateCharts(data1[data1.length - 1], data2[data2.length - 1]); // Update charts with the latest data
+            alert("Chart loaded successfully!");
+        }
+
+        function getDefaultFileName() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `Chart_${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+        }
+    </script>
 </body>
 </html>
