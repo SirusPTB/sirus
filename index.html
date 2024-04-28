@@ -158,13 +158,9 @@
             <button id="loadButton" onclick="showLoadList()">Load</button>
             <button id="deleteButton" onclick="showDeleteList()">Delete Saved</button>
         </div>
-        <div class="chart-label" id="chartLabel1">0 C</div>
+        <div class="chart-label" id="chartLabel1">Temperature and Pressure</div>
         <div class="chart-container">
-            <canvas id="dataChart1"></canvas>
-        </div>
-        <div class="chart-label" id="chartLabel2">0 bar</div>
-        <div class="chart-container">
-            <canvas id="dataChart2"></canvas>
+            <canvas id="dataChart"></canvas>
         </div>
         <div id="loadPopup" class="popup">
             <ul id="loadList" class="load-list"></ul>
@@ -185,14 +181,13 @@
         let serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
         let receiveCharacteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26aa"; // Changed UUID
         let bluetoothDevice;
-        let dataChart1;
-        let dataChart2;
+        let dataChart;
         let labels = [];
-        let data1 = [];
-        let data2 = [];
+        let temperatureData = [];
+        let pressureData = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            initializeCharts();
+            initializeChart();
         });
 
         async function connect() {
@@ -226,47 +221,26 @@
             }
         }
 
-        function initializeCharts() {
-            const ctx1 = document.getElementById('dataChart1').getContext('2d');
-            dataChart1 = new Chart(ctx1, {
+        function initializeChart() {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            dataChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Temperatue',
-                        data: data1,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#555'
-                            }
+                    datasets: [
+                        {
+                            label: 'Temperature',
+                            data: temperatureData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
                         },
-                        x: {
-                            grid: {
-                                color: '#555'
-                            }
+                        {
+                            label: 'Pressure',
+                            data: pressureData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
                         }
-                    }
-                }
-            });
-
-            const ctx2 = document.getElementById('dataChart2').getContext('2d');
-            dataChart2 = new Chart(ctx2, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Pressure',
-                        data: data2,
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
+                    ]
                 },
                 options: {
                     scales: {
@@ -293,22 +267,17 @@
             let decoder = new TextDecoder('utf-8');
             let decodedStrings = decoder.decode(receivedData).split(','); // Split the received data by comma
             console.log("Decoded strings:", decodedStrings);
-            updateCharts(Number(decodedStrings[0]), Number(decodedStrings[1])); // Convert the received strings to numbers and update the charts
+            updateChart(Number(decodedStrings[0]), Number(decodedStrings[1])); // Convert the received strings to numbers and update the chart
         }
 
-        function updateCharts(receivedNumber1, receivedNumber2) {
+        function updateChart(receivedNumber1, receivedNumber2) {
             labels.push(labels.length + 1);
-            data1.push(receivedNumber1);
-            data2.push(receivedNumber2);
-            dataChart1.data.labels = labels;
-            dataChart1.data.datasets[0].data = data1;
-            dataChart1.update();
-            document.getElementById('chartLabel1').innerText = `${receivedNumber1} C`;
-
-            dataChart2.data.labels = labels;
-            dataChart2.data.datasets[0].data = data2;
-            dataChart2.update();
-            document.getElementById('chartLabel2').innerText = `${receivedNumber2} bar`;
+            temperatureData.push(receivedNumber1);
+            pressureData.push(receivedNumber2);
+            dataChart.data.labels = labels;
+            dataChart.data.datasets[0].data = temperatureData;
+            dataChart.data.datasets[1].data = pressureData;
+            dataChart.update();
         }
 
         async function sendData() {
@@ -325,8 +294,8 @@
             }
             const data = {
                 labels: labels,
-                data1: data1,
-                data2: data2
+                temperatureData: temperatureData,
+                pressureData: pressureData
             };
             const jsonData = JSON.stringify(data);
             localStorage.setItem(fileName, jsonData);
@@ -348,7 +317,7 @@
                 listItem.textContent = chart;
                 listItem.addEventListener('click', () => {
                     loadChart(chart);
-                    loadPopup.style.display = 'none'; // Hide the load popup after a chart is loaded
+                    hideLoadPopup(); // Hide the load popup after a chart is loaded
                 });
                 loadList.appendChild(listItem);
             });
@@ -363,10 +332,9 @@
                 return;
             }
             labels = data.labels;
-            data1 = data.data1;
-            data2 = data.data2;
-            updateCharts(data1[data1.length - 1], data2[data2.length - 1]); // Update charts with the latest data
-            // alert("Graph loaded successfully!");
+            temperatureData = data.temperatureData;
+            pressureData = data.pressureData;
+            updateChart(temperatureData[temperatureData.length - 1], pressureData[pressureData.length - 1]); // Update chart with the latest data
         }
 
         function getDefaultFileName() {
@@ -395,7 +363,7 @@
                 listItem.textContent = chart;
                 listItem.addEventListener('click', () => {
                     deleteChart(chart);
-                    deletePopup.style.display = 'none'; // Hide the delete popup after a chart is deleted
+                    hideDeletePopup(); // Hide the delete popup after a chart is deleted
                 });
                 deleteList.appendChild(listItem);
             });
