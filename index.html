@@ -61,6 +61,21 @@
             margin-right: 10px;
         }
 
+        #deleteButton {
+            background-color: #ff0000; /* Red color */
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+            margin-right: 10px;
+        }
+
         .chart-container {
             width: 100%;
             max-width: 600px;
@@ -93,7 +108,7 @@
             background-color: #555;
         }
 
-        #loadPopup {
+        .popup {
             display: none;
             position: fixed;
             top: 50%;
@@ -105,6 +120,33 @@
             border-radius: 10px;
             z-index: 1000;
         }
+
+        #loadPopup, #deletePopup {
+            display: none;
+        }
+
+        .popup-buttons {
+            margin-top: 10px;
+        }
+
+        .popup-button {
+            background-color: #555;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+            margin-right: 10px;
+        }
+
+        .popup-button:hover {
+            background-color: #777;
+        }
     </style>
 </head>
 <body>
@@ -112,8 +154,9 @@
         <div id="connectionContainer">
             <button id="connectButton" onclick="connect()">Connect</button>
             <div class="connection-icon" id="connectionIcon">&#x274C;</div>
-            <button id="saveButton" onclick="saveCharts()">Save Charts</button>
-            <button id="loadButton" onclick="showLoadList()">Load Saved Graph</button>
+            <button id="saveButton" onclick="saveCharts()">Save</button>
+            <button id="loadButton" onclick="showLoadList()">Load</button>
+            <button id="deleteButton" onclick="showDeleteList()">Delete Saved</button>
         </div>
         <div class="chart-label" id="chartLabel1">0 C</div>
         <div class="chart-container">
@@ -123,8 +166,17 @@
         <div class="chart-container">
             <canvas id="dataChart2"></canvas>
         </div>
-        <div id="loadPopup">
+        <div id="loadPopup" class="popup">
             <ul id="loadList" class="load-list"></ul>
+            <div class="popup-buttons">
+                <button class="popup-button" onclick="hideLoadPopup()">Cancel</button>
+            </div>
+        </div>
+        <div id="deletePopup" class="popup">
+            <ul id="deleteList" class="load-list"></ul>
+            <div class="popup-buttons">
+                <button class="popup-button" onclick="hideDeletePopup()">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -307,14 +359,14 @@
             const jsonData = localStorage.getItem(selectedChart);
             const data = JSON.parse(jsonData);
             if (!data) {
-                alert("Error loading chart data.");
+                alert("Error loading graph data.");
                 return;
             }
             labels = data.labels;
             data1 = data.data1;
             data2 = data.data2;
             updateCharts(data1[data1.length - 1], data2[data2.length - 1]); // Update charts with the latest data
-            alert("Chart loaded successfully!");
+            // alert("Graph loaded successfully!");
         }
 
         function getDefaultFileName() {
@@ -326,6 +378,43 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             return `Chart_${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+        }
+
+        function showDeleteList() {
+            const deletePopup = document.getElementById('deletePopup');
+            const deleteList = document.getElementById('deleteList');
+            deleteList.innerHTML = ''; // Clear previous items
+            const savedCharts = Object.keys(localStorage);
+            if (savedCharts.length === 0) {
+                alert("No saved charts found.");
+                return;
+            }
+            savedCharts.forEach(chart => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('load-list-item');
+                listItem.textContent = chart;
+                listItem.addEventListener('click', () => {
+                    deleteChart(chart);
+                    deletePopup.style.display = 'none'; // Hide the delete popup after a chart is deleted
+                });
+                deleteList.appendChild(listItem);
+            });
+            deletePopup.style.display = 'block'; // Show the delete popup
+        }
+
+        function deleteChart(selectedChart) {
+            localStorage.removeItem(selectedChart);
+            alert("Chart deleted successfully!");
+        }
+
+        function hideLoadPopup() {
+            const loadPopup = document.getElementById('loadPopup');
+            loadPopup.style.display = 'none';
+        }
+
+        function hideDeletePopup() {
+            const deletePopup = document.getElementById('deletePopup');
+            deletePopup.style.display = 'none';
         }
     </script>
 </body>
