@@ -194,8 +194,8 @@
         function adjustChartSizeForDesktop() {
             if (window.innerWidth > 1024) { // Assume desktop if width > 1024px
                 const chartContainer = document.getElementById('chartContainer');
-                chartContainer.style.maxWidth = '100%';
-                chartContainer.style.height = '80vh'; // Make it fill most of the vertical space
+                chartContainer.style.maxWidth = '80%';
+                chartContainer.style.height = '80vh'; // 80% of viewport height
             }
         }
 
