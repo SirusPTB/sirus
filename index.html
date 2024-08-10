@@ -193,7 +193,7 @@
         async function connect() {
             try {
                 bluetoothDevice = await navigator.bluetooth.requestDevice({
-                    filters: [{ name: 'ESP32_BLE_Server' }],
+                    filters: [{ name: 'SirusPTB' }],
                     optionalServices: [serviceUuid]
                 });
                 const server = await bluetoothDevice.gatt.connect();
