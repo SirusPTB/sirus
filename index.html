@@ -199,9 +199,36 @@
             }
         }
 
-        async function connect() {
-            // Your existing connect function
+       async function connect() {
+    try {
+        const devices = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [serviceUuid]
+        });
+
+        // Assuming devices is an array of devices (this depends on your implementation)
+        // Since requestDevice returns a single device, you'd filter it later.
+        if (devices.name.startsWith('SirusPTB')) {
+            bluetoothDevice = devices;
+
+            const server = await bluetoothDevice.gatt.connect();
+            const service = await server.getPrimaryService(serviceUuid);
+            receiveCharacteristic = await service.getCharacteristic(receiveCharacteristicUuid);
+            console.log("Connected to BLE device");
+
+            receiveCharacteristic.addEventListener('characteristicvaluechanged', handleData);
+            await receiveCharacteristic.startNotifications();
+            updateConnectionStatus(true);
+        } else {
+            console.error("No device matching 'SirusPTB' found.");
+            updateConnectionStatus(false);
         }
+    } catch (error) {
+        console.error("Bluetooth connection error:", error);
+        updateConnectionStatus(false);
+    }
+}
+
 
         function updateConnectionStatus(connected) {
             const connectionIcon = document.getElementById("connectionIcon");
