@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BLE Data Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #121212;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+      background: #1e1e1e;
+      width: 100%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+    }
+    .controls-top {
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      background: #1e1e1e;
+      width: 100%;
+    }
+    .controls-bottom {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 10px 20px 10px;
+      width: 100%;
+      max-width: 600px;
+    }
+    button, select {
+      padding: 12px 18px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      background: #333;
+      transition: background 0.2s;
+      flex: 1 1 100px;
+    }
+    button:hover, select:hover {
+      background: #444;
+    }
+    select {
+      color: #fff;
+      background: #333;
+    }
+    #output {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #1e1e1e;
+      height: 120px;
+      overflow-y: auto;
+      width: 90%;
+      max-width: 600px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    canvas {
+      margin: 20px 0 10px 0;
+      width: 95% !important;
+      max-width: 600px;
+      height: auto !important;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>📡 BLE Data Viewer</header>
+
+  <div class="controls-top">
+    <button id="connect">Connect</button>
+  </div>
+
+  <div id="output">Output will appear here...</div>
+
+  <canvas id="tempChart"></canvas>
+  <canvas id="pressureChart"></canvas>
+
+  <div class="controls-bottom">
+    <button id="pause">Pause</button>
+    <button id="saveLocal">Save Local</button>
+    <select id="loadSelect">
+      <option value="">Load Data...</option>
+    </select>
+    <button id="reset">Reset</button>
+  </div>
+
+  <script>
+    const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb"; 
+    const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
+
+    const output = document.getElementById("output");
+    const connectBtn = document.getElementById("connect");
+    const pauseBtn = document.getElementById("pause");
+    const resetBtn = document.getElementById("reset");
+    const saveLocalBtn = document.getElementById("saveLocal");
+    const loadSelect = document.getElementById("loadSelect");
+
+    let tempChart, pressureChart, characteristic, isPaused = false;
+    let dataLog = []; // [time, temp, pressure]
+
+    // Temperature Chart (line)
+    const ctxTemp = document.getElementById("tempChart").getContext("2d");
+    tempChart = new Chart(ctxTemp, {
+      type: "line",
+      data: { labels: [], datasets: [{ label: "Temperature (°C)", borderColor: "#ff5252", backgroundColor: "rgba(255,82,82,0.2)", data: [], fill: true, tension: 0.3 }] },
+      options: {
+        responsive: true, animation: false,
+        plugins: { legend: { labels: { color: "#e0e0e0" } } },
+        scales: { 
+          x: { ticks: { color: "#aaa" }, grid: { color: "#333" } },
+          y: { ticks: { color: "#aaa" }, grid: { color: "#333" }, suggestedMin: 0, suggestedMax: 100 }
+        }
+      }
+    });
+
+    // Pressure Chart (bar)
+    const ctxPressure = document.getElementById("pressureChart").getContext("2d");
+    pressureChart = new Chart(ctxPressure, {
+      type: "bar",
+      data: { labels: [], datasets: [{ label: "Pressure (bar)", backgroundColor: "#40c4ff", data: [] }] },
+      options: {
+        responsive: true, animation: false,
+        plugins: { legend: { labels: { color: "#e0e0e0" } } },
+        scales: { 
+          x: { ticks: { color: "#aaa" }, grid: { color: "#333" } },
+          y: { ticks: { color: "#aaa" }, grid: { color: "#333" }, suggestedMin: 0, suggestedMax: 10 }
+        }
+      }
+    });
+
+    function log(message) {
+      output.textContent += message + "\n";
+      output.scrollTop = output.scrollHeight;
+    }
+
+    async function connectBLE() {
+      try {
+        log("Requesting BLE device...");
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: [serviceUuid] });
+        log("Connecting to GATT server...");
+        const server = await device.gatt.connect();
+        log("Getting service...");
+        const service = await server.getPrimaryService(serviceUuid);
+        log("Getting characteristic...");
+        characteristic = await service.getCharacteristic(characteristicUuid);
+        log("Starting notifications...");
+        await characteristic.startNotifications();
+        characteristic.addEventListener("characteristicvaluechanged", handleData);
+        isPaused = false;
+        log("Connected and listening for data...");
+      } catch (error) { log("Error: " + error); }
+    }
+
+    function handleData(event) {
+      const text = new TextDecoder("utf-8").decode(event.target.value).trim();
+      log("Received: " + text);
+
+      const parts = text.split(",");
+      if (parts.length === 2) {
+        const temp = parseFloat(parts[0]);
+        const pressure = parseFloat(parts[1]);
+        const time = new Date().toLocaleTimeString();
+        dataLog.push([time, temp, pressure]);
+
+        if (!isPaused) {
+          // Temperature chart update
+          tempChart.data.labels.push(time);
+          tempChart.data.datasets[0].data.push(temp);
+          if (tempChart.data.labels.length > 20) { tempChart.data.labels.shift(); tempChart.data.datasets[0].data.shift(); }
+          // Dynamically scale ±10°C from latest value
+          tempChart.options.scales.y.min = temp - 10;
+          tempChart.options.scales.y.max = temp + 10;
+          tempChart.update();
+
+          // Pressure chart update
+          pressureChart.data.labels.push(time);
+          pressureChart.data.datasets[0].data.push(pressure);
+          if (pressureChart.data.labels.length > 20) { pressureChart.data.labels.shift(); pressureChart.data.datasets[0].data.shift(); }
+          // Dynamically scale ±2 bar from latest value
+          pressureChart.options.scales.y.min = pressure - 2;
+          pressureChart.options.scales.y.max = pressure + 2;
+          pressureChart.update();
+        }
+      }
+    }
+
+    function pauseGraph() {
+      isPaused = !isPaused;
+      log(isPaused ? "Graph paused." : "Graph resumed.");
+      pauseBtn.textContent = isPaused ? "Resume" : "Pause";
+    }
+
+    function resetGraph() {
+      tempChart.data.labels = []; tempChart.data.datasets[0].data = []; tempChart.update();
+      pressureChart.data.labels = []; pressureChart.data.datasets[0].data = []; pressureChart.update();
+      dataLog = [];
+      log("Graphs reset.");
+    }
+
+    function updateLoadDropdown() {
+      loadSelect.innerHTML = '<option value="">Load Data...</option>';
+      const keys = Object.keys(localStorage).filter(k => k.startsWith("bleDataLog_"));
+      keys.forEach(k => {
+        const name = k.replace("bleDataLog_", "");
+        const option = document.createElement("option");
+        option.value = k;
+        option.textContent = name;
+        loadSelect.appendChild(option);
+      });
+    }
+
+    function saveLocal() {
+      const name = prompt("Enter a name for this dataset:");
+      if (!name) { log("Save cancelled."); return; }
+      localStorage.setItem("bleDataLog_" + name, JSON.stringify(dataLog));
+      log(`Data saved locally as "${name}".`);
+      updateLoadDropdown();
+    }
+
+    loadSelect.addEventListener("change", () => {
+      const key = loadSelect.value;
+      if (!key) return;
+      const data = localStorage.getItem(key);
+      if (!data) { log("Dataset not found."); return; }
+      dataLog = JSON.parse(data);
+
+      tempChart.data.labels = dataLog.map(d => d[0]);
+      tempChart.data.datasets[0].data = dataLog.map(d => d[1]);
+      if (dataLog.length > 0) {
+        const latestTemp = dataLog[dataLog.length-1][1];
+        tempChart.options.scales.y.min = latestTemp - 10;
+        tempChart.options.scales.y.max = latestTemp + 10;
+      }
+      tempChart.update();
+
+      pressureChart.data.labels = dataLog.map(d => d[0]);
+      pressureChart.data.datasets[0].data = dataLog.map(d => d[2]);
+      if (dataLog.length > 0) {
+        const latestPressure = dataLog[dataLog.length-1][2];
+        pressureChart.options.scales.y.min = latestPressure - 2;
+        pressureChart.options.scales.y.max = latestPressure + 2;
+      }
+      pressureChart.update();
+
+      log(`Dataset "${key.replace("bleDataLog_","")}" loaded.`);
+    });
+
+    updateLoadDropdown();
+    connectBtn.addEventListener("click", connectBLE);
+    pauseBtn.addEventListener("click", pauseGraph);
+    saveLocalBtn.addEventListener("click", saveLocal);
+    resetBtn.addEventListener("click", resetGraph);
+  </script>
+</body>
+</html>
