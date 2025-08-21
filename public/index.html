@@ -1,43 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />   
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SirusPTB</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  text-align: center;
+}
+header {
+  padding: 10px;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.canvas-container {
+  width: 90%;
+  margin: 10px auto;
+  height: 300px;
+}
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 30px;
+}
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  color: white;
+  background-color: #333;
+}
+#connectButton.connecting { background-color: orange; }
+#connectButton.connected { background-color: green; }
+#connectButton.disconnected { background-color: red; }
+#resetButton, #toggleViewButton { background-color: #222; }
+</style>
+</head>
+<body>
+<header>SirusPTB</header>
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>ESP32 OTA via Bluetooth</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+<div class="button-row">
+  <button id="connectButton" class="disconnected">Connect</button>
+</div>
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+<div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
+  <div class="canvas-container">
+    <canvas id="tempChart"></canvas>
+  </div>
+  <div class="canvas-container">
+    <canvas id="pressureChart"></canvas>
+  </div>
+</div>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+<div id="combinedView" style="display:none; width:100%; align-items:center;">
+  <div class="canvas-container">
+    <canvas id="combinedChart"></canvas>
+  </div>
+</div>
+
+<div class="button-row">
+  <button id="pauseResumeButton">Pause</button>
+  <button id="toggleViewButton">Toggle View</button>
+  <button id="resetButton">Reset</button>
+</div>
+
+<script>
+const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
+const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
+
+let device, characteristic;
+let tempChart, pressureChart, combinedChart;
+let paused = false;
+let currentTemp = 0, currentPressure = 0;
+let splitView = true;
+let secondsCounter = 0;
+
+// Fix canvas for high-DPI
+function fixCanvasDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+// Plugin to show latest values inline with chart label
+const currentValuePlugin = {
+  id: "currentValuePlugin",
+  afterUpdate(chart) {
+    chart.data.datasets.forEach(dataset => {
+      const latest = dataset.data[dataset.data.length-1];
+      if (latest !== undefined) {
+        if (dataset.label.includes("Temperature")) {
+          dataset.label = `Temperature (°C): ${latest.toFixed(2)}`;
+        } else if (dataset.label.includes("Pressure")) {
+          dataset.label = `Pressure (bar): ${latest.toFixed(2)}`;
+        }
+      }
+    });
+  }
+};
+
+function initCharts() {
+  const ctxTemp = document.getElementById("tempChart").getContext("2d");
+  fixCanvasDPI(ctxTemp.canvas);
+  tempChart = new Chart(ctxTemp, {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Temperature (°C)", borderColor: "#ff7f7f", data: [], fill: false }]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales: { 
+        x: { ticks:{color:"#aaa"}, grid:{color:"#333"}, title:{display:true,text:"Seconds"} },
+        y: { ticks: { color: "#ff7f7f" }, grid: { color: "#333" } }
+      }
+    },
+    plugins: [currentValuePlugin]
+  });
+
+  const ctxPressure = document.getElementById("pressureChart").getContext("2d");
+  fixCanvasDPI(ctxPressure.canvas);
+  pressureChart = new Chart(ctxPressure, {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Pressure (bar)", borderColor: "#7fbfff", data: [], fill: false }]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales: { 
+        x: { ticks:{color:"#aaa"}, grid:{color:"#333"}, title:{display:true,text:"Seconds"} },
+        y: { ticks: { color: "#7fbfff" }, grid: { color: "#333" } }
+      }
+    },
+    plugins: [currentValuePlugin]
+  });
+
+  const ctxCombined = document.getElementById("combinedChart").getContext("2d");
+  fixCanvasDPI(ctxCombined.canvas);
+  combinedChart = new Chart(ctxCombined, {
+    type: "line",
+    data: { labels: [], datasets:[
+      { label:"Temperature (°C)", borderColor:"#ff7f7f", data:[], fill:false, yAxisID:"y1" },
+      { label:"Pressure (bar)", borderColor:"#7fbfff", data:[], fill:false, yAxisID:"y2" }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales:{
+        x:{display:true, ticks:{color:"#aaa"}, title:{display:true,text:"Seconds"}},
+        y1:{position:"left", ticks:{color:"#ff7f7f"}},
+        y2:{position:"right", ticks:{color:"#7fbfff"}}
+      }
+    },
+    plugins:[currentValuePlugin]
+  });
+}
+
+initCharts();
+
+async function connect() {
+  const btn = document.getElementById("connectButton");
+  try {
+    btn.textContent = "Connecting...";
+    btn.className = "connecting";
+    device = await navigator.bluetooth.requestDevice({
+      filters:[{namePrefix:"SirusPTB"}],
+      optionalServices:[serviceUuid]
+    });
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(serviceUuid);
+    characteristic = await service.getCharacteristic(characteristicUuid);
+    await characteristic.startNotifications();
+    characteristic.addEventListener("characteristicvaluechanged", handleData);
+    btn.textContent = "Disconnect";
+    btn.className = "connected";
+    btn.onclick = disconnect;
+  } catch(e) {
+    console.error(e);
+    btn.textContent = "Connect";
+    btn.className = "disconnected";
+  }
+}
+
+async function disconnect() {
+  if(device && device.gatt.connected) await device.gatt.disconnect();
+  const btn = document.getElementById("connectButton");
+  btn.textContent = "Connect";
+  btn.className = "disconnected";
+  btn.onclick = connect;
+}
+
+function handleData(event) {
+  if(paused) return;
+  const [tempStr, pressureStr] = new TextDecoder().decode(event.target.value).trim().split(",");
+  currentTemp = parseFloat(tempStr);
+  currentPressure = Math.max(0, parseFloat(pressureStr)/100);
+
+  const label = secondsCounter++;
+  
+  tempChart.data.labels.push(label);
+  tempChart.data.datasets[0].data.push(currentTemp);
+  tempChart.options.scales.y.min = currentTemp-2;
+  tempChart.options.scales.y.max = currentTemp+2;
+  tempChart.update();
+
+  pressureChart.data.labels.push(label);
+  pressureChart.data.datasets[0].data.push(currentPressure);
+  pressureChart.options.scales.y.min = Math.max(0,currentPressure-0.5);
+  pressureChart.options.scales.y.max = currentPressure+0.5;
+  pressureChart.update();
+
+  combinedChart.data.labels.push(label);
+  combinedChart.data.datasets[0].data.push(currentTemp);
+  combinedChart.data.datasets[1].data.push(currentPressure);
+  combinedChart.options.scales.y1.min = currentTemp-2;
+  combinedChart.options.scales.y1.max = currentTemp+2;
+  combinedChart.options.scales.y2.min = Math.max(0,currentPressure-0.5);
+  combinedChart.options.scales.y2.max = currentPressure+0.5;
+  combinedChart.update();
+}
+
+document.getElementById("connectButton").onclick = connect;
+
+document.getElementById("pauseResumeButton").onclick = ()=>{
+  paused = !paused;
+  document.getElementById("pauseResumeButton").textContent = paused?"Resume":"Pause";
+};
+
+document.getElementById("resetButton").onclick = ()=>{
+  [tempChart, pressureChart, combinedChart].forEach(chart=>{
+    chart.data.labels=[];
+    chart.data.datasets.forEach(ds=>ds.data=[]);
+    chart.update();
+  });
+  secondsCounter = 0;
+};
+
+document.getElementById("toggleViewButton").onclick = ()=>{
+  splitView = !splitView;
+  localStorage.setItem("viewChoice", splitView?"split":"combined");
+  updateView();
+};
+
+function updateView(){
+  document.getElementById("splitView").style.display=splitView?"flex":"none";
+  document.getElementById("combinedView").style.display=splitView?"none":"flex";
+}
+
+function loadViewChoice(){
+  const choice = localStorage.getItem("viewChoice");
+  splitView = choice!=="combined";
+  updateView();
+}
+
+loadViewChoice();
+</script>
+</body>
 </html>
