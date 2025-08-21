@@ -1,387 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLE Communication</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-    <style>
-        body {
-            background-color: #222;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #connectionContainer {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        #connectButton {
-            background-color: #3498db;
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            outline: none;
-            margin-right: 10px;
-        }
-
-        .connection-icon {
-            font-size: 24px;
-        }
-
-        #saveButton, #loadButton {
-            background-color: #4CAF50;
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            outline: none;
-            margin-right: 10px;
-        }
-
-        #deleteButton {
-            background-color: #ff0000; /* Red color */
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            outline: none;
-            margin-right: 10px;
-        }
-
-        .chart-container {
-            width: 100%;
-            max-width: 600px;
-            height: 300px;
-            margin-bottom: 20px;
-        }
-
-        .chart-label {
-            font-size: 18px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .load-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .load-list-item {
-            cursor: pointer;
-            padding: 5px;
-            margin-bottom: 5px;
-            background-color: #333;
-            border-radius: 5px;
-            border: 1px solid #555;
-        }
-
-        .load-list-item:hover {
-            background-color: #555;
-        }
-
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 1000;
-        }
-
-        #loadPopup, #deletePopup {
-            display: none;
-        }
-
-        .popup-buttons {
-            margin-top: 10px;
-        }
-
-        .popup-button {
-            background-color: #555;
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            outline: none;
-            margin-right: 10px;
-        }
-
-        .popup-button:hover {
-            background-color: #777;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SirusPTB</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  text-align: center;
+}
+header {
+  padding: 10px;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.canvas-container {
+  width: 90%;
+  margin: 10px auto;
+  height: 300px;
+}
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 30px;
+}
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  color: white;
+  background-color: #333;
+}
+#connectButton.connecting { background-color: orange; }
+#connectButton.connected { background-color: green; }
+#connectButton.disconnected { background-color: red; }
+#resetButton, #toggleViewButton { background-color: #222; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div id="connectionContainer">
-            <button id="connectButton" onclick="connect()">Connect</button>
-            <div class="connection-icon" id="connectionIcon">&#x274C;</div>
-            <button id="saveButton" onclick="saveCharts()">Save</button>
-            <button id="loadButton" onclick="showLoadList()">Load</button>
-            <button id="deleteButton" onclick="showDeleteList()">Delete</button>
-        </div>
-        <div class="chart-label" id="chartLabel1">Temperature and Pressure</div>
-        <div class="chart-container" id="chartContainer">
-            <canvas id="dataChart"></canvas>
-        </div>
-        <div id="loadPopup" class="popup">
-            <ul id="loadList" class="load-list"></ul>
-            <div class="popup-buttons">
-                <button class="popup-button" onclick="hideLoadPopup()">Cancel</button>
-            </div>
-        </div>
-        <div id="deletePopup" class="popup">
-            <ul id="deleteList" class="load-list"></ul>
-            <div class="popup-buttons">
-                <button class="popup-button" onclick="hideDeletePopup()">Cancel</button>
-            </div>
-        </div>
-    </div>
+<header>SirusPTB</header>
 
-    <script>
-        let receiveCharacteristic;
-        let serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-        let receiveCharacteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26aa"; // Changed UUID
-        let bluetoothDevice;
-        let dataChart;
-        let labels = [];
-        let temperatureData = [];
-        let pressureData = [];
+<div class="button-row">
+  <button id="connectButton" class="disconnected">Connect</button>
+</div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeChart();
-            adjustChartSizeForDesktop();
-        });
+<div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
+  <div class="canvas-container">
+    <canvas id="tempChart"></canvas>
+  </div>
+  <div class="canvas-container">
+    <canvas id="pressureChart"></canvas>
+  </div>
+</div>
 
-        function adjustChartSizeForDesktop() {
-            if (window.innerWidth > 1024) { // Assume desktop if width > 1024px
-                const chartContainer = document.getElementById('chartContainer');
-                chartContainer.style.maxWidth = '80%';
-                chartContainer.style.height = '80vh'; // 80% of viewport height
-            }
-        }
+<div id="combinedView" style="display:none; width:100%; align-items:center;">
+  <div class="canvas-container">
+    <canvas id="combinedChart"></canvas>
+  </div>
+</div>
 
-       async function connect() {
-    try {
-        const devices = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: [serviceUuid]
-        });
+<div class="button-row">
+  <button id="pauseResumeButton">Pause</button>
+  <button id="toggleViewButton">Toggle View</button>
+  <button id="resetButton">Reset</button>
+</div>
 
-        // Assuming devices is an array of devices (this depends on your implementation)
-        // Since requestDevice returns a single device, you'd filter it later.
-        if (devices.name.startsWith('SirusPTB')) {
-            bluetoothDevice = devices;
+<script>
+const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
+const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
 
-            const server = await bluetoothDevice.gatt.connect();
-            const service = await server.getPrimaryService(serviceUuid);
-            receiveCharacteristic = await service.getCharacteristic(receiveCharacteristicUuid);
-            console.log("Connected to BLE device");
+let device, characteristic;
+let tempChart, pressureChart, combinedChart;
+let paused = false;
+let currentTemp = 0, currentPressure = 0;
+let splitView = true;
+let secondsCounter = 0;
 
-            receiveCharacteristic.addEventListener('characteristicvaluechanged', handleData);
-            await receiveCharacteristic.startNotifications();
-            updateConnectionStatus(true);
-        } else {
-            console.error("No device matching 'SirusPTB' found.");
-            updateConnectionStatus(false);
-        }
-    } catch (error) {
-        console.error("Bluetooth connection error:", error);
-        updateConnectionStatus(false);
-    }
+// Fix canvas for high-DPI
+function fixCanvasDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
-
-        function updateConnectionStatus(connected) {
-            const connectionIcon = document.getElementById("connectionIcon");
-            if (connected) {
-                connectionIcon.innerHTML = "&#x2714;"; // Change icon to connected (checkmark)
-                connectionIcon.style.color = "#4CAF50"; // Change color to green
-            } else {
-                connectionIcon.innerHTML = "&#x274C;"; // Change icon to disconnected (cross)
-                connectionIcon.style.color = "#ff0000"; // Change color to red
-            }
+// Plugin to show latest values inline with chart label
+const currentValuePlugin = {
+  id: "currentValuePlugin",
+  afterUpdate(chart) {
+    chart.data.datasets.forEach(dataset => {
+      const latest = dataset.data[dataset.data.length-1];
+      if (latest !== undefined) {
+        if (dataset.label.includes("Temperature")) {
+          dataset.label = `Temperature (°C): ${latest.toFixed(2)}`;
+        } else if (dataset.label.includes("Pressure")) {
+          dataset.label = `Pressure (bar): ${latest.toFixed(2)}`;
         }
+      }
+    });
+  }
+};
 
-        function initializeChart() {
-            const ctx = document.getElementById('dataChart').getContext('2d');
-            dataChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Temperature',
-                            data: temperatureData,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Pressure',
-                            data: pressureData,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: '#555'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: '#555'
-                            }
-                        }
-                    }
-                }
-            });
-        }
+function initCharts() {
+  const ctxTemp = document.getElementById("tempChart").getContext("2d");
+  fixCanvasDPI(ctxTemp.canvas);
+  tempChart = new Chart(ctxTemp, {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Temperature (°C)", borderColor: "#ff7f7f", data: [], fill: false }]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales: { 
+        x: { ticks:{color:"#aaa"}, grid:{color:"#333"}, title:{display:true,text:"Seconds"} },
+        y: { ticks: { color: "#ff7f7f" }, grid: { color: "#333" } }
+      }
+    },
+    plugins: [currentValuePlugin]
+  });
 
-        function handleData(event) {
-            let receivedData = event.target.value;
-            let decoder = new TextDecoder('utf-8');
-            let decodedStrings = decoder.decode(receivedData).split(',');
-            updateChart(Number(decodedStrings[0]), Number(decodedStrings[1]));
-        }
+  const ctxPressure = document.getElementById("pressureChart").getContext("2d");
+  fixCanvasDPI(ctxPressure.canvas);
+  pressureChart = new Chart(ctxPressure, {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Pressure (bar)", borderColor: "#7fbfff", data: [], fill: false }]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales: { 
+        x: { ticks:{color:"#aaa"}, grid:{color:"#333"}, title:{display:true,text:"Seconds"} },
+        y: { ticks: { color: "#7fbfff" }, grid: { color: "#333" } }
+      }
+    },
+    plugins: [currentValuePlugin]
+  });
 
-        function updateChart(receivedNumber1, receivedNumber2) {
-            labels.push(labels.length + 1);
-            temperatureData.push(receivedNumber1);
-            pressureData.push(receivedNumber2);
-            dataChart.data.labels = labels;
-            dataChart.data.datasets[0].data = temperatureData;
-            dataChart.data.datasets[1].data = pressureData;
-            dataChart.update();
-        }
+  const ctxCombined = document.getElementById("combinedChart").getContext("2d");
+  fixCanvasDPI(ctxCombined.canvas);
+  combinedChart = new Chart(ctxCombined, {
+    type: "line",
+    data: { labels: [], datasets:[
+      { label:"Temperature (°C)", borderColor:"#ff7f7f", data:[], fill:false, yAxisID:"y1" },
+      { label:"Pressure (bar)", borderColor:"#7fbfff", data:[], fill:false, yAxisID:"y2" }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales:{
+        x:{display:true, ticks:{color:"#aaa"}, title:{display:true,text:"Seconds"}},
+        y1:{position:"left", ticks:{color:"#ff7f7f"}},
+        y2:{position:"right", ticks:{color:"#7fbfff"}}
+      }
+    },
+    plugins:[currentValuePlugin]
+  });
+}
 
-        function saveCharts() {
-            const defaultFileName = getDefaultFileName();
-            const fileName = prompt("Enter file name:", defaultFileName);
-            if (!fileName) {
-                alert("No file name provided. Charts were not saved.");
-                return;
-            }
-            const data = {
-                labels: labels,
-                temperatureData: temperatureData,
-                pressureData: pressureData
-            };
-            const jsonData = JSON.stringify(data);
-            localStorage.setItem(fileName, jsonData);
-            alert("Charts saved successfully!");
-        }
+initCharts();
 
-        function showLoadList() {
-            const loadList = document.getElementById('loadList');
-            loadList.innerHTML = '';
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                const li = document.createElement('li');
-                li.textContent = key;
-                li.classList.add('load-list-item');
-                li.onclick = () => loadCharts(key);
-                loadList.appendChild(li);
-            }
-            document.getElementById('loadPopup').style.display = 'block';
-        }
+async function connect() {
+  const btn = document.getElementById("connectButton");
+  try {
+    btn.textContent = "Connecting...";
+    btn.className = "connecting";
+    device = await navigator.bluetooth.requestDevice({
+      filters:[{namePrefix:"SirusPTB"}],
+      optionalServices:[serviceUuid]
+    });
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(serviceUuid);
+    characteristic = await service.getCharacteristic(characteristicUuid);
+    await characteristic.startNotifications();
+    characteristic.addEventListener("characteristicvaluechanged", handleData);
+    btn.textContent = "Disconnect";
+    btn.className = "connected";
+    btn.onclick = disconnect;
+  } catch(e) {
+    console.error(e);
+    btn.textContent = "Connect";
+    btn.className = "disconnected";
+  }
+}
 
-        function loadCharts(fileName) {
-            const jsonData = localStorage.getItem(fileName);
-            if (jsonData) {
-                const data = JSON.parse(jsonData);
-                labels = data.labels;
-                temperatureData = data.temperatureData;
-                pressureData = data.pressureData;
-                updateChartFromLoadedData();
-                alert("Charts loaded successfully!");
-            }
-            document.getElementById('loadPopup').style.display = 'none';
-        }
+async function disconnect() {
+  if(device && device.gatt.connected) await device.gatt.disconnect();
+  const btn = document.getElementById("connectButton");
+  btn.textContent = "Connect";
+  btn.className = "disconnected";
+  btn.onclick = connect;
+}
 
-        function updateChartFromLoadedData() {
-            dataChart.data.labels = labels;
-            dataChart.data.datasets[0].data = temperatureData;
-            dataChart.data.datasets[1].data = pressureData;
-            dataChart.update();
-        }
+function handleData(event) {
+  if(paused) return;
+  const [tempStr, pressureStr] = new TextDecoder().decode(event.target.value).trim().split(",");
+  currentTemp = parseFloat(tempStr);
+  currentPressure = Math.max(0, parseFloat(pressureStr)/100);
 
-        function showDeleteList() {
-            const deleteList = document.getElementById('deleteList');
-            deleteList.innerHTML = '';
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                const li = document.createElement('li');
-                li.textContent = key;
-                li.classList.add('load-list-item');
-                li.onclick = () => deleteCharts(key);
-                deleteList.appendChild(li);
-            }
-            document.getElementById('deletePopup').style.display = 'block';
-        }
+  const label = secondsCounter++;
+  
+  tempChart.data.labels.push(label);
+  tempChart.data.datasets[0].data.push(currentTemp);
+  tempChart.options.scales.y.min = currentTemp-2;
+  tempChart.options.scales.y.max = currentTemp+2;
+  tempChart.update();
 
-        function deleteCharts(fileName) {
-            if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
-                localStorage.removeItem(fileName);
-                alert("Charts deleted successfully!");
-                document.getElementById('deletePopup').style.display = 'none';
-            }
-        }
+  pressureChart.data.labels.push(label);
+  pressureChart.data.datasets[0].data.push(currentPressure);
+  pressureChart.options.scales.y.min = Math.max(0,currentPressure-0.5);
+  pressureChart.options.scales.y.max = currentPressure+0.5;
+  pressureChart.update();
 
-        function getDefaultFileName() {
-            const now = new Date();
-            return 'charts_' + now.toISOString().slice(0, 10) + '_' + now.getTime();
-        }
+  combinedChart.data.labels.push(label);
+  combinedChart.data.datasets[0].data.push(currentTemp);
+  combinedChart.data.datasets[1].data.push(currentPressure);
+  combinedChart.options.scales.y1.min = currentTemp-2;
+  combinedChart.options.scales.y1.max = currentTemp+2;
+  combinedChart.options.scales.y2.min = Math.max(0,currentPressure-0.5);
+  combinedChart.options.scales.y2.max = currentPressure+0.5;
+  combinedChart.update();
+}
 
-        function hideLoadPopup() {
-            document.getElementById('loadPopup').style.display = 'none';
-        }
+document.getElementById("connectButton").onclick = connect;
 
-        function hideDeletePopup() {
-            document.getElementById('deletePopup').style.display = 'none';
-        }
-    </script>
+document.getElementById("pauseResumeButton").onclick = ()=>{
+  paused = !paused;
+  document.getElementById("pauseResumeButton").textContent = paused?"Resume":"Pause";
+};
+
+document.getElementById("resetButton").onclick = ()=>{
+  [tempChart, pressureChart, combinedChart].forEach(chart=>{
+    chart.data.labels=[];
+    chart.data.datasets.forEach(ds=>ds.data=[]);
+    chart.update();
+  });
+  secondsCounter = 0;
+};
+
+document.getElementById("toggleViewButton").onclick = ()=>{
+  splitView = !splitView;
+  localStorage.setItem("viewChoice", splitView?"split":"combined");
+  updateView();
+};
+
+function updateView(){
+  document.getElementById("splitView").style.display=splitView?"flex":"none";
+  document.getElementById("combinedView").style.display=splitView?"none":"flex";
+}
+
+function loadViewChoice(){
+  const choice = localStorage.getItem("viewChoice");
+  splitView = choice!=="combined";
+  updateView();
+}
+
+loadViewChoice();
+</script>
 </body>
 </html>
