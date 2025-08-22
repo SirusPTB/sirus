@@ -6,260 +6,311 @@
 <title>SirusPTB</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #121212;
-    color: #e0e0e0;
-    font-family: 'Inter', sans-serif;
-  }
-  body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  header {
-    padding: 16px;
-    font-size: 20px;
-    font-weight: 600;
-    text-align: center;
-    background: #1e1e1e;
-    width: 100%;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.6);
-    flex: 0 0 auto;
-  }
-  .controls-top, .controls-bottom {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 10px;
-    width: 95%;
-    max-width: 600px;
-    box-sizing: border-box;
-    flex: 0 0 auto;
-  }
-  button {
-    padding: 12px 18px;
-    font-size: 14px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #fff;
-    transition: background 0.2s;
-    flex: 1 1 100px;
-  }
-  button:hover { background: #555; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #121212;
+  color: #e0e0e0;
+  text-align: center;
+}
+header {
+  padding: 10px;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.canvas-container {
+  width: 90%;
+  margin: 10px auto;
+  height: 300px;
+}
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background: #1e1e1e;
+  border-radius: 8px;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 30px;
+}
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  color: white;
+  background-color: #333;
+}
+#connectButton.connecting { background-color: orange; }
+#connectButton.connected { background-color: green; }
+#connectButton.disconnected { background-color: red; }
+#resetButton, #toggleViewButton { background-color: #222; }
 
-  /* Button colors */
-  #connect { background: #4caf50; }
-  #pauseResume { background: #4caf50; }
-  #reset, #toggleView { background: #222; }
-
-  .chart-container {
-    width: 80%;
-    max-width: 600px;
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-bottom: 10px;
-  }
-
-  canvas {
-    width: 100% !important;
-    height: 100% !important;
-    background: #1e1e1e;
-    border-radius: 8px;
-    box-sizing: border-box;
-  }
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center; align-items: center;
+}
+.modal-content {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+.modal select {
+  width: 80%;
+  padding: 8px;
+  margin: 10px 0;
+  border-radius: 6px;
+  background: #333;
+  color: #fff;
+  border: none;
+}
+.modal button { margin: 5px; }
 </style>
 </head>
 <body>
 <header>SirusPTB</header>
 
-<div class="controls-top">
-  <button id="connect">Connect</button>
+<div class="button-row">
+  <button id="connectButton" class="disconnected">Connect</button>
 </div>
 
-<div class="chart-container">
-  <canvas id="tempChart"></canvas>
-  <canvas id="pressureChart"></canvas>
-  <canvas id="combinedChart" style="display:none;"></canvas>
+<div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
+  <div class="canvas-container"><canvas id="tempChart"></canvas></div>
+  <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
 </div>
 
-<div class="controls-bottom">
-  <button id="pauseResume">Pause</button>
-  <button id="toggleView">Toggle View</button>
-  <button id="reset">Reset</button>
+<div id="combinedView" style="display:none; width:100%; align-items:center;">
+  <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
+</div>
+
+<div class="button-row">
+  <button id="pauseResumeButton">Pause</button>
+  <button id="toggleViewButton">Toggle View</button>
+  <button id="resetButton">Reset</button>
+</div>
+
+<div class="button-row">
+  <button id="saveButton">Save</button>
+  <button id="loadButton">Load</button>
+  <button id="deleteButton">Delete</button>
+</div>
+
+<!-- Modal -->
+<div id="popupModal" class="modal">
+  <div class="modal-content">
+    <h3>Select Saved Graph</h3>
+    <select id="modalSelect"></select>
+    <div>
+      <button id="confirmButton">Confirm</button>
+      <button id="cancelButton">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
 const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
 
-let device, server, characteristic;
-let isPaused = false;
+let device, characteristic;
 let tempChart, pressureChart, combinedChart;
+let paused = false;
+let currentTemp = 0, currentPressure = 0;
+let splitView = true;
+let secondsCounter = 0;
 let chartData = { labels: [], temp: [], pressure: [] };
-let showCombined = false;
-const maxPoints = 50; 
+let modalAction = ""; // "load" or "delete"
 
-const connectBtn = document.getElementById("connect");
-const pauseResumeBtn = document.getElementById("pauseResume");
-const resetBtn = document.getElementById("reset");
-const toggleBtn = document.getElementById("toggleView");
+// --- Modal ---
+const modal = document.getElementById("popupModal");
+const modalSelect = document.getElementById("modalSelect");
+const confirmButton = document.getElementById("confirmButton");
+const cancelButton = document.getElementById("cancelButton");
 
-// Plugin to show latest values
+function showModal(action){
+  modalAction = action;
+  modalSelect.innerHTML="";
+  const saved = Object.keys(localStorage).filter(k=>k.startsWith("graph_"));
+  if(saved.length===0){ alert("No saved graphs"); return; }
+  saved.forEach(k=>{
+    const opt = document.createElement("option");
+    opt.value = k; opt.text = k.replace("graph_","");
+    modalSelect.add(opt);
+  });
+  modal.style.display="flex";
+}
+
+confirmButton.onclick = () => {
+  const key = modalSelect.value;
+  if(!key){ modal.style.display="none"; return; }
+  if(modalAction==="load"){
+    const data = JSON.parse(localStorage.getItem(key));
+    if(data){
+      chartData = data; secondsCounter=data.labels.length;
+      [tempChart,pressureChart,combinedChart].forEach(chart=>{
+        chart.data.labels=chartData.labels;
+        chart.data.datasets.forEach((ds,i)=>{
+          ds.data=i===0?chartData.temp:chartData.pressure;
+        });
+        chart.update();
+      });
+    }
+  } else if(modalAction==="delete"){
+    localStorage.removeItem(key);
+  }
+  modal.style.display="none";
+};
+
+cancelButton.onclick = () => { modal.style.display="none"; };
+
+// --- Charts ---
+function fixCanvasDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
 const currentValuePlugin = {
-  id: "currentValuePlugin",
-  afterUpdate(chart) {
-    chart.data.datasets.forEach(ds => {
-      const latest = ds.data[ds.data.length-1];
-      if(latest!==undefined){
-        if(ds.yAxisID==="yTemp") ds.label = "Temperature (°C): "+latest.toFixed(2);
-        if(ds.yAxisID==="yPressure") ds.label = "Pressure (bar): "+latest.toFixed(2);
+  id:"currentValuePlugin",
+  afterUpdate(chart){
+    chart.data.datasets.forEach(ds=>{
+      const val=ds.data[ds.data.length-1];
+      if(val!==undefined){
+        if(ds.label.includes("Temperature")) ds.label=`${val.toFixed(2)}°C`;
+        if(ds.label.includes("Pressure")) ds.label=`${val.toFixed(2)} bar`;
       }
     });
   }
 };
 
-function createCharts() {
+function initCharts(){
   const ctxTemp = document.getElementById("tempChart").getContext("2d");
+  fixCanvasDPI(ctxTemp.canvas);
   tempChart = new Chart(ctxTemp,{
     type:"line",
-    data:{labels:[], datasets:[{ label:"Temperature (°C)", borderColor:"#ff5252", backgroundColor:"rgba(255,82,82,0.2)", data:[], fill:true, tension:0.3, yAxisID:"yTemp" }]},
-    options:{ responsive:true, maintainAspectRatio:true, animation:false, plugins:{legend:{labels:{color:"#e0e0e0"}}}, scales:{x:{ticks:{color:"#aaa"}, grid:{color:"#333"}}, y:{ticks:{color:"#aaa"}, grid:{color:"#333"}}} },
+    data:{labels:[],datasets:[{label:"Temperature",borderColor:"#ff7f7f",data:[],fill:false}]},
+    options:{responsive:true,maintainAspectRatio:true,animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales:{x:{ticks:{color:"#aaa"}},y:{ticks:{color:"#ff7f7f"}}}},
     plugins:[currentValuePlugin]
   });
 
   const ctxPressure = document.getElementById("pressureChart").getContext("2d");
+  fixCanvasDPI(ctxPressure.canvas);
   pressureChart = new Chart(ctxPressure,{
     type:"line",
-    data:{labels:[], datasets:[{ label:"Pressure (bar)", borderColor:"#42a5f5", backgroundColor:"rgba(66,165,245,0.2)", data:[], fill:true, tension:0.3, yAxisID:"yPressure" }]},
-    options:{ responsive:true, maintainAspectRatio:true, animation:false, plugins:{legend:{labels:{color:"#e0e0e0"}}}, scales:{x:{ticks:{color:"#aaa"}, grid:{color:"#333"}}, y:{ticks:{color:"#aaa"}, grid:{color:"#333"}}} },
+    data:{labels:[],datasets:[{label:"Pressure",borderColor:"#7fbfff",data:[],fill:false}]},
+    options:{responsive:true,maintainAspectRatio:true,animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales:{x:{ticks:{color:"#aaa"}},y:{ticks:{color:"#7fbfff"}}}},
     plugins:[currentValuePlugin]
   });
 
   const ctxCombined = document.getElementById("combinedChart").getContext("2d");
+  fixCanvasDPI(ctxCombined.canvas);
   combinedChart = new Chart(ctxCombined,{
     type:"line",
-    data:{ labels:[], datasets:[
-      { label:"Temperature (°C)", borderColor:"#ff5252", backgroundColor:"rgba(255,82,82,0.2)", data:[], fill:false, tension:0.3, yAxisID:"yTemp" },
-      { label:"Pressure (bar)", borderColor:"#42a5f5", backgroundColor:"rgba(66,165,245,0.2)", data:[], fill:false, tension:0.3, yAxisID:"yPressure" }
+    data:{labels:[],datasets:[
+      {label:"Temperature",borderColor:"#ff7f7f",data:[],fill:false,yAxisID:"y1"},
+      {label:"Pressure",borderColor:"#7fbfff",data:[],fill:false,yAxisID:"y2"}
     ]},
-    options:{ responsive:true, maintainAspectRatio:true, animation:false, plugins:{legend:{labels:{color:"#e0e0e0"}}}, scales:{ x:{ticks:{color:"#aaa"}, grid:{color:"#333"}, min:0, max:maxPoints-1}, yTemp:{type:"linear", position:"left", ticks:{color:"#ff5252"}, grid:{color:"#333"}}, yPressure:{type:"linear", position:"right", ticks:{color:"#42a5f5"}, grid:{drawOnChartArea:false}} } },
+    options:{responsive:true,maintainAspectRatio:true,animation:false,
+      plugins:{legend:{labels:{color:"#e0e0e0"}}},
+      scales:{x:{ticks:{color:"#aaa"}},y1:{ticks:{color:"#ff7f7f"}},y2:{ticks:{color:"#7fbfff"}}}},
     plugins:[currentValuePlugin]
   });
 }
 
-async function connectBLE() {
-  if(device && device.gatt.connected){
-    device.gatt.disconnect();
-    connectBtn.textContent="Connect";
-    connectBtn.style.background="#4caf50";
-    return;
-  }
+initCharts();
+
+// --- BLE ---
+async function connect(){
+  const btn=document.getElementById("connectButton");
   try{
-    device = await navigator.bluetooth.requestDevice({
-      filters:[{namePrefix:"SirusPTB"}],
-      optionalServices:[serviceUuid]
-    });
-    connectBtn.textContent="Connecting...";
-    connectBtn.style.background="#ff9800";
-
-    server = await device.gatt.connect();
-    const service = await server.getPrimaryService(serviceUuid);
-    characteristic = await service.getCharacteristic(characteristicUuid);
-
+    btn.textContent="Connecting..."; btn.className="connecting";
+    device=await navigator.bluetooth.requestDevice({filters:[{namePrefix:"SirusPTB"}],optionalServices:[serviceUuid]});
+    const server=await device.gatt.connect();
+    const service=await server.getPrimaryService(serviceUuid);
+    characteristic=await service.getCharacteristic(characteristicUuid);
     await characteristic.startNotifications();
-    characteristic.addEventListener("characteristicvaluechanged", handleData);
+    characteristic.addEventListener("characteristicvaluechanged",handleData);
+    btn.textContent="Disconnect"; btn.className="connected"; btn.onclick=disconnect;
+  } catch(e){ console.error(e); btn.textContent="Connect"; btn.className="disconnected"; }
+}
 
-    connectBtn.textContent="Disconnect";
-    connectBtn.style.background="#f44336";
-    isPaused=false;
-
-    device.addEventListener("gattserverdisconnected",()=>{
-      connectBtn.textContent="Connect";
-      connectBtn.style.background="#4caf50";
-    });
-  }catch(err){
-    connectBtn.textContent="Connect";
-    connectBtn.style.background="#4caf50";
-    console.error(err);
-  }
+async function disconnect(){
+  if(device && device.gatt.connected) await device.gatt.disconnect();
+  const btn=document.getElementById("connectButton");
+  btn.textContent="Connect"; btn.className="disconnected"; btn.onclick=connect;
 }
 
 function handleData(event){
-  if(isPaused) return;
-  const value = new TextDecoder().decode(event.target.value);
-  const [tempStr, pressureStr] = value.split(",");
-  const temp=parseFloat(tempStr);
-  const pressure=Math.max(0,parseFloat(pressureStr)/100);
-  const timestamp=new Date().toLocaleTimeString();
+  if(paused) return;
+  const [tempStr,pressureStr]=new TextDecoder().decode(event.target.value).trim().split(",");
+  currentTemp=parseFloat(tempStr);
+  currentPressure=Math.max(0,parseFloat(pressureStr));
 
-  chartData.labels.push(timestamp);
-  chartData.temp.push(temp);
-  chartData.pressure.push(pressure);
-  if(chartData.labels.length>maxPoints){
-    chartData.labels.shift();
-    chartData.temp.shift();
-    chartData.pressure.shift();
-  }
+  const label=secondsCounter++;
+  chartData.labels.push(label);
+  chartData.temp.push(currentTemp);
+  chartData.pressure.push(currentPressure);
+  if(chartData.labels.length>50){ chartData.labels.shift(); chartData.temp.shift(); chartData.pressure.shift(); }
 
-  tempChart.data.labels = chartData.labels;
-  tempChart.data.datasets[0].data = chartData.temp;
-  pressureChart.data.labels = chartData.labels;
-  pressureChart.data.datasets[0].data = chartData.pressure;
-  combinedChart.data.labels = chartData.labels;
-  combinedChart.data.datasets[0].data = chartData.temp;
-  combinedChart.data.datasets[1].data = chartData.pressure;
+  tempChart.data.labels=chartData.labels; tempChart.data.datasets[0].data=chartData.temp;
+  tempChart.options.scales.y.min=currentTemp-2; tempChart.options.scales.y.max=currentTemp+2; tempChart.update();
 
-  combinedChart.options.scales.yTemp.min=temp-2;
-  combinedChart.options.scales.yTemp.max=temp+2;
-  combinedChart.options.scales.yPressure.min=Math.max(0,pressure-0.5);
-  combinedChart.options.scales.yPressure.max=pressure+0.5;
+  pressureChart.data.labels=chartData.labels; pressureChart.data.datasets[0].data=chartData.pressure;
+  pressureChart.options.scales.y.min=Math.max(0,currentPressure-0.5); pressureChart.options.scales.y.max=currentPressure+0.5; pressureChart.update();
 
-  if(chartData.labels.length < maxPoints){
-    combinedChart.options.scales.x.min=0;
-    combinedChart.options.scales.x.max=maxPoints-1;
-  } else {
-    combinedChart.options.scales.x.min=chartData.labels.length-maxPoints;
-    combinedChart.options.scales.x.max=chartData.labels.length-1;
-  }
-
-  tempChart.update(); 
-  pressureChart.update(); 
+  combinedChart.data.labels=chartData.labels;
+  combinedChart.data.datasets[0].data=chartData.temp;
+  combinedChart.data.datasets[1].data=chartData.pressure;
+  combinedChart.options.scales.y1.min=currentTemp-2; combinedChart.options.scales.y1.max=currentTemp+2;
+  combinedChart.options.scales.y2.min=Math.max(0,currentPressure-0.5); combinedChart.options.scales.y2.max=currentPressure+0.5;
   combinedChart.update();
 }
 
-// Controls
-pauseResumeBtn.onclick = () => {
-  isPaused = !isPaused;
-  pauseResumeBtn.textContent = isPaused ? "Resume" : "Pause";
-  pauseResumeBtn.style.background = isPaused ? "#ff9800" : "#4caf50";
+document.getElementById("connectButton").onclick=connect;
+document.getElementById("pauseResumeButton").onclick=()=>{
+  paused=!paused;
+  document.getElementById("pauseResumeButton").textContent=paused?"Resume":"Pause";
+};
+document.getElementById("resetButton").onclick=()=>{
+  chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
+  [tempChart,pressureChart,combinedChart].forEach(chart=>{chart.data.labels=[];chart.data.datasets.forEach(ds=>ds.data=[]);chart.update();});
+};
+document.getElementById("toggleViewButton").onclick=()=>{
+  splitView=!splitView; localStorage.setItem("viewChoice",splitView?"split":"combined"); updateView();
+};
+function updateView(){
+  document.getElementById("splitView").style.display=splitView?"flex":"none";
+  document.getElementById("combinedView").style.display=splitView?"none":"flex";
+}
+if(localStorage.getItem("viewChoice")==="combined") splitView=false;
+updateView();
+
+// --- Save/Load/Delete ---
+document.getElementById("saveButton").onclick=()=>{
+  const name=prompt("Enter a name for saved graph:"); if(!name) return;
+  localStorage.setItem("graph_"+name,JSON.stringify(chartData));
 };
 
-resetBtn.onclick=()=>{
-  chartData={labels:[], temp:[], pressure:[]};
-  [tempChart, pressureChart, combinedChart].forEach(c=>{
-    c.data.labels=[]; 
-    c.data.datasets.forEach(ds=>ds.data=[]); 
-    c.update();
-  });
-};
-connectBtn.onclick=connectBLE;
-
-toggleBtn.onclick=()=>{
-  showCombined=!showCombined;
-  document.getElementById("tempChart").style.display=showCombined?"none":"block";
-  document.getElementById("pressureChart").style.display=showCombined?"none":"block";
-  document.getElementById("combinedChart").style.display=showCombined?"block":"none";
-  toggleBtn.textContent=showCombined?"Split View":"Combined View";
-};
-
-createCharts();
+document.getElementById("loadButton").onclick=()=>{showModal("load");};
+document.getElementById("deleteButton").onclick=()=>{showModal("delete");};
 </script>
 </body>
 </html>
