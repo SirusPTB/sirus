@@ -130,7 +130,7 @@ let currentTemp = 0, currentPressure = 0;
 let splitView = true;
 let secondsCounter = 0;
 let chartData = { labels: [], temp: [], pressure: [] };
-let modalAction = ""; // "load" or "delete"
+let modalAction = "";
 
 // --- Modal ---
 const modal = document.getElementById("popupModal");
@@ -184,15 +184,23 @@ function fixCanvasDPI(canvas) {
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 
+// Plugin to display current value next to label
 const currentValuePlugin = {
-  id:"currentValuePlugin",
-  afterUpdate(chart){
-    chart.data.datasets.forEach(ds=>{
-      const val=ds.data[ds.data.length-1];
-      if(val!==undefined){
-        if(ds.label.includes("Temperature")) ds.label=`${val.toFixed(2)}°C`;
-        if(ds.label.includes("Pressure")) ds.label=`${val.toFixed(2)} bar`;
-      }
+  id:'currentValue',
+  afterDraw(chart){
+    if(chart.data.datasets.length===0) return;
+    const ctx = chart.ctx;
+    chart.data.datasets.forEach((ds,i)=>{
+      if(ds.data.length===0) return;
+      const latest = ds.data[ds.data.length-1];
+      const x = chart.chartArea.left + 5;
+      ctx.save();
+      ctx.fillStyle = ds.borderColor;
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(ds.label + ": " + latest.toFixed(2) + (ds.label.includes("Temp")?"°C":" bar"), x, 5 + i*18);
+      ctx.restore();
     });
   }
 };
@@ -202,10 +210,11 @@ function initCharts(){
   fixCanvasDPI(ctxTemp.canvas);
   tempChart = new Chart(ctxTemp,{
     type:"line",
-    data:{labels:[],datasets:[{label:"Temperature",borderColor:"#ff7f7f",data:[],fill:false}]},
+    data:{labels:[],datasets:[{label:"Temp",borderColor:"#ff7f7f",data:[],fill:false}]},
     options:{responsive:true,maintainAspectRatio:true,animation:false,
       plugins:{legend:{labels:{color:"#e0e0e0"}}},
-      scales:{x:{ticks:{color:"#aaa"}},y:{ticks:{color:"#ff7f7f"}}}},
+      scales:{x:{ticks:{display:false}},y:{ticks:{color:"#ff7f7f"}}}
+    },
     plugins:[currentValuePlugin]
   });
 
@@ -216,7 +225,8 @@ function initCharts(){
     data:{labels:[],datasets:[{label:"Pressure",borderColor:"#7fbfff",data:[],fill:false}]},
     options:{responsive:true,maintainAspectRatio:true,animation:false,
       plugins:{legend:{labels:{color:"#e0e0e0"}}},
-      scales:{x:{ticks:{color:"#aaa"}},y:{ticks:{color:"#7fbfff"}}}},
+      scales:{x:{ticks:{display:false}},y:{ticks:{color:"#7fbfff"}}}
+    },
     plugins:[currentValuePlugin]
   });
 
@@ -225,12 +235,13 @@ function initCharts(){
   combinedChart = new Chart(ctxCombined,{
     type:"line",
     data:{labels:[],datasets:[
-      {label:"Temperature",borderColor:"#ff7f7f",data:[],fill:false,yAxisID:"y1"},
+      {label:"Temp",borderColor:"#ff7f7f",data:[],fill:false,yAxisID:"y1"},
       {label:"Pressure",borderColor:"#7fbfff",data:[],fill:false,yAxisID:"y2"}
     ]},
     options:{responsive:true,maintainAspectRatio:true,animation:false,
       plugins:{legend:{labels:{color:"#e0e0e0"}}},
-      scales:{x:{ticks:{color:"#aaa"}},y1:{ticks:{color:"#ff7f7f"}},y2:{ticks:{color:"#7fbfff"}}}},
+      scales:{x:{ticks:{display:false}},y1:{ticks:{color:"#ff7f7f"}},y2:{ticks:{color:"#7fbfff"}}}
+    },
     plugins:[currentValuePlugin]
   });
 }
@@ -248,7 +259,17 @@ async function connect(){
     characteristic=await service.getCharacteristic(characteristicUuid);
     await characteristic.startNotifications();
     characteristic.addEventListener("characteristicvaluechanged",handleData);
-    btn.textContent="Disconnect"; btn.className="connected"; btn.onclick=disconnect;
+
+    btn.textContent="Disconnect"; btn.className="connected";
+    btn.onclick=disconnect;
+
+    // Listen for disconnect
+    device.addEventListener("gattserverdisconnected",()=>{
+      btn.textContent="Connect";
+      btn.className="disconnected";
+      btn.onclick=connect;
+    });
+
   } catch(e){ console.error(e); btn.textContent="Connect"; btn.className="disconnected"; }
 }
 
@@ -258,6 +279,7 @@ async function disconnect(){
   btn.textContent="Connect"; btn.className="disconnected"; btn.onclick=connect;
 }
 
+// --- Data Handling ---
 function handleData(event){
   if(paused) return;
   const [tempStr,pressureStr]=new TextDecoder().decode(event.target.value).trim().split(",");
@@ -270,6 +292,7 @@ function handleData(event){
   chartData.pressure.push(currentPressure);
   if(chartData.labels.length>50){ chartData.labels.shift(); chartData.temp.shift(); chartData.pressure.shift(); }
 
+  // Update charts
   tempChart.data.labels=chartData.labels; tempChart.data.datasets[0].data=chartData.temp;
   tempChart.options.scales.y.min=currentTemp-2; tempChart.options.scales.y.max=currentTemp+2; tempChart.update();
 
@@ -284,6 +307,7 @@ function handleData(event){
   combinedChart.update();
 }
 
+// --- Buttons ---
 document.getElementById("connectButton").onclick=connect;
 document.getElementById("pauseResumeButton").onclick=()=>{
   paused=!paused;
@@ -291,7 +315,11 @@ document.getElementById("pauseResumeButton").onclick=()=>{
 };
 document.getElementById("resetButton").onclick=()=>{
   chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
-  [tempChart,pressureChart,combinedChart].forEach(chart=>{chart.data.labels=[];chart.data.datasets.forEach(ds=>ds.data=[]);chart.update();});
+  [tempChart,pressureChart,combinedChart].forEach(chart=>{
+    chart.data.labels=[];
+    chart.data.datasets.forEach(ds=>ds.data=[]);
+    chart.update();
+  });
 };
 document.getElementById("toggleViewButton").onclick=()=>{
   splitView=!splitView; localStorage.setItem("viewChoice",splitView?"split":"combined"); updateView();
@@ -308,9 +336,20 @@ document.getElementById("saveButton").onclick=()=>{
   const name=prompt("Enter a name for saved graph:"); if(!name) return;
   localStorage.setItem("graph_"+name,JSON.stringify(chartData));
 };
-
 document.getElementById("loadButton").onclick=()=>{showModal("load");};
 document.getElementById("deleteButton").onclick=()=>{showModal("delete");};
+
+// --- Auto-check BLE connection every second ---
+setInterval(()=>{
+  const btn=document.getElementById("connectButton");
+  if(device){
+    if(device.gatt.connected){
+      btn.textContent="Disconnect"; btn.className="connected"; btn.onclick=disconnect;
+    } else {
+      btn.textContent="Connect"; btn.className="disconnected"; btn.onclick=connect;
+    }
+  }
+},1000);
 </script>
 </body>
 </html>
