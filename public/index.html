@@ -45,11 +45,12 @@ button {
   color: white;
   background-color: #333;
 }
+#loadButton { background-color: #444; }
 #connectButton.connecting { background-color: orange; }
 #connectButton.connected { background-color: green; }
 #connectButton.disconnected { background-color: red; }
 #resetButton, #toggleViewButton { background-color: #222; }
-#saveButton { background-color: blue; }
+#saveButton { background-color: #444; }
 
 /* Toggle Switch Styles */
 .toggle-container {
@@ -175,17 +176,49 @@ button {
   </div>
 
   <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
-    <div class="canvas-container"><canvas id="tempChart"></canvas></div>
-    <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
+    <div style="width: 90%; margin: 0 auto;">
+      <div id="tempCurrentValue" style="background: #121212; color: #ff7f7f; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">Temperature: -- °C</div>
+      <div class="canvas-container"><canvas id="tempChart"></canvas></div>
+    </div>
+    <div style="width: 90%; margin: 0 auto;">
+      <div id="pressureCurrentValue" style="background: #121212; color: #7fbfff; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">Pressure: -- bar</div>
+      <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
+    </div>
   </div>
 
   <div id="combinedView" style="display:none; width:100%; align-items:center;">
-    <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
+    <div style="width: 90%; margin: 0 auto;">
+      <div id="combinedCurrentValue" style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+        <span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
+      </div>
+      <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
+    </div>
+  </div>
+
+  <div id="gaugeView" style="display:none; width:100%; align-items:center;">
+    <div style="width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+        <!-- Temperature Gauge -->
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <div style="position: relative; width: 280px; height: 280px;">
+            <canvas id="tempGauge" width="280" height="280" style="border-radius: 50%; background: #121212;"></canvas>
+          </div>
+        </div>
+        
+        <!-- Pressure Gauge -->
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <div style="position: relative; width: 280px; height: 280px;">
+            <canvas id="pressureGauge" width="280" height="280" style="border-radius: 50%; background: #121212;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="button-row">
     <button id="pauseResumeButton">Pause</button>
     <button id="toggleViewButton">Toggle View</button>
+    <button id="toggleGaugeButton">Toggle Gauges</button>
     <button id="resetButton">Reset</button>
   </div>
 
@@ -239,6 +272,7 @@ let tempChart, pressureChart, combinedChart;
 let paused = false;
 let currentTemp = 0, currentPressure = 0;
 let splitView = true;
+let gaugeView = false;
 let secondsCounter = 0;
 let chartData = { labels: [], temp: [], pressure: [] };
 let modalAction = "";
@@ -304,6 +338,9 @@ confirmButton.onclick = () => {
       combinedChart.data.datasets[0].data=chartData.temp;
       combinedChart.data.datasets[1].data=chartData.pressure;
       combinedChart.update();
+  
+  // Update gauges if in gauge view
+  updateGauges();
     }
   } else if(modalAction==="delete"){
     localStorage.removeItem(key);
@@ -326,26 +363,8 @@ function fixCanvasDPI(canvas) {
 const currentValuePlugin = {
   id:'currentValue',
   afterDraw(chart){
-    if(chart.data.datasets.length===0) return;
-    const ctx = chart.ctx;
-    chart.data.datasets.forEach((ds,i)=>{
-      if(ds.data.length===0) return;
-      const latest = ds.data[ds.data.length-1];
-      const x = chart.chartArea.left + 5;
-      ctx.save();
-      ctx.fillStyle = ds.borderColor;
-      ctx.font = "bold 14px Arial";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      let unit = "";
-      if(ds.label.includes("Temp")){
-        unit = ds.label.includes("°F") ? "°F" : "°C";
-      } else if(ds.label.includes("Pressure")){
-        unit = ds.label.includes("PSI") ? " PSI" : " bar";
-      }
-      ctx.fillText(ds.label + ": " + latest.toFixed(2) + unit, x, 5 + i*18);
-      ctx.restore();
-    });
+    // Plugin disabled - labels are now shown above the graphs
+    return;
   }
 };
 
@@ -410,6 +429,136 @@ function initCharts(){
 }
 
 initCharts();
+
+// --- Gauge Drawing Functions ---
+function drawGauge(canvas, value, min, max, unit, color) {
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 100; // Back to 100 from 120
+  
+  // Clear canvas with page background color
+  ctx.fillStyle = '#121212';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw outer circle
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius + 15, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  // Draw gauge background arc (270 degrees)
+  const startAngle = 0.75 * Math.PI; // Start at 135 degrees
+  const endAngle = 2.25 * Math.PI;   // End at 405 degrees (270 degree arc)
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 20;
+  ctx.stroke();
+  
+  // Calculate value angle
+  const valueRange = max - min;
+  const normalizedValue = Math.max(0, Math.min(1, (value - min) / valueRange));
+  const valueAngle = startAngle + normalizedValue * (endAngle - startAngle);
+  
+  // Draw value arc
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, startAngle, valueAngle);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 20;
+  ctx.stroke();
+  
+  // Draw tick marks and labels
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = '#999';
+  ctx.font = '14px Arial'; // Back to 14px from 16px
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  for(let i = 0; i <= 10; i++) {
+    const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
+    const innerRadius = radius - 20;
+    const outerRadius = radius + 10;
+    const labelRadius = radius + 30; // Back to 30 from 35
+    
+    // Draw tick mark
+    ctx.beginPath();
+    ctx.moveTo(
+      centerX + Math.cos(tickAngle) * innerRadius,
+      centerY + Math.sin(tickAngle) * innerRadius
+    );
+    ctx.lineTo(
+      centerX + Math.cos(tickAngle) * outerRadius,
+      centerY + Math.sin(tickAngle) * outerRadius
+    );
+    ctx.stroke();
+    
+    // Draw tick value label
+    const tickValue = min + (i / 10) * (max - min);
+    const labelX = centerX + Math.cos(tickAngle) * labelRadius;
+    const labelY = centerY + Math.sin(tickAngle) * labelRadius;
+    ctx.fillText(Math.round(tickValue).toString(), labelX, labelY);
+  }
+  
+  // Draw center value
+  ctx.fillStyle = color;
+  ctx.font = 'bold 28px Arial'; // Back to 28px from 32px
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(value.toFixed(1), centerX, centerY - 15);
+  
+  // Draw unit
+  ctx.fillStyle = '#ccc';
+  ctx.font = '18px Arial'; // Back to 18px from 20px
+  ctx.fillText(unit, centerX, centerY + 15);
+}
+
+function updateGauges() {
+  if(!gaugeView) return;
+  
+  // Determine units and values
+  const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+  const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+  
+  let displayTemp = currentTemp;
+  let displayPressure = currentPressure;
+  
+  // Convert pressure if needed
+  if(currentPressureUnit === "PSI") {
+    displayPressure = barToPsi(currentPressure);
+  }
+  
+  // Set gauge ranges according to specifications
+  let tempMin, tempMax;
+  if(currentTempUnit === "F") {
+    tempMin = 0; 
+    tempMax = 302; // Fahrenheit: 0°F to 302°F
+  } else {
+    tempMin = 0; 
+    tempMax = 150; // Celsius: 0°C to 150°C
+  }
+  
+  let pressureMin, pressureMax;
+  if(currentPressureUnit === "PSI") {
+    pressureMin = 0; 
+    pressureMax = 262; // PSI: 0 to 262 PSI
+  } else {
+    pressureMin = 0; 
+    pressureMax = 18; // Bar: 0 to 18 bar
+  }
+  
+  // Draw gauges
+  const tempCanvas = document.getElementById('tempGauge');
+  const pressureCanvas = document.getElementById('pressureGauge');
+  
+  if(tempCanvas && pressureCanvas) {
+    drawGauge(tempCanvas, displayTemp, tempMin, tempMax, tempUnit, '#ff7f7f');
+    drawGauge(pressureCanvas, displayPressure, pressureMin, pressureMax, pressureUnit, '#7fbfff');
+  }
+}
 
 // --- Helper function to update temperature toggle switch ---
 function updateTempToggleSwitch(unit) {
@@ -666,8 +815,8 @@ document.getElementById("tempToggle").onclick = async () => {
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
-  // Also update the load button color for immediate feedback
-  document.getElementById("loadButton").style.backgroundColor = tempToggleActive ? "green" : "yellow";
+  // Update gauges if in gauge view
+  updateGauges();
   
   await sendData(command);
 };
@@ -688,8 +837,8 @@ document.getElementById("pressureToggle").onclick = async () => {
   const newUnit = pressureToggleActive ? "Bar" : "PSI";
   updatePressureToggleSwitch(newUnit);
   
-  // Also update the delete button color for immediate feedback
-  document.getElementById("deleteButton").style.backgroundColor = pressureToggleActive ? "blue" : "purple";
+  // Update gauges if in gauge view
+  updateGauges();
   
   await sendData(command);
 };
@@ -701,24 +850,75 @@ document.getElementById("pauseResumeButton").onclick=()=>{
 
 document.getElementById("resetButton").onclick=()=>{
   chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
+  
+  // Reset current temperature and pressure values
+  currentTemp = 0;
+  currentPressure = 0;
+  
+  // Reset charts
   [tempChart,pressureChart,combinedChart].forEach(chart=>{
     chart.data.labels=[];
     chart.data.datasets.forEach(ds=>ds.data=[]);
     chart.update();
   });
+  
+  // Reset current value displays
+  const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+  const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+  
+  document.getElementById("tempCurrentValue").textContent = `Temperature: -- ${tempUnit}`;
+  document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
+  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
+  
+  // Reset gauges
+  updateGauges();
 };
 
 document.getElementById("toggleViewButton").onclick=()=>{
-  splitView=!splitView; localStorage.setItem("viewChoice",splitView?"split":"combined"); updateView();
+  if(!gaugeView) {
+    splitView=!splitView; 
+    localStorage.setItem("viewChoice",splitView?"split":"combined"); 
+  }
+  updateView();
+};
+
+document.getElementById("toggleGaugeButton").onclick=()=>{
+  gaugeView=!gaugeView;
+  localStorage.setItem("gaugeMode", gaugeView?"true":"false");
+  updateView();
+  // Update gauges when switching to gauge view
+  if(gaugeView) {
+    setTimeout(() => {
+      updateGauges();
+    }, 50);
+  }
 };
 
 function updateView(){
-  document.getElementById("splitView").style.display=splitView?"flex":"none";
-  document.getElementById("combinedView").style.display=splitView?"none":"flex";
+  if(gaugeView) {
+    document.getElementById("splitView").style.display="none";
+    document.getElementById("combinedView").style.display="none";
+    document.getElementById("gaugeView").style.display="flex";
+    document.getElementById("toggleViewButton").textContent="Chart/Combined";
+    document.getElementById("toggleGaugeButton").textContent="Charts";
+  } else {
+    document.getElementById("splitView").style.display=splitView?"flex":"none";
+    document.getElementById("combinedView").style.display=splitView?"none":"flex";
+    document.getElementById("gaugeView").style.display="none";
+    document.getElementById("toggleViewButton").textContent="Toggle View";
+    document.getElementById("toggleGaugeButton").textContent="Gauges";
+  }
 }
 
+// Load saved preferences
 if(localStorage.getItem("viewChoice")==="combined") splitView=false;
+if(localStorage.getItem("gaugeMode")==="true") gaugeView=true;
 updateView();
+
+// Initialize gauges with default values
+setTimeout(() => {
+  updateGauges();
+}, 100);
 
 document.getElementById("saveButton").onclick=()=>{
   const name=prompt("Enter a name for saved graph:"); if(!name) return;
@@ -742,20 +942,16 @@ function handleData(event){
   if(dataParts.length >= 3){
     const thirdValue = dataParts[2].trim();
     if(thirdValue === "C"){
-      document.getElementById("loadButton").style.backgroundColor = "green";
       updateTempToggleSwitch("C");
       isFahrenheit = false;
     } else if(thirdValue === "F"){
-      document.getElementById("loadButton").style.backgroundColor = "yellow";
       updateTempToggleSwitch("F");
       isFahrenheit = true;
     } else {
-      document.getElementById("loadButton").style.backgroundColor = "#333";
       updateTempToggleSwitch("C");
       isFahrenheit = false;
     }
   } else {
-    document.getElementById("loadButton").style.backgroundColor = "#333";
     updateTempToggleSwitch("C");
     isFahrenheit = false;
   }
@@ -763,21 +959,17 @@ function handleData(event){
   if(dataParts.length >= 4){
     const fourthValue = dataParts[3].trim();
     if(fourthValue === "bar"){
-      document.getElementById("deleteButton").style.backgroundColor = "blue";
       updatePressureToggleSwitch("Bar");
       isPSI = false;
     } else if(fourthValue === "psi"){
-      document.getElementById("deleteButton").style.backgroundColor = "purple";
       updatePressureToggleSwitch("PSI");
       isPSI = true;
     } else {
       // Don't change toggle state if we get unknown data
-      document.getElementById("deleteButton").style.backgroundColor = "#333";
       isPSI = (currentPressureUnit === "PSI");
     }
   } else {
     // Don't change toggle state if no data received - keep current state
-    document.getElementById("deleteButton").style.backgroundColor = "#333";
     isPSI = (currentPressureUnit === "PSI");
   }
   
@@ -808,15 +1000,20 @@ function handleData(event){
     const padding = Math.max(tempRange * 0.1, 1); // 10% padding or minimum 1 degree
     tempChart.options.scales.y.min = minTemp - padding;
     tempChart.options.scales.y.max = maxTemp + padding;
+    
+    // Update temperature current value label
+    document.getElementById("tempCurrentValue").textContent = `Temperature: ${currentTemp.toFixed(2)} ${tempUnit}`;
   }
   tempChart.update();
 
   // Update pressure chart with appropriate unit
   const pressureUnit = isPSI ? "PSI" : "bar";
   let displayPressure = chartData.pressure.slice(); // Copy the array
+  let displayCurrentPressure = currentPressure;
   if(isPSI) {
     // Convert bar to PSI for display
     displayPressure = displayPressure.map(p => barToPsi(p));
+    displayCurrentPressure = barToPsi(currentPressure);
   }
   
   pressureChart.data.labels=chartData.labels; 
@@ -830,13 +1027,18 @@ function handleData(event){
     const padding = Math.max(pressureRange * 0.1, isPSI ? 1.45 : 0.1); // Different padding for different units
     pressureChart.options.scales.y.min = Math.max(0, minPressure - padding);
     pressureChart.options.scales.y.max = maxPressure + padding;
+    
+    // Update pressure current value label
+    document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayCurrentPressure.toFixed(2)} ${pressureUnit}`;
   }
   pressureChart.update();
 
   // Update combined chart
   let combinedDisplayPressure = chartData.pressure.slice();
+  let combinedDisplayCurrentPressure = currentPressure;
   if(isPSI) {
     combinedDisplayPressure = combinedDisplayPressure.map(p => barToPsi(p));
+    combinedDisplayCurrentPressure = barToPsi(currentPressure);
   }
   
   combinedChart.data.labels=chartData.labels;
@@ -859,8 +1061,14 @@ function handleData(event){
     const pressurePadding = Math.max(pressureRange * 0.1, isPSI ? 1.45 : 0.1);
     combinedChart.options.scales.y2.min = Math.max(0, minPressure - pressurePadding);
     combinedChart.options.scales.y2.max = maxPressure + pressurePadding;
+    
+    // Update combined current value label
+    document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${currentTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${combinedDisplayCurrentPressure.toFixed(2)} ${pressureUnit}</span>`;
   }
   combinedChart.update();
+  
+  // Update gauges with new data
+  updateGauges();
 }
 
 // Initialize toggles as disabled on page load
