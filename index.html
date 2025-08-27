@@ -168,6 +168,83 @@ button {
 #settingsPage input, #settingsPage select { width: 100%; padding: 5px; border-radius: 5px; margin-bottom: 15px; background:#333; color:#fff; border:none; }
 #settingsPage button { background-color: #444; margin-top: 20px; }
 
+/* Slider styles */
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px auto;
+  padding: 20px;
+  background: #1e1e1e;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+}
+
+.slider-label {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #e0e0e0;
+}
+
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+}
+
+.slider-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #4caf50;
+  min-width: 50px;
+  text-align: center;
+}
+
+#valueSlider {
+  flex: 1;
+  height: 8px;
+  border-radius: 5px;
+  background: #333;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#valueSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+  border: 2px solid #2e7d32;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+#valueSlider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+  border: 2px solid #2e7d32;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.slider-range {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #999;
+}
+
 /* Hide main app initially */
 .main-app { display: none; }
 </style>
@@ -259,6 +336,21 @@ button {
     <button id="loadButton">Load</button>
     <button id="deleteButton">Delete</button>
     <button id="settingsButton">Settings</button>
+  </div>
+
+  <!-- Slider Control -->
+  <div class="slider-container">
+    <div class="slider-label">Value Control</div>
+    <div class="slider-wrapper">
+      <span class="slider-value">0</span>
+      <input type="range" id="valueSlider" min="0" max="250" value="0">
+      <span class="slider-value">250</span>
+    </div>
+    <div class="slider-range">
+      <span>Min: 0</span>
+      <span id="currentSliderValue">Current: 0</span>
+      <span>Max: 250</span>
+    </div>
   </div>
 </div>
 
@@ -399,6 +491,9 @@ let currentPressureUnit = "Bar";
 let tempToggleActive = false;
 let pressureToggleActive = false;
 
+// --- Slider Variables ---
+let sliderValue = 0;
+
 // --- SPA Navigation ---
 const graphPage = document.getElementById("graphPage");
 const settingsPage = document.getElementById("settingsPage");
@@ -412,6 +507,21 @@ document.getElementById("backButton").onclick = () => {
   settingsPage.style.display = "none";
   graphPage.style.display = "block";
 };
+
+// --- Slider Functionality ---
+const slider = document.getElementById("valueSlider");
+const currentValueDisplay = document.getElementById("currentSliderValue");
+
+slider.addEventListener("input", function() {
+  sliderValue = parseInt(this.value);
+  currentValueDisplay.textContent = `Current: ${sliderValue}`;
+  
+  // You can add additional functionality here when the slider value changes
+  console.log("Slider value changed to:", sliderValue);
+  
+  // Example: Send slider value to Bluetooth device if connected
+  // sendData(`SLIDER:${sliderValue}`);
+});
 
 // --- Modal ---
 const modal = document.getElementById("popupModal");
@@ -640,38 +750,6 @@ function updateGauges() {
     const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
     
     const tempCanvas = document.getElementById('tempGauge');
-    const pressureCanvas = document.getElementById('pressureGauge');
-    
-    if(tempCanvas && pressureCanvas) {
-      drawGauge(tempCanvas, null, 0, 100, tempUnit, '#ff7f7f');
-      drawGauge(pressureCanvas, null, 0, 100, pressureUnit, '#7fbfff');
-    }
-    return;
-  }
-  
-  if(currentPressureUnit === "PSI") {
-    displayPressure = barToPsi(currentPressure);
-  }
-  
-  let tempMin, tempMax;
-  if(currentTempUnit === "F") {
-    tempMin = 0; 
-    tempMax = 302;
-  } else {
-    tempMin = 0; 
-    tempMax = 150;
-  }
-  
-  let pressureMin, pressureMax;
-  if(currentPressureUnit === "PSI") {
-    pressureMin = 0; 
-    pressureMax = 262;
-  } else {
-    pressureMin = 0; 
-    pressureMax = 18;
-  }
-  
-  const tempCanvas = document.getElementById('tempGauge');
   const pressureCanvas = document.getElementById('pressureGauge');
   
   if(tempCanvas && pressureCanvas) {
@@ -1177,4 +1255,36 @@ document.getElementById("applySettings").onclick = ()=>{
 }
 </script>
 </body>
-</html>
+</html>getElementById('tempGauge');
+    const pressureCanvas = document.getElementById('pressureGauge');
+    
+    if(tempCanvas && pressureCanvas) {
+      drawGauge(tempCanvas, null, 0, 100, tempUnit, '#ff7f7f');
+      drawGauge(pressureCanvas, null, 0, 100, pressureUnit, '#7fbfff');
+    }
+    return;
+  }
+  
+  if(currentPressureUnit === "PSI") {
+    displayPressure = barToPsi(currentPressure);
+  }
+  
+  let tempMin, tempMax;
+  if(currentTempUnit === "F") {
+    tempMin = 0; 
+    tempMax = 302;
+  } else {
+    tempMin = 0; 
+    tempMax = 150;
+  }
+  
+  let pressureMin, pressureMax;
+  if(currentPressureUnit === "PSI") {
+    pressureMin = 0; 
+    pressureMax = 262;
+  } else {
+    pressureMin = 0; 
+    pressureMax = 18;
+  }
+  
+  const tempCanvas = document.
