@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Bluetooth API Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #e4e4e7;
+        }
+
+        .container {
+            background: rgba(30, 30, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .icon.success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            animation: pulse 2s infinite;
+        }
+
+        .icon.error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .icon.warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            animation: bounce 1s ease-in-out;
+        }
+
+        .icon.loading {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            color: #f8fafc;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            font-weight: 300;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .status {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #065f46, #047857);
+            color: #a7f3d0;
+            border: 2px solid #10b981;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #7f1d1d, #991b1b);
+            color: #fecaca;
+            border: 2px solid #ef4444;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, #78350f, #92400e);
+            color: #fed7aa;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
+        }
+
+        .status.loading {
+            background: linear-gradient(135deg, #1e3a8a, #1e40af);
+            color: #93c5fd;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .browser-info {
+            background: rgba(55, 65, 81, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            color: #9ca3af;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions {
+            text-align: left;
+            background: rgba(17, 24, 39, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border-left: 5px solid #3b82f6;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions h3 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            color: #d1d5db;
+        }
+
+        .code {
+            background: #111827;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-link {
+            background: #111827;
+            color: #3b82f6;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            cursor: pointer;
+            user-select: all;
+            position: relative;
+        }
+
+        .code-link:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .code-link::after {
+            content: "📋 Click to copy";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .code-link:hover::after {
+            opacity: 1;
+        }
+
+        .copy-success {
+            background: rgba(16, 185, 129, 0.1) !important;
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+
+        .note {
+            background: rgba(30, 58, 138, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #3b82f6;
+            color: #93c5fd;
+            font-style: italic;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .redirect-message {
+            background: linear-gradient(135deg, #065f46, #047857);
+            color: #a7f3d0;
+            border: 2px solid #10b981;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .countdown {
+            font-size: 2em;
+            font-weight: bold;
+            color: #10b981;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .instructions ol {
+                margin-left: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="icon" class="icon loading">
+            🔍
+        </div>
+        
+        <h1>Web Bluetooth API Checker</h1>
+        
+        <div id="browser-info" class="browser-info">
+            Detecting browser...
+        </div>
+        
+        <div id="status" class="status loading">
+            Checking Web Bluetooth API availability...
+        </div>
+        
+        <div id="redirect-message" class="redirect-message" style="display: none;">
+            <!-- Redirect message will be populated by JavaScript -->
+        </div>
+        
+        <div id="instructions" class="instructions" style="display: none;">
+            <!-- Instructions will be populated by JavaScript -->
+        </div>
+        
+        <button id="retry-btn" class="retry-btn" onclick="checkBluetoothSupport()" style="display: none;">
+            🔄 Check Again
+        </button>
+    </div>
+
+    <script>
+        // Browser detection
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
+            
+            let browser = 'Unknown';
+            let version = '';
+            let os = '';
+            
+            // Detect OS
+            if (platform.indexOf('Mac') !== -1) {
+                os = 'macOS';
+            } else if (platform.indexOf('Win') !== -1) {
+                os = 'Windows';
+            } else if (platform.indexOf('Linux') !== -1) {
+                os = 'Linux';
+            } else if (/Android/i.test(ua)) {
+                os = 'Android';
+            } else if (/iPhone|iPad|iPod/i.test(ua)) {
+                os = 'iOS';
+            }
+            
+            // Detect browser
+            if (/Chrome/i.test(ua) && !/Edge/i.test(ua)) {
+                browser = 'Chrome';
+                version = ua.match(/Chrome\/([0-9]+)/)?.[1] || '';
+            } else if (/Firefox/i.test(ua)) {
+                browser = 'Firefox';
+                version = ua.match(/Firefox\/([0-9]+)/)?.[1] || '';
+            } else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) {
+                browser = 'Safari';
+                version = ua.match(/Version\/([0-9]+)/)?.[1] || '';
+            } else if (/Edge/i.test(ua)) {
+                browser = 'Edge';
+                version = ua.match(/Edge\/([0-9]+)/)?.[1] || '';
+            } else if (/Opera/i.test(ua)) {
+                browser = 'Opera';
+                version = ua.match(/Opera\/([0-9]+)/)?.[1] || '';
+            }
+            
+            return { browser, version, os, userAgent: ua };
+        }
+        
+        function displayBrowserInfo() {
+            const info = getBrowserInfo();
+            document.getElementById('browser-info').innerHTML = 
+                `${info.browser} ${info.version} on ${info.os}`;
+        }
+        
+        function redirectToIndex(delay = 3000) {
+            const statusDiv = document.getElementById('status');
+            const iconDiv = document.getElementById('icon');
+            const redirectDiv = document.getElementById('redirect-message');
+            
+            // Update status
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = '✅ Web Bluetooth API is available and functional!';
+            iconDiv.className = 'icon success';
+            iconDiv.innerHTML = '🎉';
+            
+            // Show redirect message with countdown
+            redirectDiv.style.display = 'block';
+            let countdown = Math.ceil(delay / 1000);
+            
+            redirectDiv.innerHTML = `
+                <div>🚀 Redirecting to main application...</div>
+                <div class="countdown">${countdown}</div>
+            `;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    redirectDiv.querySelector('.countdown').textContent = countdown;
+                } else {
+                    clearInterval(countdownInterval);
+                    redirectDiv.innerHTML = '<div>🚀 Redirecting now...</div>';
+                }
+            }, 1000);
+            
+            // Perform redirect
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, delay);
+        }
+        
+        function getInstructions(browserInfo) {
+            const { browser, os } = browserInfo;
+            
+            if (browser === 'Chrome') {
+                return {
+                    title: '🔧 Enable Web Bluetooth in Chrome',
+                    steps: [
+                        'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\', this)">chrome://flags/#brave-web-bluetooth-api</span>',
+                        'Set "Web Bluetooth API" to "Enabled"',
+                        'Also check: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#experimental-web-platform-features\', this)">chrome://flags/#experimental-web-platform-features</span> and enable if needed',
+                        'Restart Chrome',
+                        'Make sure you\'re on a secure connection (HTTPS)'
+                    ],
+                    note: 'Web Bluetooth requires Chrome 56+ and HTTPS connection.'
+                };
+            } else if (browser === 'Edge') {
+                return {
+                    title: '🔧 Enable Web Bluetooth in Edge',
+                    steps: [
+                        'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'edge://flags/#brave-web-bluetooth-api\', this)">edge://flags/#brave-web-bluetooth-api</span>',
+                        'Set "Web Bluetooth API" to "Enabled"',
+                        'Also check: <span class="code-link" onclick="copyToClipboard(\'edge://flags/#experimental-web-platform-features\', this)">edge://flags/#experimental-web-platform-features</span> and enable if needed',
+                        'Restart Edge',
+                        'Ensure you\'re on a secure connection (HTTPS)'
+                    ],
+                    note: 'Web Bluetooth requires Edge 79+ and HTTPS connection.'
+                };
+            } else if (browser === 'Firefox') {
+                return {
+                    title: '⚠️ Firefox Web Bluetooth Support',
+                    steps: [
+                        'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'about:config\', this)">about:config</span>',
+                        'Search for <span class="code">dom.bluetooth.webbluetooth.enabled</span>',
+                        'Double-click to set it to <span class="code">true</span>',
+                        'Restart Firefox'
+                    ],
+                    note: 'Firefox has limited Web Bluetooth support and it\'s experimental. Consider using Chrome or Edge for better compatibility.'
+                };
+            } else if (browser === 'Safari' && os === 'macOS') {
+                return {
+                    title: '❌ Safari on macOS - Web Bluetooth Not Supported',
+                    steps: [
+                        'Safari on macOS does not support Web Bluetooth API',
+                        'Apple has not implemented this feature in Safari',
+                        'Switch to Chrome, Firefox, or Edge for Web Bluetooth functionality',
+                        'Download Chrome from <a href="https://chrome.google.com" class="code-link" target="_blank" rel="noopener">chrome.google.com</a>',
+                        'Or download Edge from <a href="https://microsoft.com/edge" class="code-link" target="_blank" rel="noopener">microsoft.com/edge</a>'
+                    ],
+                    note: 'Safari prioritizes privacy and battery life over experimental web APIs. Web Bluetooth is not available and likely won\'t be added in the near future.'
+                };
+            } else if (browser === 'Safari' && os === 'iOS') {
+                return {
+                    title: '📱 Safari on iOS - Web Bluetooth Not Supported',
+                    steps: [
+                        'Safari on iOS does not support Web Bluetooth API',
+                        'iOS Safari has strict limitations on hardware access',
+                        'Consider using a native iOS app for Bluetooth functionality',
+                        'Or use Chrome/Edge on a desktop/laptop computer'
+                    ],
+                    note: 'iOS restricts web access to Bluetooth for security and privacy reasons.'
+                };
+            } else if (browser === 'Opera') {
+                return {
+                    title: '🔧 Enable Web Bluetooth in Opera',
+                    steps: [
+                        'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'opera://flags/#brave-web-bluetooth-api\', this)">opera://flags/#brave-web-bluetooth-api</span>',
+                        'Set "Web Bluetooth API" to "Enabled"',
+                        'Also check: <span class="code-link" onclick="copyToClipboard(\'opera://flags/#experimental-web-platform-features\', this)">opera://flags/#experimental-web-platform-features</span> and enable if needed',
+                        'Restart Opera',
+                        'Ensure you\'re on a secure connection (HTTPS)'
+                    ],
+                    note: 'Opera is based on Chromium and supports Web Bluetooth with proper flags enabled.'
+                };
+            } else {
+                return {
+                    title: '❓ Unknown Browser - Web Bluetooth Support',
+                    steps: [
+                        'Your browser may not support Web Bluetooth API',
+                        'Try switching to Chrome, Edge, or Firefox',
+                        'If using a Chromium-based browser, try: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\', this)">chrome://flags/#brave-web-bluetooth-api</span>',
+                        'Ensure you\'re on a secure connection (HTTPS)',
+                        'Check if your browser has experimental flags to enable Web Bluetooth'
+                    ],
+                    note: 'For best compatibility, use Chrome or Edge with the latest version.'
+                };
+            }
+        }
+        
+        function displayInstructions(instructions) {
+            const instructionsDiv = document.getElementById('instructions');
+            instructionsDiv.innerHTML = `
+                <h3>${instructions.title}</h3>
+                <ol>
+                    ${instructions.steps.map(step => `<li>${step}</li>`).join('')}
+                </ol>
+                <div class="note">
+                    <strong>Note:</strong> ${instructions.note}
+                </div>
+            `;
+            instructionsDiv.style.display = 'block';
+        }
+        
+        function checkBluetoothSupport() {
+            const browserInfo = getBrowserInfo();
+            const statusDiv = document.getElementById('status');
+            const iconDiv = document.getElementById('icon');
+            const retryBtn = document.getElementById('retry-btn');
+            const instructionsDiv = document.getElementById('instructions');
+            const redirectDiv = document.getElementById('redirect-message');
+            
+            // Reset state
+            instructionsDiv.style.display = 'none';
+            retryBtn.style.display = 'none';
+            redirectDiv.style.display = 'none';
+            
+            // Show loading state
+            statusDiv.className = 'status loading';
+            statusDiv.innerHTML = 'Checking Web Bluetooth API availability...';
+            iconDiv.className = 'icon loading';
+            iconDiv.innerHTML = '🔍';
+            
+            // Check if Web Bluetooth API exists
+            if ('bluetooth' in navigator) {
+                // API exists, now test if it's actually functional
+                testBluetoothFunctionality()
+                    .then((isWorking) => {
+                        if (isWorking) {
+                            // Web Bluetooth is fully functional - redirect immediately
+                            redirectToIndex(2000); // 2 second delay to show success message
+                        } else {
+                            // API exists but is disabled/non-functional
+                            statusDiv.className = 'status warning';
+                            statusDiv.innerHTML = '⚠️ Web Bluetooth API exists but appears to be disabled';
+                            iconDiv.className = 'icon warning';
+                            iconDiv.innerHTML = '⚠️';
+                            
+                            const instructions = getInstructions(browserInfo);
+                            displayInstructions(instructions);
+                            retryBtn.style.display = 'inline-block';
+                        }
+                    })
+                    .catch(() => {
+                        // Error occurred during testing - likely disabled
+                        statusDiv.className = 'status warning';
+                        statusDiv.innerHTML = '⚠️ Web Bluetooth API exists but is not properly enabled';
+                        iconDiv.className = 'icon warning';
+                        iconDiv.innerHTML = '⚠️';
+                        
+                        const instructions = getInstructions(browserInfo);
+                        displayInstructions(instructions);
+                        retryBtn.style.display = 'inline-block';
+                    });
+            } else {
+                // Web Bluetooth is not supported at all
+                statusDiv.className = 'status error';
+                iconDiv.className = 'icon error';
+                iconDiv.innerHTML = '❌';
+                
+                const instructions = getInstructions(browserInfo);
+                
+                if (browserInfo.browser === 'Safari') {
+                    statusDiv.innerHTML = '❌ Web Bluetooth API is not supported in Safari';
+                } else {
+                    statusDiv.innerHTML = '❌ Web Bluetooth API is not supported in this browser';
+                }
+                
+                displayInstructions(instructions);
+                retryBtn.style.display = 'inline-block';
+            }
+        }
+        
+        // Test if Bluetooth API is actually functional
+        async function testBluetoothFunctionality() {
+            try {
+                // Try to get availability - this will fail if Bluetooth is disabled
+                const available = await navigator.bluetooth.getAvailability();
+                return available;
+            } catch (error) {
+                // If getAvailability fails, try a different approach
+                try {
+                    // This will throw if Bluetooth is completely disabled
+                    await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true
+                    });
+                    return true; // This shouldn't happen in testing, but if it does, it works
+                } catch (requestError) {
+                    // Check the specific error type
+                    if (requestError.name === 'NotFoundError' || requestError.name === 'NotAllowedError') {
+                        // These errors mean the API is working but no device was selected or permission denied
+                        // which is expected in our test
+                        return true;
+                    } else if (requestError.name === 'NotSupportedError' || 
+                               requestError.message.includes('not supported') ||
+                               requestError.message.includes('disabled')) {
+                        // API is disabled or not supported
+                        return false;
+                    }
+                    // For other errors, assume it's working but something else went wrong
+                    return true;
+                }
+            }
+        }
+        
+        // Copy to clipboard function
+        async function copyToClipboard(text, element) {
+            try {
+                await navigator.clipboard.writeText(text);
+                
+                // Visual feedback
+                element.classList.add('copy-success');
+                const originalText = element.textContent;
+                element.textContent = '✓ Copied!';
+                
+                setTimeout(() => {
+                    element.classList.remove('copy-success');
+                    element.textContent = originalText;
+                }, 2000);
+                
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Visual feedback
+                element.classList.add('copy-success');
+                const originalText = element.textContent;
+                element.textContent = '✓ Copied!';
+                
+                setTimeout(() => {
+                    element.classList.remove('copy-success');
+                    element.textContent = originalText;
+                }, 2000);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            displayBrowserInfo();
+            checkBluetoothSupport();
+        });
+    </script>
+</body>
+</html>
