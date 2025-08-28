@@ -211,27 +211,6 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
         }
 
-        .code-link::after {
-            content: "📋 Click to copy";
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7em;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .code-link:hover::after {
-            opacity: 1;
-        }
-
         .copy-success {
             background: rgba(16, 185, 129, 0.1) !important;
             border-color: #10b981 !important;
@@ -268,24 +247,6 @@
             box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
         }
 
-        .redirect-message {
-            background: linear-gradient(135deg, #065f46, #047857);
-            color: #a7f3d0;
-            border: 2px solid #10b981;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            font-size: 1.1em;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
-        }
-
-        .countdown {
-            font-size: 2em;
-            font-weight: bold;
-            color: #10b981;
-            margin: 10px 0;
-        }
-
         @media (max-width: 600px) {
             .container {
                 padding: 30px 20px;
@@ -309,16 +270,12 @@
         
         <h1>Web Bluetooth API Checker</h1>
         
-        <div id="browser-info" class="browser-info">
+        <div id="browser-info" class="browser-info" style="display: none;">
             Detecting browser...
         </div>
         
-        <div id="status" class="status loading">
+        <div id="status" class="status loading" style="display: none;">
             Checking Web Bluetooth API availability...
-        </div>
-        
-        <div id="redirect-message" class="redirect-message" style="display: none;">
-            <!-- Redirect message will be populated by JavaScript -->
         </div>
         
         <div id="instructions" class="instructions" style="display: none;">
@@ -376,44 +333,13 @@
         
         function displayBrowserInfo() {
             const info = getBrowserInfo();
-            document.getElementById('browser-info').innerHTML = 
-                `${info.browser} ${info.version} on ${info.os}`;
+            const browserInfoDiv = document.getElementById('browser-info');
+            browserInfoDiv.innerHTML = `${info.browser} ${info.version} on ${info.os}`;
+            browserInfoDiv.style.display = 'block';
         }
         
-        function redirectToIndex(delay = 3000) {
-            const statusDiv = document.getElementById('status');
-            const iconDiv = document.getElementById('icon');
-            const redirectDiv = document.getElementById('redirect-message');
-            
-            // Update status
-            statusDiv.className = 'status success';
-            statusDiv.innerHTML = '✅ Web Bluetooth API is available and functional!';
-            iconDiv.className = 'icon success';
-            iconDiv.innerHTML = '🎉';
-            
-            // Show redirect message with countdown
-            redirectDiv.style.display = 'block';
-            let countdown = Math.ceil(delay / 1000);
-            
-            redirectDiv.innerHTML = `
-                <div>🚀 Redirecting to main application...</div>
-                <div class="countdown">${countdown}</div>
-            `;
-            
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    redirectDiv.querySelector('.countdown').textContent = countdown;
-                } else {
-                    clearInterval(countdownInterval);
-                    redirectDiv.innerHTML = '<div>🚀 Redirecting now...</div>';
-                }
-            }, 1000);
-            
-            // Perform redirect
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, delay);
+        function redirectToIndex() {
+            window.location.href = 'index.html';
         }
         
         function getInstructions(browserInfo) {
@@ -426,8 +352,7 @@
                         'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\', this)">chrome://flags/#brave-web-bluetooth-api</span>',
                         'Set "Web Bluetooth API" to "Enabled"',
                         'Also check: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#experimental-web-platform-features\', this)">chrome://flags/#experimental-web-platform-features</span> and enable if needed',
-                        'Restart Chrome',
-                        'Make sure you\'re on a secure connection (HTTPS)'
+                        'Restart Chrome'
                     ],
                     note: 'Web Bluetooth requires Chrome 56+ and HTTPS connection.'
                 };
@@ -438,8 +363,7 @@
                         'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'edge://flags/#brave-web-bluetooth-api\', this)">edge://flags/#brave-web-bluetooth-api</span>',
                         'Set "Web Bluetooth API" to "Enabled"',
                         'Also check: <span class="code-link" onclick="copyToClipboard(\'edge://flags/#experimental-web-platform-features\', this)">edge://flags/#experimental-web-platform-features</span> and enable if needed',
-                        'Restart Edge',
-                        'Ensure you\'re on a secure connection (HTTPS)'
+                        'Restart Edge'
                     ],
                     note: 'Web Bluetooth requires Edge 79+ and HTTPS connection.'
                 };
@@ -461,8 +385,7 @@
                         'Safari on macOS does not support Web Bluetooth API',
                         'Apple has not implemented this feature in Safari',
                         'Switch to Chrome, Firefox, or Edge for Web Bluetooth functionality',
-                        'Download Chrome from <a href="https://chrome.google.com" class="code-link" target="_blank" rel="noopener">chrome.google.com</a>',
-                        'Or download Edge from <a href="https://microsoft.com/edge" class="code-link" target="_blank" rel="noopener">microsoft.com/edge</a>'
+                        'Download Chrome from <a href="https://chrome.google.com" class="code-link" target="_blank" rel="noopener">chrome.google.com</a>'
                     ],
                     note: 'Safari prioritizes privacy and battery life over experimental web APIs. Web Bluetooth is not available and likely won\'t be added in the near future.'
                 };
@@ -484,8 +407,7 @@
                         'Copy and paste this URL into your address bar: <span class="code-link" onclick="copyToClipboard(\'opera://flags/#brave-web-bluetooth-api\', this)">opera://flags/#brave-web-bluetooth-api</span>',
                         'Set "Web Bluetooth API" to "Enabled"',
                         'Also check: <span class="code-link" onclick="copyToClipboard(\'opera://flags/#experimental-web-platform-features\', this)">opera://flags/#experimental-web-platform-features</span> and enable if needed',
-                        'Restart Opera',
-                        'Ensure you\'re on a secure connection (HTTPS)'
+                        'Restart Opera'
                     ],
                     note: 'Opera is based on Chromium and supports Web Bluetooth with proper flags enabled.'
                 };
@@ -496,7 +418,6 @@
                         'Your browser may not support Web Bluetooth API',
                         'Try switching to Chrome, Edge, or Firefox',
                         'If using a Chromium-based browser, try: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\', this)">chrome://flags/#brave-web-bluetooth-api</span>',
-                        'Ensure you\'re on a secure connection (HTTPS)',
                         'Check if your browser has experimental flags to enable Web Bluetooth'
                     ],
                     note: 'For best compatibility, use Chrome or Edge with the latest version.'
@@ -524,18 +445,11 @@
             const iconDiv = document.getElementById('icon');
             const retryBtn = document.getElementById('retry-btn');
             const instructionsDiv = document.getElementById('instructions');
-            const redirectDiv = document.getElementById('redirect-message');
             
             // Reset state
             instructionsDiv.style.display = 'none';
             retryBtn.style.display = 'none';
-            redirectDiv.style.display = 'none';
-            
-            // Show loading state
-            statusDiv.className = 'status loading';
-            statusDiv.innerHTML = 'Checking Web Bluetooth API availability...';
-            iconDiv.className = 'icon loading';
-            iconDiv.innerHTML = '🔍';
+            statusDiv.style.display = 'none';
             
             // Check if Web Bluetooth API exists
             if ('bluetooth' in navigator) {
@@ -544,9 +458,11 @@
                     .then((isWorking) => {
                         if (isWorking) {
                             // Web Bluetooth is fully functional - redirect immediately
-                            redirectToIndex(2000); // 2 second delay to show success message
+                            redirectToIndex();
                         } else {
                             // API exists but is disabled/non-functional
+                            displayBrowserInfo();
+                            statusDiv.style.display = 'block';
                             statusDiv.className = 'status warning';
                             statusDiv.innerHTML = '⚠️ Web Bluetooth API exists but appears to be disabled';
                             iconDiv.className = 'icon warning';
@@ -559,6 +475,8 @@
                     })
                     .catch(() => {
                         // Error occurred during testing - likely disabled
+                        displayBrowserInfo();
+                        statusDiv.style.display = 'block';
                         statusDiv.className = 'status warning';
                         statusDiv.innerHTML = '⚠️ Web Bluetooth API exists but is not properly enabled';
                         iconDiv.className = 'icon warning';
@@ -570,6 +488,8 @@
                     });
             } else {
                 // Web Bluetooth is not supported at all
+                displayBrowserInfo();
+                statusDiv.style.display = 'block';
                 statusDiv.className = 'status error';
                 iconDiv.className = 'icon error';
                 iconDiv.innerHTML = '❌';
@@ -657,7 +577,6 @@
         
         // Initialize on page load
         window.addEventListener('load', function() {
-            displayBrowserInfo();
             checkBluetoothSupport();
         });
     </script>
