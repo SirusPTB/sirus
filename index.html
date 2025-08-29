@@ -49,8 +49,9 @@ button {
 #connectButton.connecting { background-color: orange; }
 #connectButton.connected { background-color: green; }
 #connectButton.disconnected { background-color: red; }
-#resetButton, #toggleViewButton { background-color: #222; }
+#resetButton, #toggleViewButton { background-color: #333; }
 #saveButton { background-color: #444; }
+#pauseResumeButton.resume { background-color: #CC6600; }
 
 /* Toggle Switch Styles */
 .toggle-container {
@@ -157,6 +158,31 @@ button {
 #settingsPage label { display: block; margin: 10px 0 5px; }
 #settingsPage input, #settingsPage select { width: 100%; padding: 5px; border-radius: 5px; margin-bottom: 15px; background:#333; color:#fff; border:none; }
 #settingsPage button { background-color: #444; margin-top: 20px; }
+#settingsPage input:disabled, #settingsPage button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #222;
+}
+#calibrationValue {
+  width: 80px !important; 
+  display: inline-block;
+  margin-bottom: 0 !important;
+  margin-right: 10px;
+  padding: 10px 8px;
+  height: auto;
+  box-sizing: border-box;
+}
+.calibration-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.calibration-row button {
+  height: auto;
+  padding: 10px 18px;
+  margin: 0;
+}
 
 /* Brightness slider styles */
 #brightnessSlider {
@@ -275,20 +301,26 @@ button {
     <button id="settingsButton">Settings</button>
   </div>
 
+  <!-- Always On Toggle - Standalone row -->
+  <div style="width: 80%; margin: 10px auto;">
+    <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+      <div class="toggle-container">
+        <span style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</span>
+        <div id="alwaysOnToggle" class="toggle-switch" style="background-color: #666;">
+          <div class="toggle-slider">OFF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Brightness Slider - Now matches chart width -->
-  <div style="width: 90%; margin: 20px auto;">
+  <div style="width: 80%; margin: 20px auto;">
     <div id="brightnessContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; gap: 15px;">
         <span style="color: #e0e0e0; font-weight: bold; min-width: 120px;">Device brightness:</span>
         <input type="range" id="brightnessSlider" min="10" max="250" value="125" 
                style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;">
         <span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</span>
-        <div class="toggle-container" style="margin-left: 10px;">
-          <span style="color: #e0e0e0;">Always on:</span>
-          <div id="alwaysOnToggle" class="toggle-switch" style="background-color: #666;">
-            <div class="toggle-slider">OFF</div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -297,20 +329,13 @@ button {
 <!-- Settings Page -->
 <div id="settingsPage">
   <h2>Settings</h2>
-  <label for="tempColor">Temperature Line Color</label>
-  <input type="color" id="tempColor" value="#ff7f7f">
-
-  <label for="pressureColor">Pressure Line Color</label>
-  <input type="color" id="pressureColor" value="#7fbfff">
-
-  <label for="maxPoints">Max Points on Chart</label>
-  <input type="number" id="maxPoints" value="50" min="10" max="500">
-
-  <label>
-    <input type="checkbox" id="autoRefresh" checked> Auto Refresh Graph
-  </label>
-
-  <button id="applySettings">Apply Settings</button>
+  
+  <label for="calibrationValue">Pressure Calibration Value</label>
+  <div class="calibration-row">
+    <input type="text" id="calibrationValue" maxlength="4" placeholder="1.79" pattern="[0-9]*\.?[0-9]*">
+    <button id="setCalibrationButton">Set Calibration</button>
+  </div>
+  
   <button id="backButton">Back to Graphs</button>
 </div>
 
@@ -349,15 +374,27 @@ let alwaysOnToggleActive = false; // Track always-on toggle switch state
 let isConnected = false; // Track connection state
 let brightnessDataReceived = false; // Track if we've received brightness data
 let alwaysOnDataReceived = false; // Track if we've received always-on data
+let calibrationDataReceived = false; // Track if we've received calibration data
 let receivedDataCount = 0; // Count received data points to identify the sixth one
+let currentCalibrationValue = null; // Store the current calibration value
 
 // --- SPA Navigation ---
 const graphPage = document.getElementById("graphPage");
 const settingsPage = document.getElementById("settingsPage");
 
-document.getElementById("settingsButton").onclick = () => {
+document.getElementById("settingsButton").onclick = async () => {
   graphPage.style.display = "none";
   settingsPage.style.display = "block";
+  
+  // Request calibration value from device when opening settings page
+  if(isConnected && !calibrationDataReceived) {
+    await sendData("GC"); // Send "Get Calibration" command
+  }
+  
+  // Update calibration input with current value if available
+  if(currentCalibrationValue !== null) {
+    document.getElementById("calibrationValue").value = currentCalibrationValue;
+  }
 };
 
 document.getElementById("backButton").onclick = () => {
@@ -772,7 +809,9 @@ async function connectToDevice() {
     // Reset brightness and always-on data tracking on new connection
     brightnessDataReceived = false;
     alwaysOnDataReceived = false;
+    calibrationDataReceived = false;
     receivedDataCount = 0;
+    currentCalibrationValue = null;
     
     if (writeCharacteristic) {
       console.log("Connected successfully, write characteristic available");
@@ -820,7 +859,9 @@ function handleDisconnection() {
   // Reset brightness and always-on tracking on disconnection
   brightnessDataReceived = false;
   alwaysOnDataReceived = false;
+  calibrationDataReceived = false;
   receivedDataCount = 0;
+  currentCalibrationValue = null;
 }
 
 // --- Button Setup ---
@@ -906,17 +947,23 @@ function updateConnectionState(connected) {
   const pressureToggle = document.getElementById("pressureToggle");
   const alwaysOnToggle = document.getElementById("alwaysOnToggle");
   const brightnessContainer = document.getElementById("brightnessContainer");
+  const calibrationInput = document.getElementById("calibrationValue");
+  const setCalibrationButton = document.getElementById("setCalibrationButton");
   
   if (connected) {
     tempToggle.classList.remove("disabled");
     pressureToggle.classList.remove("disabled");
     alwaysOnToggle.classList.remove("disabled");
     brightnessContainer.classList.remove("disabled");
+    calibrationInput.disabled = false;
+    setCalibrationButton.disabled = false;
   } else {
     tempToggle.classList.add("disabled");
     pressureToggle.classList.add("disabled");
     alwaysOnToggle.classList.add("disabled");
     brightnessContainer.classList.add("disabled");
+    calibrationInput.disabled = true;
+    setCalibrationButton.disabled = true;
   }
 }
 
@@ -1012,8 +1059,16 @@ document.getElementById("alwaysOnToggle").onclick = async () => {
 };
 
 document.getElementById("pauseResumeButton").onclick=()=>{
+  const btn = document.getElementById("pauseResumeButton");
   paused=!paused;
-  document.getElementById("pauseResumeButton").textContent=paused?"Resume":"Pause";
+  btn.textContent=paused?"Resume":"Pause";
+  
+  // Add/remove the resume class for styling
+  if(paused) {
+    btn.classList.add("resume");
+  } else {
+    btn.classList.remove("resume");
+  }
 };
 
 document.getElementById("resetButton").onclick=()=>{
@@ -1185,6 +1240,40 @@ function handleData(event){
     }
   }
   
+  // Check for seventh data point (calibration value) - only update if we haven't received calibration data yet
+  if(dataParts.length >= 7 && !calibrationDataReceived) {
+    const seventhValue = dataParts[6].trim();
+    const calibrationValue = parseFloat(seventhValue);
+    
+    // Validate calibration value is a number
+    if(!isNaN(calibrationValue)) {
+      currentCalibrationValue = calibrationValue;
+      calibrationDataReceived = true;
+      console.log(`Calibration value received from device: ${calibrationValue}`);
+      
+      // Update calibration input if settings page is currently open
+      if(settingsPage.style.display !== "none") {
+        document.getElementById("calibrationValue").value = calibrationValue;
+      }
+    }
+  }
+  
+  // Also check if this is specifically the 7th data packet received (alternative approach for calibration response)
+  if(receivedDataCount === 7 && dataParts.length >= 1 && !calibrationDataReceived) {
+    // If the 7th packet is just a calibration value
+    const calibrationValue = parseFloat(dataParts[0].trim());
+    if(!isNaN(calibrationValue)) {
+      currentCalibrationValue = calibrationValue;
+      calibrationDataReceived = true;
+      console.log(`Calibration value received from 7th packet: ${calibrationValue}`);
+      
+      // Update calibration input if settings page is currently open
+      if(settingsPage.style.display !== "none") {
+        document.getElementById("calibrationValue").value = calibrationValue;
+      }
+    }
+  }
+  
   if(paused) return;
   const [tempStr,pressureStr]=rawData.split(",");
   currentTemp=parseFloat(tempStr);
@@ -1281,6 +1370,61 @@ function handleData(event){
 
 // Initialize toggles and brightness slider as disabled on page load
 updateConnectionState(false);
+
+// --- Calibration Input Validation ---
+document.getElementById("calibrationValue").addEventListener('input', function(e) {
+  let value = e.target.value;
+  
+  // Remove any non-numeric characters except decimal point
+  value = value.replace(/[^0-9.]/g, '');
+  
+  // Ensure only one decimal point
+  const parts = value.split('.');
+  if (parts.length > 2) {
+    value = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  // Limit to 4 characters total
+  if (value.length > 4) {
+    value = value.substring(0, 4);
+  }
+  
+  // Update the input value
+  e.target.value = value;
+});
+
+// Prevent non-numeric key presses (except decimal point, backspace, delete, arrow keys)
+document.getElementById("calibrationValue").addEventListener('keydown', function(e) {
+  const allowedKeys = [
+    'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+    'Home', 'End', 'Tab', 'Enter'
+  ];
+  
+  const isNumeric = (e.key >= '0' && e.key <= '9');
+  const isDecimal = (e.key === '.' && !e.target.value.includes('.'));
+  
+  if (!isNumeric && !isDecimal && !allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+  }
+});
+
+// --- Set Calibration Button Handler ---
+document.getElementById("setCalibrationButton").onclick = async () => {
+  const calibrationInput = document.getElementById("calibrationValue");
+  const value = parseFloat(calibrationInput.value);
+  
+  if (isNaN(value)) {
+    alert("Please enter a valid calibration value");
+    return;
+  }
+  
+  // Format as SC followed by the value
+  const command = `SC${value}`;
+  await sendData(command);
+  
+  // Clear the input after sending
+  calibrationInput.value = "";
+};
 
 // --- Auto-check BLE every second ---
 setInterval(()=>{
