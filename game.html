@@ -19,7 +19,7 @@ html,body{
   width:100%;
 }
 canvas{
-  flex:1 1 auto;
+  flex:0 0 90%; /* canvas uses 90% of visible height */
   background:linear-gradient(#1d2230,#0f0f12);
   border:2px solid #333;
   border-radius:8px;
@@ -27,7 +27,7 @@ canvas{
   display:block;
 }
 .controls{
-  flex:0 0 60px;
+  flex:0 0 10%; /* controls use remaining 10% */
   display:flex;
 }
 .ctrl-btn{
