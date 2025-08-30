@@ -3,20 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <title>Coffee Catch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{
+html,body{
   margin:0;
+  padding:0;
   background:#0f0f12;
+  height:100%;
   display:flex;
   justify-content:center;
-  padding:10px;
+  align-items:center;
   font-family:"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.container{
+  position:relative;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 canvas{
   background:linear-gradient(#1d2230,#0f0f12);
   border:2px solid #333;
   border-radius:8px;
   touch-action:none;
+  flex:1;
 }
 .overlay{
   position:absolute;
@@ -45,15 +57,13 @@ canvas{
 }
 .controls{
   display:flex;
-  justify-content:space-between;
-  margin-top:8px;
   width:100%;
 }
 .ctrl-btn{
   flex:1;
   background:rgba(255,255,255,0.1);
   color:#fff;
-  font-size:20px;
+  font-size:5vw;
   padding:15px;
   border:none;
 }
@@ -66,8 +76,8 @@ ul{
 </style>
 </head>
 <body>
-<div style="position:relative;display:flex;flex-direction:column;align-items:center">
-<canvas id="c" width="400" height="600"></canvas>
+<div class="container">
+<canvas id="c"></canvas>
 <div class="controls">
   <button class="ctrl-btn" id="leftBtn">⟸</button>
   <button class="ctrl-btn" id="rightBtn">⟹</button>
@@ -94,19 +104,32 @@ ul{
 </div>
 
 <script>
-let ctx=c.getContext`2d`,
-    cup={x:200,y:550,w:50,h:30,s:5},
-    items=[],score,lives,go,st,si,fs,run,ml,mr;
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let cup = {x:0,y:0,w:0,h:0,s:0};
+let items=[],score,lives,go,st,si,fs,run,ml,mr;
+
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - document.querySelector('.controls').offsetHeight;
+  cup.w = canvas.width * 0.12;
+  cup.h = cup.w * 0.6;
+  cup.s = canvas.width * 0.012;
+  cup.x = canvas.width/2;
+  cup.y = canvas.height - cup.h*1.5;
+}
+window.addEventListener('resize', resizeCanvas);
 
 function reset(){
-  items=[];score=0;lives=3;go=0;st=0;si=1e3;fs=2;
-  cup.x=200;run=1;over.style.display='none';
+  items=[];score=0;lives=3;go=0;st=0;si=1000;fs=canvas.height*0.003;
+  cup.x = canvas.width/2;
+  run=1;document.getElementById('over').style.display='none';
 }
 
 function spawn(){
   let hc=Math.min(.4+score*.015,.8),
       t=Math.random()<hc?(Math.random()<.8?'skull':'bomb'):'bean';
-  items.push({x:Math.random()*370+15,y:-20,t});
+  items.push({x:Math.random()*(canvas.width-30)+15,y:-20,t});
 }
 
 function drawCup(){
@@ -120,7 +143,7 @@ function drawCup(){
 }
 
 function drawItems(){
-  ctx.font='24px sans-serif';
+  ctx.font=`${canvas.width*0.06}px sans-serif`;
   ctx.textAlign='center';
   ctx.textBaseline='middle';
   items.forEach(it=>{
@@ -134,7 +157,7 @@ function drawItems(){
 function update(){
   items.forEach(it=>it.y+=fs);
   items=items.filter(it=>{
-    if(it.y>620) return 0;
+    if(it.y>canvas.height+20) return 0;
     if(it.y+12>cup.y-cup.h/2 && it.y-12<cup.y+cup.h/2 &&
        it.x>cup.x-cup.w/2 && it.x<cup.x+cup.w/2){
       if(it.t=='bean') score++;
@@ -148,29 +171,29 @@ function update(){
 
 function hud(){
   ctx.fillStyle='#fff';
-  ctx.font='16px sans-serif';
+  ctx.font=`${canvas.width*0.04}px sans-serif`;
   ctx.textAlign='left';
-  ctx.fillText('Score:'+score,10,20);
+  ctx.fillText('Score:'+score,10,30);
   ctx.textAlign='right';
-  ctx.fillText('Lives:'+lives,390,20);
+  ctx.fillText('Lives:'+lives,canvas.width-10,30);
 }
 
 function loop(){
   if(!run) return;
   if(go){
-    final.textContent=`Game Over — Score: ${score}`;
-    over.style.display='flex';
+    document.getElementById('final').textContent=`Game Over — Score: ${score}`;
+    document.getElementById('over').style.display='flex';
     run=0;return;
   }
-  ctx.clearRect(0,0,400,600);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   if(ml) cup.x-=cup.s;
   if(mr) cup.x+=cup.s;
-  cup.x=Math.max(cup.w/2,Math.min(400-cup.w/2,cup.x));
+  cup.x=Math.max(cup.w/2,Math.min(canvas.width-cup.w/2,cup.x));
   st+=16.67;
   if(st>si){
     spawn();st=0;
     if(si>300) si-=10;
-    fs+=.02;
+    fs+=canvas.height*0.00005;
   }
   update();drawItems();drawCup();hud();
   requestAnimationFrame(loop);
@@ -196,7 +219,9 @@ rightBtn.ontouchstart=e=>{e.preventDefault();mr=1};
 rightBtn.ontouchend=()=>mr=0;
 
 again.onclick=()=>{reset();requestAnimationFrame(loop)};
-startBtn.onclick=()=>{startOverlay.style.display='none';reset();requestAnimationFrame(loop)};
+startBtn.onclick=()=>{document.getElementById('startOverlay').style.display='none';reset();requestAnimationFrame(loop)};
+
+resizeCanvas();
 </script>
 </body>
 </html>
