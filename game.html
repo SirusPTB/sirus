@@ -19,27 +19,118 @@ ul{text-align:left;max-width:300px;padding-left:20px}
 <body>
 <div class="container">
 <canvas id="cv"></canvas>
-<div class="controls"><button class="ctrl-btn" id="lBtn">⟸</button><button class="ctrl-btn" id="rBtn">⟹</button></div>
-<div class="overlay" id="start"><h2>How to Play</h2><ul><li>Move cup with buttons or ←/→</li><li>Catch 🫘 for points</li><li>💀 lose 1 life</li><li>💣 instant game over</li></ul><button class="btn" id="goBtn">Start Game</button></div>
-<div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)"><div id="final" style="font-size:22px;margin-bottom:10px">Game Over</div><button class="btn" id="again">Play Again</button></div>
+<div class="controls">
+  <button class="ctrl-btn" id="lBtn">⟸</button>
+  <button class="ctrl-btn" id="rBtn">⟹</button>
+</div>
+<div class="overlay" id="start">
+  <h2>How to Play</h2>
+  <ul>
+    <li>Tap ⟸ or ⟹ to move the cup</li>
+    <li>Catch 🫘 beans to score points</li>
+    <li>💀 skulls cost 1 life</li>
+    <li>💣 bombs end the game instantly</li>
+  </ul>
+  <button class="btn" id="goBtn">Start Game</button>
+</div>
+<div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
+  <div id="final" style="font-size:22px;margin-bottom:10px">Game Over</div>
+  <button class="btn" id="again">Play Again</button>
+</div>
 </div>
 <script>
-const cv=document.getElementById('cv'),ctx=cv.getContext('2d');let cup={},items=[],score,lives,go,st,si,fs,run,ml,mr;
-function resize(){const ch=document.querySelector('.controls').offsetHeight||0;cv.width=innerWidth;cv.height=innerHeight-ch;cup.w=cv.width*.12;cup.h=cup.w*.6;cup.s=Math.max(3,cv.width*.012);cup.x=Math.min(Math.max(cup.x||cv.width/2,cup.w/2),cv.width-cup.w/2);cup.y=cv.height-cup.h*1.5}
-function reset(){items=[];score=0;lives=3;go=0;st=0;si=700;fs=cv.height*.003;cup.x=cv.width/2;run=1;over.style.display='none'}
-function spawn(){let hc=Math.min(.25+score*.01,.6),t=Math.random()<hc?(Math.random()<.8?'skull':'bomb'):'bean';items.push({x:Math.random()*(cv.width-30)+15,y:-20,t})}
-function drawCup(){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(cup.x-cup.w/2,cup.y-cup.h/2,cup.w,cup.h);ctx.fillStyle='#6b4226';ctx.fillRect(cup.x-cup.w/2+2,cup.y-cup.h/2+2,cup.w-4,cup.h/3);ctx.beginPath();ctx.arc(cup.x+cup.w/2,cup.y,cup.w/4,Math.PI/4,-Math.PI/4,1);ctx.stroke()}
-function drawItems(){ctx.font=`${cv.width*.06}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';items.forEach(it=>{ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=4;ctx.fillText(it.t=='bean'?'🫘':it.t=='bomb'?'💣':'💀',it.x,it.y);ctx.shadowBlur=0})}
-function update(){items.forEach(it=>it.y+=fs);items=items.filter(it=>{if(it.y>cv.height+20)return 0;if(it.y+12>cup.y-cup.h/2&&it.y-12<cup.y+cup.h/2&&it.x>cup.x-cup.w/2&&it.x<cup.x+cup.w/2){if(it.t=='bean')score++;else if(it.t=='skull'){if(--lives<=0)go=1}else go=1;return 0}return 1})}
-function hud(){ctx.fillStyle='#fff';ctx.font=`${cv.width*.04}px sans-serif`;ctx.textAlign='left';ctx.fillText('Score:'+score,10,30);ctx.textAlign='right';ctx.fillText('Lives:'+lives,cv.width-10,30)}
-function loop(){if(!run)return;if(go){final.textContent=`Game Over — Score: ${score}`;over.style.display='flex';run=0;return}ctx.clearRect(0,0,cv.width,cv.height);if(ml)cup.x-=cup.s;if(mr)cup.x+=cup.s;cup.x=Math.max(cup.w/2,Math.min(cv.width-cup.w/2,cup.x));st+=16.67;if(st>si){spawn();st=0;if(si>200)si-=8;fs+=cv.height*.00005}update();drawItems();drawCup();hud();requestAnimationFrame(loop)}
-onkeydown=e=>{if(e.key=='ArrowLeft'||e.key=='a')ml=1;if(e.key=='ArrowRight'||e.key=='d')mr=1}
-onkeyup=e=>{if(e.key=='ArrowLeft'||e.key=='a')ml=0;if(e.key=='ArrowRight'||e.key=='d')mr=0}
-lBtn.onmousedown=()=>ml=1;lBtn.onmouseup=()=>ml=0;lBtn.ontouchstart=e=>{e.preventDefault();ml=1};lBtn.ontouchend=()=>ml=0;
-rBtn.onmousedown=()=>mr=1;rBtn.onmouseup=()=>mr=0;rBtn.ontouchstart=e=>{e.preventDefault();mr=1};rBtn.ontouchend=()=>mr=0;
-again.onclick=()=>{resize();reset();requestAnimationFrame(loop)}
-goBtn.onclick=()=>{start.style.display='none';resize();reset();requestAnimationFrame(loop)}
-addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let cup={},items=[],score,lives,go,st,si,fs,run,ml=0,mr=0;
+
+function resize(){
+  const ch=document.querySelector('.controls').offsetHeight||0;
+  cv.width=innerWidth; cv.height=innerHeight-ch;
+  cup.w=cv.width*.12; cup.h=cup.w*.6; cup.s=Math.max(3,cv.width*.012);
+  cup.x=cv.width/2; cup.y=cv.height-cup.h*1.5;
+}
+
+function reset(){
+  items=[];score=0;lives=3;go=0;st=0;si=700;fs=cv.height*.003;
+  cup.x=cv.width/2; run=1; over.style.display='none';
+}
+
+function spawn(){
+  let hc=Math.min(.25+score*.01,.6);
+  let t=Math.random()<hc?(Math.random()<.8?'skull':'bomb'):'bean';
+  items.push({x:Math.random()*(cv.width-30)+15,y:-20,t});
+}
+
+function drawCup(){
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+  ctx.strokeRect(cup.x-cup.w/2,cup.y-cup.h/2,cup.w,cup.h);
+  ctx.fillStyle='#6b4226';
+  ctx.fillRect(cup.x-cup.w/2+2,cup.y-cup.h/2+2,cup.w-4,cup.h/3);
+  ctx.beginPath();
+  ctx.arc(cup.x+cup.w/2,cup.y,cup.w/4,Math.PI/4,-Math.PI/4,1);
+  ctx.stroke();
+}
+
+function drawItems(){
+  ctx.font=`${cv.width*.06}px sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  items.forEach(it=>{
+    ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=4;
+    ctx.fillText(it.t=='bean'?'🫘':it.t=='bomb'?'💣':'💀',it.x,it.y);
+    ctx.shadowBlur=0;
+  });
+}
+
+function update(){
+  items.forEach(it=>it.y+=fs);
+  items=items.filter(it=>{
+    if(it.y>cv.height+20) return 0;
+    if(it.y+12>cup.y-cup.h/2 && it.y-12<cup.y+cup.h/2 &&
+       it.x>cup.x-cup.w/2 && it.x<cup.x+cup.w/2){
+      if(it.t=='bean') score++;
+      else if(it.t=='skull'){ if(--lives<=0) go=1; }
+      else go=1;
+      return 0;
+    }
+    return 1;
+  });
+}
+
+function hud(){
+  ctx.fillStyle='#fff';
+  ctx.font=`${cv.width*.04}px sans-serif`;
+  ctx.textAlign='left'; ctx.fillText('Score:'+score,10,30);
+  ctx.textAlign='right'; ctx.fillText('Lives:'+lives,cv.width-10,30);
+}
+
+function loop(){
+  if(!run) return;
+  if(go){
+    final.textContent=`Game Over — Score: ${score}`;
+    over.style.display='flex'; run=0; return;
+  }
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(ml) cup.x-=cup.s; if(mr) cup.x+=cup.s;
+  cup.x=Math.max(cup.w/2,Math.min(cv.width-cup.w/2,cup.x));
+  st+=16.67;
+  if(st>si){
+    spawn(); st=0;
+    if(si>200) si-=8; fs+=cv.height*.00005;
+  }
+  update(); drawItems(); drawCup(); hud();
+  requestAnimationFrame(loop);
+}
+
+// Touch controls only
+lBtn.ontouchstart=e=>{e.preventDefault();ml=1};
+lBtn.ontouchend=()=>ml=0;
+rBtn.ontouchstart=e=>{e.preventDefault();mr=1};
+rBtn.ontouchend=()=>mr=0;
+
+again.ontouchstart=()=>{resize();reset();requestAnimationFrame(loop)};
+goBtn.ontouchstart=()=>{start.style.display='none';resize();reset();requestAnimationFrame(loop)};
+
+addEventListener('resize',resize);
+addEventListener('orientationchange',()=>setTimeout(resize,200));
 resize();
 </script>
 </body>
