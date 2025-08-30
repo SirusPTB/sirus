@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Coffee Catch</title>
+<style>
+body{
+  margin:0;
+  background:#0f0f12;
+  display:flex;
+  justify-content:center;
+  padding:10px;
+  font-family:"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+canvas{
+  background:linear-gradient(#1d2230,#0f0f12);
+  border:2px solid #333;
+  border-radius:8px;
+  touch-action:none;
+}
+.overlay{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,.85);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  color:#fff;
+  text-align:center;
+  padding:20px;
+  box-sizing:border-box;
+}
+.btn{
+  background:#ffb84d;
+  border:none;
+  padding:10px 20px;
+  font-size:18px;
+  font-weight:bold;
+  border-radius:6px;
+  cursor:pointer;
+  color:#000;
+  margin-top:10px;
+}
+.controls{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  width:100%;
+}
+.ctrl-btn{
+  flex:1;
+  background:rgba(255,255,255,0.1);
+  color:#fff;
+  font-size:20px;
+  padding:15px;
+  border:none;
+}
+.ctrl-btn:active{background:rgba(255,255,255,0.3)}
+ul{
+  text-align:left;
+  max-width:300px;
+  padding-left:20px;
+}
+</style>
+</head>
+<body>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center">
+<canvas id="c" width="400" height="600"></canvas>
+<div class="controls">
+  <button class="ctrl-btn" id="leftBtn">⟸</button>
+  <button class="ctrl-btn" id="rightBtn">⟹</button>
+</div>
+
+<!-- Start overlay -->
+<div class="overlay" id="startOverlay">
+  <h2>How to Play</h2>
+  <ul>
+    <li>Move the cup with buttons or ←/→ keys</li>
+    <li>Catch 🫘 beans to score points</li>
+    <li>💀 skulls cost 1 life</li>
+    <li>💣 bombs end the game instantly</li>
+    <li>Game ends when lives reach 0 or you catch a bomb</li>
+  </ul>
+  <button class="btn" id="startBtn">Start Game</button>
+</div>
+
+<!-- Game over overlay -->
+<div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
+  <div id="final" style="font-size:22px;margin-bottom:10px;">Game Over</div>
+  <button class="btn" id="again">Play Again</button>
+</div>
+</div>
+
+<script>
+let ctx=c.getContext`2d`,
+    cup={x:200,y:550,w:50,h:30,s:5},
+    items=[],score,lives,go,st,si,fs,run,ml,mr;
+
+function reset(){
+  items=[];score=0;lives=3;go=0;st=0;si=1e3;fs=2;
+  cup.x=200;run=1;over.style.display='none';
+}
+
+function spawn(){
+  let hc=Math.min(.4+score*.015,.8),
+      t=Math.random()<hc?(Math.random()<.8?'skull':'bomb'):'bean';
+  items.push({x:Math.random()*370+15,y:-20,t});
+}
+
+function drawCup(){
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;
+  ctx.strokeRect(cup.x-cup.w/2,cup.y-cup.h/2,cup.w,cup.h);
+  ctx.fillStyle='#6b4226';
+  ctx.fillRect(cup.x-cup.w/2+2,cup.y-cup.h/2+2,cup.w-4,cup.h/3);
+  ctx.beginPath();
+  ctx.arc(cup.x+cup.w/2,cup.y,cup.w/4,Math.PI/4,-Math.PI/4,1);
+  ctx.stroke();
+}
+
+function drawItems(){
+  ctx.font='24px sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  items.forEach(it=>{
+    ctx.shadowColor='rgba(0,0,0,.4)';
+    ctx.shadowBlur=4;
+    ctx.fillText(it.t=='bean'?'🫘':it.t=='bomb'?'💣':'💀',it.x,it.y);
+    ctx.shadowBlur=0;
+  });
+}
+
+function update(){
+  items.forEach(it=>it.y+=fs);
+  items=items.filter(it=>{
+    if(it.y>620) return 0;
+    if(it.y+12>cup.y-cup.h/2 && it.y-12<cup.y+cup.h/2 &&
+       it.x>cup.x-cup.w/2 && it.x<cup.x+cup.w/2){
+      if(it.t=='bean') score++;
+      else if(it.t=='skull'){ if(--lives<=0) go=1; }
+      else go=1;
+      return 0;
+    }
+    return 1;
+  });
+}
+
+function hud(){
+  ctx.fillStyle='#fff';
+  ctx.font='16px sans-serif';
+  ctx.textAlign='left';
+  ctx.fillText('Score:'+score,10,20);
+  ctx.textAlign='right';
+  ctx.fillText('Lives:'+lives,390,20);
+}
+
+function loop(){
+  if(!run) return;
+  if(go){
+    final.textContent=`Game Over — Score: ${score}`;
+    over.style.display='flex';
+    run=0;return;
+  }
+  ctx.clearRect(0,0,400,600);
+  if(ml) cup.x-=cup.s;
+  if(mr) cup.x+=cup.s;
+  cup.x=Math.max(cup.w/2,Math.min(400-cup.w/2,cup.x));
+  st+=16.67;
+  if(st>si){
+    spawn();st=0;
+    if(si>300) si-=10;
+    fs+=.02;
+  }
+  update();drawItems();drawCup();hud();
+  requestAnimationFrame(loop);
+}
+
+onkeydown=e=>{
+  if(e.key=='ArrowLeft'||e.key=='a') ml=1;
+  if(e.key=='ArrowRight'||e.key=='d') mr=1;
+};
+onkeyup=e=>{
+  if(e.key=='ArrowLeft'||e.key=='a') ml=0;
+  if(e.key=='ArrowRight'||e.key=='d') mr=0;
+};
+
+leftBtn.onmousedown=()=>ml=1;
+leftBtn.onmouseup=()=>ml=0;
+leftBtn.ontouchstart=e=>{e.preventDefault();ml=1};
+leftBtn.ontouchend=()=>ml=0;
+
+rightBtn.onmousedown=()=>mr=1;
+rightBtn.onmouseup=()=>mr=0;
+rightBtn.ontouchstart=e=>{e.preventDefault();mr=1};
+rightBtn.ontouchend=()=>mr=0;
+
+again.onclick=()=>{reset();requestAnimationFrame(loop)};
+startBtn.onclick=()=>{startOverlay.style.display='none';reset();requestAnimationFrame(loop)};
+</script>
+</body>
+</html>
