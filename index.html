@@ -103,6 +103,15 @@ button {
   background-color: #4CAF50;
 }
 
+/* Raw data toggle - purple when active */
+#rawDataToggle {
+  background-color: #666;
+}
+
+#rawDataToggle.active {
+  background-color: #8A2BE2;
+}
+
 .toggle-slider {
   position: absolute;
   top: 3px;
@@ -220,6 +229,89 @@ button {
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* Raw data panel styles - Updated for scrolling list */
+#rawDataDisplay {
+  background: #1e1e1e; 
+  color: #00ff00; 
+  padding: 10px; 
+  margin: 10px auto; 
+  width: 90%; 
+  border-radius: 8px; 
+  font-family: monospace; 
+  text-align: left; 
+  height: 120px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column-reverse; /* Newest at the bottom */
+}
+
+#rawDataDisplay.hidden {
+  display: none;
+}
+
+.data-entry {
+  margin: 2px 0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  line-height: 1.3;
+}
+
+.data-entry.sent {
+  color: #ffaa00; /* Orange for sent data */
+}
+
+.data-entry.received {
+  color: #00ff00; /* Green for received data */
+}
+
+.data-entry.error {
+  color: #ff0000; /* Red for errors */
+}
+
+.data-timestamp {
+  color: #888;
+  font-size: 0.8em;
+  margin-right: 8px;
+}
+
+/* Clear data button */
+#clearDataButton {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 0.8em;
+  cursor: pointer;
+  padding: 2px 5px;
+}
+
+#clearDataButton:hover {
+  color: #fff;
+}
+
+/* Scrollbar styling for raw data display */
+#rawDataDisplay::-webkit-scrollbar {
+  width: 8px;
+}
+
+#rawDataDisplay::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 4px;
+}
+
+#rawDataDisplay::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+#rawDataDisplay::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 </style>
 </head>
 <body>
@@ -241,10 +333,18 @@ button {
         <div class="toggle-slider">Bar</div>
       </div>
     </div>
+    <div class="toggle-container">
+      <span>Raw Data:</span>
+      <div id="rawDataToggle" class="toggle-switch active">
+        <div class="toggle-slider">ON</div>
+      </div>
+    </div>
   </div>
 
-  <div id="rawDataDisplay" style="background: #1e1e1e; color: #00ff00; padding: 10px; margin: 10px auto; width: 90%; border-radius: 8px; font-family: monospace; text-align: left; min-height: 20px;">
-    No data sent yet...
+  <!-- Updated raw data display with clear button -->
+  <div id="rawDataDisplay" class="raw-data-container">
+    <button id="clearDataButton" title="Clear data">Clear</button>
+    <div class="data-entry">No data yet...</div>
   </div>
 
   <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
@@ -371,12 +471,14 @@ let currentPressureUnit = "Bar"; // Track current pressure unit
 let tempToggleActive = false; // Track temperature toggle switch state
 let pressureToggleActive = false; // Track pressure toggle switch state
 let alwaysOnToggleActive = false; // Track always-on toggle switch state
+let rawDataToggleActive = true; // Track raw data toggle switch state (default to visible)
 let isConnected = false; // Track connection state
 let brightnessDataReceived = false; // Track if we've received brightness data
 let alwaysOnDataReceived = false; // Track if we've received always-on data
 let calibrationDataReceived = false; // Track if we've received calibration data
 let receivedDataCount = 0; // Count received data points to identify the sixth one
 let currentCalibrationValue = null; // Store the current calibration value
+let dataEntries = []; // Store data entries for the scrolling list
 
 // --- SPA Navigation ---
 const graphPage = document.getElementById("graphPage");
@@ -641,7 +743,14 @@ function updateGauges() {
   let displayTemp = isConnected ? currentTemp : null;
   let displayPressure = isConnected ? currentPressure : null;
   
-  // For gauges, use raw pressure data unchanged when PSI is selected
+  // Convert units for gauges if needed
+  if (currentTempUnit === "F") {
+    displayTemp = (displayTemp * 9/5) + 32;
+  }
+  
+  if (currentPressureUnit === "PSI") {
+    displayPressure = displayPressure * 14.5038;
+  }
   
   // Set gauge ranges according to specifications
   let tempMin, tempMax;
@@ -733,6 +842,25 @@ function updateAlwaysOnToggleSwitch(isOn) {
   } else {
     toggle.classList.remove("active");
     slider.textContent = "OFF";
+  }
+}
+
+// --- Helper function to update raw data toggle switch ---
+function updateRawDataToggleSwitch(isVisible) {
+  const toggle = document.getElementById("rawDataToggle");
+  const slider = toggle.querySelector(".toggle-slider");
+  const rawDataDisplay = document.getElementById("rawDataDisplay");
+  
+  rawDataToggleActive = isVisible;
+  
+  if (isVisible) {
+    toggle.classList.add("active");
+    slider.textContent = "ON";
+    rawDataDisplay.classList.remove("hidden");
+  } else {
+    toggle.classList.remove("active");
+    slider.textContent = "OFF";
+    rawDataDisplay.classList.add("hidden");
   }
 }
 
@@ -895,28 +1023,12 @@ async function sendData(command) {
       
       console.log("Data sent successfully");
       
-      // Display sent string in raw data window
-      document.getElementById("rawDataDisplay").textContent = "Sent: " + command;
-      document.getElementById("rawDataDisplay").style.color = "#ffaa00"; // Orange color for sent data
-      
-      // Reset color back to green after 2 seconds
-      setTimeout(() => {
-        document.getElementById("rawDataDisplay").style.color = "#00ff00";
-        if(document.getElementById("rawDataDisplay").textContent.startsWith("Sent:")) {
-          document.getElementById("rawDataDisplay").textContent = "No data sent yet...";
-        }
-      }, 2000);
+      // Add to data entries for scrolling display
+      addDataEntry(command, "sent");
       
     } catch(error) {
       console.error("Error sending data:", error);
-      document.getElementById("rawDataDisplay").textContent = "Error sending: " + error.message;
-      document.getElementById("rawDataDisplay").style.color = "#ff0000"; // Red color for errors
-      
-      // Reset color back to green after 3 seconds
-      setTimeout(() => {
-        document.getElementById("rawDataDisplay").style.color = "#00ff00";
-        document.getElementById("rawDataDisplay").textContent = "No data sent yet...";
-      }, 3000);
+      addDataEntry(`Error: ${error.message}`, "error");
     }
   } else {
     let errorMsg = "Cannot send data: ";
@@ -931,13 +1043,7 @@ async function sendData(command) {
     }
     
     console.log("Send error:", errorMsg);
-    document.getElementById("rawDataDisplay").textContent = errorMsg;
-    document.getElementById("rawDataDisplay").style.color = "#ff0000";
-    
-    setTimeout(() => {
-      document.getElementById("rawDataDisplay").style.color = "#00ff00";
-      document.getElementById("rawDataDisplay").textContent = "No data sent yet...";
-    }, 3000);
+    addDataEntry(errorMsg, "error");
   }
 }
 
@@ -967,6 +1073,68 @@ function updateConnectionState(connected) {
   }
 }
 
+// --- Add data entry to scrolling list ---
+function addDataEntry(data, type) {
+  const timestamp = new Date().toLocaleTimeString();
+  const entry = {
+    timestamp,
+    data,
+    type
+  };
+  
+  // Add to beginning of array (newest first)
+  dataEntries.unshift(entry);
+  
+  // Limit to 100 entries to prevent performance issues
+  if (dataEntries.length > 100) {
+    dataEntries.pop();
+  }
+  
+  // Update the display
+  updateDataDisplay();
+}
+
+// --- Update the data display ---
+function updateDataDisplay() {
+  const rawDataDisplay = document.getElementById("rawDataDisplay");
+  
+  // Clear existing content (except the clear button)
+  const clearButton = document.getElementById("clearDataButton");
+  rawDataDisplay.innerHTML = "";
+  rawDataDisplay.appendChild(clearButton);
+  
+  // Add entries
+  dataEntries.forEach(entry => {
+    const entryElement = document.createElement("div");
+    entryElement.className = `data-entry ${entry.type}`;
+    
+    const timestampSpan = document.createElement("span");
+    timestampSpan.className = "data-timestamp";
+    timestampSpan.textContent = `[${entry.timestamp}]`;
+    
+    const dataSpan = document.createElement("span");
+    dataSpan.textContent = entry.data;
+    
+    entryElement.appendChild(timestampSpan);
+    entryElement.appendChild(dataSpan);
+    rawDataDisplay.appendChild(entryElement);
+  });
+  
+  // If no data, show placeholder
+  if (dataEntries.length === 0) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "data-entry";
+    placeholder.textContent = "No data yet...";
+    rawDataDisplay.appendChild(placeholder);
+  }
+}
+
+// --- Clear data entries ---
+document.getElementById("clearDataButton").onclick = function() {
+  dataEntries = [];
+  updateDataDisplay();
+};
+
 // --- Temperature Toggle Switch Handler ---
 document.getElementById("tempToggle").onclick = async () => {
   // Check if disabled (not connected)
@@ -976,14 +1144,15 @@ document.getElementById("tempToggle").onclick = async () => {
   
   console.log("Temperature toggle switch clicked");
   
-  // Send the opposite of current state to toggle the device
+  // Send the appropriate command based on new state
   const command = tempToggleActive ? "C" : "F";
   
   // Immediately update the toggle switch visual state
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
-  // Update gauges if in gauge view
+  // Update charts and gauges with new units
+  updateCharts();
   updateGauges();
   
   await sendData(command);
@@ -1009,7 +1178,9 @@ document.getElementById("brightnessSlider").onchange = function() {
       clearTimeout(brightnessTimeout);
     }
     
-    const command = `L${value}`;  // L for LED/Light brightness command
+    // Format the value to 3 digits (e.g., 125 -> "125", 10 -> "010")
+    const formattedValue = value.padStart(3, '0');
+    const command = `L${formattedValue}`;  // L for brightness command
     sendData(command);
   }
   
@@ -1026,14 +1197,15 @@ document.getElementById("pressureToggle").onclick = async () => {
   
   console.log("Pressure toggle switch clicked");
   
-  // Send the opposite of current state to toggle the device
-  const command = pressureToggleActive ? "B" : "P"; // B for Bar, P for PSI
+  // Send the appropriate command based on new state
+  const command = pressureToggleActive ? "bar" : "psi";
   
   // Immediately update the toggle switch visual state
   const newUnit = pressureToggleActive ? "Bar" : "PSI";
   updatePressureToggleSwitch(newUnit);
   
-  // Update gauges if in gauge view
+  // Update charts and gauges with new units
+  updateCharts();
   updateGauges();
   
   await sendData(command);
@@ -1058,6 +1230,11 @@ document.getElementById("alwaysOnToggle").onclick = async () => {
   await sendData(command);
 };
 
+// --- Raw Data Toggle Switch Handler ---
+document.getElementById("rawDataToggle").onclick = () => {
+  updateRawDataToggleSwitch(!rawDataToggleActive);
+};
+
 document.getElementById("pauseResumeButton").onclick=()=>{
   const btn = document.getElementById("pauseResumeButton");
   paused=!paused;
@@ -1073,10 +1250,6 @@ document.getElementById("pauseResumeButton").onclick=()=>{
 
 document.getElementById("resetButton").onclick=()=>{
   chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
-  
-  // Reset current temperature and pressure values
-  currentTemp = 0;
-  currentPressure = 0;
   
   // Reset charts
   [tempChart,pressureChart,combinedChart].forEach(chart=>{
@@ -1157,11 +1330,11 @@ document.getElementById("deleteButton").onclick=()=>{showModal("delete");};
 function handleData(event){
   const rawData = new TextDecoder().decode(event.target.value).trim();
   
+  // Add to data entries for scrolling display
+  addDataEntry(rawData, "received");
+  
   // Increment received data count
   receivedDataCount++;
-  
-  // Don't display received data in the raw data window anymore
-  // This window is now only for sent data
   
   // Check for third and fourth values and update UI accordingly
   const dataParts = rawData.split(",");
@@ -1275,101 +1448,86 @@ function handleData(event){
   }
   
   if(paused) return;
-  const [tempStr,pressureStr]=rawData.split(",");
-  currentTemp=parseFloat(tempStr);
-  currentPressure=Math.max(0,parseFloat(pressureStr));
+  
+  // Parse temperature and pressure values
+  if(dataParts.length >= 2) {
+    const tempStr = dataParts[0];
+    const pressureStr = dataParts[1];
+    
+    currentTemp = parseFloat(tempStr);
+    currentPressure = Math.max(0, parseFloat(pressureStr));
+    
+    // Update charts and gauges
+    updateCharts();
+    updateGauges();
+  }
+}
 
-  const label=secondsCounter++;
+// --- Update Charts Function ---
+function updateCharts() {
+  const label = secondsCounter++;
   chartData.labels.push(label);
   chartData.temp.push(currentTemp);
   chartData.pressure.push(currentPressure);
 
-  if(chartData.labels.length>maxPointsValue){
-    chartData.labels.shift(); chartData.temp.shift(); chartData.pressure.shift();
+  if(chartData.labels.length > maxPointsValue) {
+    chartData.labels.shift(); 
+    chartData.temp.shift(); 
+    chartData.pressure.shift();
   }
 
   // Update temperature chart with appropriate unit
-  const tempUnit = isFahrenheit ? "°F" : "°C";
-  tempChart.data.labels=chartData.labels; 
-  tempChart.data.datasets[0].data=chartData.temp;
+  const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+  tempChart.data.labels = chartData.labels; 
+  tempChart.data.datasets[0].data = chartData.temp;
   tempChart.data.datasets[0].label = `Temp (${tempUnit})`;
   tempChart.options.scales.y.title.text = `Temperature (${tempUnit})`;
-  if(chartData.temp.length > 0) {
-    const minTemp = Math.min(...chartData.temp);
-    const maxTemp = Math.max(...chartData.temp);
-    const tempRange = maxTemp - minTemp;
-    const padding = Math.max(tempRange * 0.1, 1); // 10% padding or minimum 1 degree
-    tempChart.options.scales.y.min = minTemp - padding;
-    tempChart.options.scales.y.max = maxTemp + padding;
-    
-    // Update temperature current value label
-    document.getElementById("tempCurrentValue").textContent = `Temperature: ${currentTemp.toFixed(2)} ${tempUnit}`;
+  
+  // Update temperature current value label
+  let displayTemp = currentTemp;
+  if (currentTempUnit === "F") {
+    displayTemp = (currentTemp * 9/5) + 32;
   }
+  document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(2)} ${tempUnit}`;
+  
   tempChart.update();
 
   // Update pressure chart with appropriate unit
-  const pressureUnit = isPSI ? "PSI" : "bar";
-  let displayPressure = chartData.pressure.slice(); // Copy the array
-  let displayCurrentPressure = currentPressure;
+  const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+  let displayPressure = currentPressure;
   
-  // For PSI mode, use raw data unchanged; for bar mode, use data as-is
-  // (assuming device sends bar data by default)
+  if (currentPressureUnit === "PSI") {
+    displayPressure = barToPsi(currentPressure);
+  }
   
-  pressureChart.data.labels=chartData.labels; 
-  pressureChart.data.datasets[0].data=displayPressure;
+  pressureChart.data.labels = chartData.labels; 
+  pressureChart.data.datasets[0].data = chartData.pressure.map(p => {
+    return currentPressureUnit === "PSI" ? barToPsi(p) : p;
+  });
   pressureChart.data.datasets[0].label = `Pressure (${pressureUnit})`;
   pressureChart.options.scales.y.title.text = `Pressure (${pressureUnit})`;
-  if(displayPressure.length > 0) {
-    const minPressure = Math.min(...displayPressure);
-    const maxPressure = Math.max(...displayPressure);
-    const pressureRange = maxPressure - minPressure;
-    const padding = Math.max(pressureRange * 0.1, isPSI ? 1.45 : 0.1); // Different padding for different units
-    pressureChart.options.scales.y.min = Math.max(0, minPressure - padding);
-    pressureChart.options.scales.y.max = maxPressure + padding;
-    
-    // Update pressure current value label
-    document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayCurrentPressure.toFixed(2)} ${pressureUnit}`;
-  }
+  
+  // Update pressure current value label
+  document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}`;
+  
   pressureChart.update();
 
   // Update combined chart
-  let combinedDisplayPressure = chartData.pressure.slice();
-  let combinedDisplayCurrentPressure = currentPressure;
-  
-  // For PSI mode, use raw data unchanged; for bar mode, use data as-is
-  
-  combinedChart.data.labels=chartData.labels;
-  combinedChart.data.datasets[0].data=chartData.temp;
-  combinedChart.data.datasets[1].data=combinedDisplayPressure;
+  combinedChart.data.labels = chartData.labels;
+  combinedChart.data.datasets[0].data = chartData.temp.map(t => {
+    return currentTempUnit === "F" ? (t * 9/5) + 32 : t;
+  });
+  combinedChart.data.datasets[1].data = chartData.pressure.map(p => {
+    return currentPressureUnit === "PSI" ? barToPsi(p) : p;
+  });
   combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
-  if(chartData.temp.length > 0) {
-    const minTemp = Math.min(...chartData.temp);
-    const maxTemp = Math.max(...chartData.temp);
-    const tempRange = maxTemp - minTemp;
-    const tempPadding = Math.max(tempRange * 0.1, 1);
-    combinedChart.options.scales.y1.min = minTemp - tempPadding;
-    combinedChart.options.scales.y1.max = maxTemp + tempPadding;
-  }
-  if(combinedDisplayPressure.length > 0) {
-    const minPressure = Math.min(...combinedDisplayPressure);
-    const maxPressure = Math.max(...combinedDisplayPressure);
-    const pressureRange = maxPressure - minPressure;
-    const pressurePadding = Math.max(pressureRange * 0.1, isPSI ? 1.45 : 0.1);
-    combinedChart.options.scales.y2.min = Math.max(0, minPressure - pressurePadding);
-    combinedChart.options.scales.y2.max = maxPressure + pressurePadding;
-    
-    // Update combined current value label
-    document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${currentTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${combinedDisplayCurrentPressure.toFixed(2)} ${pressureUnit}</span>`;
-  }
-  combinedChart.update();
   
-  // Update gauges with new data
-  updateGauges();
+  // Update combined current value label
+  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
+  
+  combinedChart.update();
 }
-
-// Initialize toggles and brightness slider as disabled on page load
-updateConnectionState(false);
 
 // --- Calibration Input Validation ---
 document.getElementById("calibrationValue").addEventListener('input', function(e) {
@@ -1434,30 +1592,22 @@ setInterval(()=>{
       btn.textContent="Disconnect"; btn.className="connected";
       if(!isConnected) {
         isConnected = true;
+        updateConnectionState(true);
         updateGauges(); // Update gauges when connection is restored
       }
     } else {
       btn.textContent="Connect"; btn.className="disconnected";
       if(isConnected) {
         isConnected = false;
+        updateConnectionState(false);
         updateGauges(); // Update gauges to show "--.-" when disconnected
       }
     }
   }
 },1000);
 
-// --- Apply Settings ---
-document.getElementById("applySettings").onclick = ()=>{
-  const tempC = document.getElementById("tempColor").value;
-  const pressureC = document.getElementById("pressureColor").value;
-  const maxP = parseInt(document.getElementById("maxPoints").value);
-  maxPointsValue = maxP;
-  tempChart.data.datasets[0].borderColor=tempC;
-  pressureChart.data.datasets[0].borderColor=pressureC;
-  combinedChart.data.datasets[0].borderColor=tempC;
-  combinedChart.data.datasets[1].borderColor=pressureC;
-  tempChart.update(); pressureChart.update(); combinedChart.update();
-};
+// Initialize toggles and brightness slider as disabled on page load
+updateConnectionState(false);
 </script>
 </body>
 </html>
