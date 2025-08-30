@@ -1304,7 +1304,7 @@ function updateView(){
     document.getElementById("combinedView").style.display=splitView?"none":"flex";
     document.getElementById("gaugeView").style.display="none";
     toggleViewButton.style.display="inline-block"; // Show the toggle view button
-    toggleViewButton.textContent="Toggle View";
+    toggleViewButton.textContent=splitView?"Combine":"Split";
     document.getElementById("toggleGaugeButton").textContent="Gauges";
   }
 }
