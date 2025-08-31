@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SirusPTB SPA</title>
+<title>SirusPTB</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body {
@@ -161,38 +161,6 @@ button {
 }
 .modal button { margin: 5px; }
 
-/* Settings page */
-#settingsPage { display: none; text-align: left; padding: 20px; }
-#settingsPage h2 { text-align: center; }
-#settingsPage label { display: block; margin: 10px 0 5px; }
-#settingsPage input, #settingsPage select { width: 100%; padding: 5px; border-radius: 5px; margin-bottom: 15px; background:#333; color:#fff; border:none; }
-#settingsPage button { background-color: #444; margin-top: 20px; }
-#settingsPage input:disabled, #settingsPage button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  background-color: #222;
-}
-#calibrationValue {
-  width: 80px !important; 
-  display: inline-block;
-  margin-bottom: 0 !important;
-  margin-right: 10px;
-  padding: 10px 8px;
-  height: auto;
-  box-sizing: border-box;
-}
-.calibration-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.calibration-row button {
-  height: auto;
-  padding: 10px 18px;
-  margin: 0;
-}
-
 /* Brightness slider styles */
 #brightnessSlider {
   -webkit-appearance: none;
@@ -317,7 +285,7 @@ button {
 <body>
 <header>SirusPTB SPA</header>
 
-<!-- Graphs Page -->
+<!-- Main Page -->
 <div id="graphPage">
   <div class="button-row">
     <button id="connectButton" class="disconnected">Connect</button>
@@ -387,18 +355,17 @@ button {
     </div>
   </div>
 
-  <div class="button-row">
+  <div id="chartControlButtons" class="button-row">
     <button id="pauseResumeButton">Pause</button>
     <button id="toggleViewButton">Toggle View</button>
     <button id="toggleGaugeButton">Toggle Gauges</button>
     <button id="resetButton">Reset</button>
   </div>
 
-  <div class="button-row">
+  <div id="saveLoadDeleteButtons" class="button-row">
     <button id="saveButton">Save</button>
     <button id="loadButton">Load</button>
     <button id="deleteButton">Delete</button>
-    <button id="settingsButton">Settings</button>
   </div>
 
   <!-- Always On Toggle - Standalone row -->
@@ -424,19 +391,6 @@ button {
       </div>
     </div>
   </div>
-</div>
-
-<!-- Settings Page -->
-<div id="settingsPage">
-  <h2>Settings</h2>
-  
-  <label for="calibrationValue">Pressure Calibration Value</label>
-  <div class="calibration-row">
-    <input type="text" id="calibrationValue" maxlength="4" placeholder="1.79" pattern="[0-9]*\.?[0-9]*">
-    <button id="setCalibrationButton">Set Calibration</button>
-  </div>
-  
-  <button id="backButton">Back to Graphs</button>
 </div>
 
 <!-- Modal -->
@@ -475,34 +429,8 @@ let rawDataToggleActive = true; // Track raw data toggle switch state (default t
 let isConnected = false; // Track connection state
 let brightnessDataReceived = false; // Track if we've received brightness data
 let alwaysOnDataReceived = false; // Track if we've received always-on data
-let calibrationDataReceived = false; // Track if we've received calibration data
 let receivedDataCount = 0; // Count received data points to identify the sixth one
-let currentCalibrationValue = null; // Store the current calibration value
 let dataEntries = []; // Store data entries for the scrolling list
-
-// --- SPA Navigation ---
-const graphPage = document.getElementById("graphPage");
-const settingsPage = document.getElementById("settingsPage");
-
-document.getElementById("settingsButton").onclick = async () => {
-  graphPage.style.display = "none";
-  settingsPage.style.display = "block";
-  
-  // Request calibration value from device when opening settings page
-  if(isConnected && !calibrationDataReceived) {
-    await sendData("GC"); // Send "Get Calibration" command
-  }
-  
-  // Update calibration input with current value if available
-  if(currentCalibrationValue !== null) {
-    document.getElementById("calibrationValue").value = currentCalibrationValue;
-  }
-};
-
-document.getElementById("backButton").onclick = () => {
-  settingsPage.style.display = "none";
-  graphPage.style.display = "block";
-};
 
 // --- Modal ---
 const modal = document.getElementById("popupModal");
@@ -937,9 +865,7 @@ async function connectToDevice() {
     // Reset brightness and always-on data tracking on new connection
     brightnessDataReceived = false;
     alwaysOnDataReceived = false;
-    calibrationDataReceived = false;
     receivedDataCount = 0;
-    currentCalibrationValue = null;
     
     if (writeCharacteristic) {
       console.log("Connected successfully, write characteristic available");
@@ -987,9 +913,7 @@ function handleDisconnection() {
   // Reset brightness and always-on tracking on disconnection
   brightnessDataReceived = false;
   alwaysOnDataReceived = false;
-  calibrationDataReceived = false;
   receivedDataCount = 0;
-  currentCalibrationValue = null;
 }
 
 // --- Button Setup ---
@@ -1053,23 +977,17 @@ function updateConnectionState(connected) {
   const pressureToggle = document.getElementById("pressureToggle");
   const alwaysOnToggle = document.getElementById("alwaysOnToggle");
   const brightnessContainer = document.getElementById("brightnessContainer");
-  const calibrationInput = document.getElementById("calibrationValue");
-  const setCalibrationButton = document.getElementById("setCalibrationButton");
   
   if (connected) {
     tempToggle.classList.remove("disabled");
     pressureToggle.classList.remove("disabled");
     alwaysOnToggle.classList.remove("disabled");
     brightnessContainer.classList.remove("disabled");
-    calibrationInput.disabled = false;
-    setCalibrationButton.disabled = false;
   } else {
     tempToggle.classList.add("disabled");
     pressureToggle.classList.add("disabled");
     alwaysOnToggle.classList.add("disabled");
     brightnessContainer.classList.add("disabled");
-    calibrationInput.disabled = true;
-    setCalibrationButton.disabled = true;
   }
 }
 
@@ -1292,18 +1210,37 @@ document.getElementById("toggleGaugeButton").onclick=()=>{
 
 function updateView(){
   const toggleViewButton = document.getElementById("toggleViewButton");
+  const saveLoadDeleteButtons = document.getElementById("saveLoadDeleteButtons");
+  const chartControlButtons = document.getElementById("chartControlButtons");
   
   if(gaugeView) {
     document.getElementById("splitView").style.display="none";
     document.getElementById("combinedView").style.display="none";
     document.getElementById("gaugeView").style.display="flex";
     toggleViewButton.style.display="none"; // Hide the toggle view button
+    saveLoadDeleteButtons.style.display="none"; // Hide save/load/delete buttons
+    
+    // Hide most chart control buttons, but keep pause/resume and toggle gauge
+    chartControlButtons.style.display="flex";
+    document.getElementById("pauseResumeButton").style.display="inline-block";
+    document.getElementById("toggleViewButton").style.display="none";
+    document.getElementById("resetButton").style.display="none";
+    document.getElementById("toggleGaugeButton").style.display="inline-block";
+    
     document.getElementById("toggleGaugeButton").textContent="Charts";
   } else {
     document.getElementById("splitView").style.display=splitView?"flex":"none";
     document.getElementById("combinedView").style.display=splitView?"none":"flex";
     document.getElementById("gaugeView").style.display="none";
-    toggleViewButton.style.display="inline-block"; // Show the toggle view button
+    saveLoadDeleteButtons.style.display="flex"; // Show save/load/delete buttons
+    
+    // Show all chart control buttons
+    chartControlButtons.style.display="flex";
+    document.getElementById("pauseResumeButton").style.display="inline-block";
+    document.getElementById("toggleViewButton").style.display="inline-block";
+    document.getElementById("resetButton").style.display="inline-block";
+    document.getElementById("toggleGaugeButton").style.display="inline-block";
+    
     toggleViewButton.textContent=splitView?"Combine":"Split";
     document.getElementById("toggleGaugeButton").textContent="Gauges";
   }
@@ -1413,40 +1350,6 @@ function handleData(event){
     }
   }
   
-  // Check for seventh data point (calibration value) - only update if we haven't received calibration data yet
-  if(dataParts.length >= 7 && !calibrationDataReceived) {
-    const seventhValue = dataParts[6].trim();
-    const calibrationValue = parseFloat(seventhValue);
-    
-    // Validate calibration value is a number
-    if(!isNaN(calibrationValue)) {
-      currentCalibrationValue = calibrationValue;
-      calibrationDataReceived = true;
-      console.log(`Calibration value received from device: ${calibrationValue}`);
-      
-      // Update calibration input if settings page is currently open
-      if(settingsPage.style.display !== "none") {
-        document.getElementById("calibrationValue").value = calibrationValue;
-      }
-    }
-  }
-  
-  // Also check if this is specifically the 7th data packet received (alternative approach for calibration response)
-  if(receivedDataCount === 7 && dataParts.length >= 1 && !calibrationDataReceived) {
-    // If the 7th packet is just a calibration value
-    const calibrationValue = parseFloat(dataParts[0].trim());
-    if(!isNaN(calibrationValue)) {
-      currentCalibrationValue = calibrationValue;
-      calibrationDataReceived = true;
-      console.log(`Calibration value received from 7th packet: ${calibrationValue}`);
-      
-      // Update calibration input if settings page is currently open
-      if(settingsPage.style.display !== "none") {
-        document.getElementById("calibrationValue").value = calibrationValue;
-      }
-    }
-  }
-  
   if(paused) return;
   
   // Parse temperature and pressure values
@@ -1528,61 +1431,6 @@ function updateCharts() {
   
   combinedChart.update();
 }
-
-// --- Calibration Input Validation ---
-document.getElementById("calibrationValue").addEventListener('input', function(e) {
-  let value = e.target.value;
-  
-  // Remove any non-numeric characters except decimal point
-  value = value.replace(/[^0-9.]/g, '');
-  
-  // Ensure only one decimal point
-  const parts = value.split('.');
-  if (parts.length > 2) {
-    value = parts[0] + '.' + parts.slice(1).join('');
-  }
-  
-  // Limit to 4 characters total
-  if (value.length > 4) {
-    value = value.substring(0, 4);
-  }
-  
-  // Update the input value
-  e.target.value = value;
-});
-
-// Prevent non-numeric key presses (except decimal point, backspace, delete, arrow keys)
-document.getElementById("calibrationValue").addEventListener('keydown', function(e) {
-  const allowedKeys = [
-    'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-    'Home', 'End', 'Tab', 'Enter'
-  ];
-  
-  const isNumeric = (e.key >= '0' && e.key <= '9');
-  const isDecimal = (e.key === '.' && !e.target.value.includes('.'));
-  
-  if (!isNumeric && !isDecimal && !allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-  }
-});
-
-// --- Set Calibration Button Handler ---
-document.getElementById("setCalibrationButton").onclick = async () => {
-  const calibrationInput = document.getElementById("calibrationValue");
-  const value = parseFloat(calibrationInput.value);
-  
-  if (isNaN(value)) {
-    alert("Please enter a valid calibration value");
-    return;
-  }
-  
-  // Format as SC followed by the value
-  const command = `SC${value}`;
-  await sendData(command);
-  
-  // Clear the input after sending
-  calibrationInput.value = "";
-};
 
 // --- Auto-check BLE every second ---
 setInterval(()=>{
