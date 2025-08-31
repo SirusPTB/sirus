@@ -443,7 +443,7 @@ button {
   <div style="width: 80%; margin: 20px auto;">
     <div id="setControlContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-        <span style="color: #e0e0e0; font-weight: bold;">Set Control:</span>
+        <span style="color: #e0e0e0; font-weight: bold;">Pressure calibration:</span>
         <input type="text" id="setControlInput" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*">
         <button id="setControlButton">Set</button>
       </div>
@@ -1145,7 +1145,7 @@ document.getElementById("setControlButton").onclick = async () => {
     return;
   }
   
-  const command = `SC${value}`;
+  const command = `c${value}`;
   console.log(`Sending set control command: ${command}`);
   
   await sendData(command);
