@@ -19,25 +19,13 @@ html,body{
   width:100%;
 }
 canvas{
-  flex:0 0 80%; /* play area height */
+  flex:1;
   background:linear-gradient(#1d2230,#0f0f12);
   border:2px solid #333;
   border-radius:8px;
   touch-action:none;
   display:block;
 }
-.controls{
-  flex:0 0 20%; /* controls height */
-  display:flex;
-}
-.ctrl-btn{
-  flex:1;
-  background:rgba(255,255,255,.1);
-  color:#fff;
-  font-size:5vw;
-  border:none;
-}
-.ctrl-btn:active{background:rgba(255,255,255,.3)}
 .overlay{
   position:absolute;
   top:0;left:0;
@@ -69,28 +57,28 @@ ul{text-align:left;max-width:300px;padding-left:20px}
 <body>
 <div class="container">
   <canvas id="cv"></canvas>
-  <div class="controls">
-    <button class="ctrl-btn" id="lBtn">⟸</button>
-    <button class="ctrl-btn" id="rBtn">⟹</button>
-  </div>
+
   <div class="overlay" id="start">
     <h2>How to Play</h2>
     <ul>
-      <li>Tap ⟸ or ⟹ to move the cup</li>
+      <li>Drag the cup left or right with your finger</li>
       <li>Catch 🫘 beans to score points</li>
       <li>💀 skulls cost 1 life</li>
       <li>💣 bombs end the game instantly</li>
     </ul>
     <button class="btn" id="goBtn">Start Game</button>
   </div>
+
   <div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
     <div id="final" style="font-size:22px;margin-bottom:10px">Game Over</div>
     <button class="btn" id="again">Play Again</button>
   </div>
 </div>
+
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-let cup={},items=[],score,lives,go,st,si,fs,run,ml=0,mr=0;
+let cup={},items=[],score,lives,go,st,si,fs,run;
+let dragging=false, dragOffsetX=0;
 
 function resize(){
   cv.width=cv.clientWidth;
@@ -162,7 +150,6 @@ function loop(){
     over.style.display='flex'; run=0; return;
   }
   ctx.clearRect(0,0,cv.width,cv.height);
-  if(ml) cup.x-=cup.s; if(mr) cup.x+=cup.s;
   cup.x=Math.max(cup.w/2,Math.min(cv.width-cup.w/2,cup.x));
   st+=16.67;
   if(st>si){
@@ -173,11 +160,26 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-// Touch controls only
-lBtn.ontouchstart=e=>{e.preventDefault();ml=1};
-lBtn.ontouchend=()=>ml=0;
-rBtn.ontouchstart=e=>{e.preventDefault();mr=1};
-rBtn.ontouchend=()=>mr=0;
+// Touch drag controls
+cv.addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  const tx=t.clientX - cv.getBoundingClientRect().left;
+  const ty=t.clientY - cv.getBoundingClientRect().top;
+  // Check if touch is on cup
+  if(tx>cup.x-cup.w/2 && tx<cup.x+cup.w/2 &&
+     ty>cup.y-cup.h/2 && ty<cup.y+cup.h/2){
+    dragging=true;
+    dragOffsetX = tx - cup.x;
+  }
+});
+cv.addEventListener('touchmove',e=>{
+  if(dragging){
+    const t=e.touches[0];
+    const tx=t.clientX - cv.getBoundingClientRect().left;
+    cup.x = tx - dragOffsetX;
+  }
+});
+cv.addEventListener('touchend',()=>dragging=false);
 
 again.ontouchstart=()=>{resize();reset();requestAnimationFrame(loop)};
 goBtn.ontouchstart=()=>{start.style.display='none';resize();reset();requestAnimationFrame(loop)};
