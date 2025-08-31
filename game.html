@@ -19,7 +19,7 @@ html,body{
   width:100%;
 }
 canvas{
-  flex:0 0 80%; /* canvas uses 80% of visible height */
+  flex:0 0 80%; /* play area height */
   background:linear-gradient(#1d2230,#0f0f12);
   border:2px solid #333;
   border-radius:8px;
@@ -27,15 +27,19 @@ canvas{
   display:block;
 }
 .controls{
-  flex:0 0 20%; /* controls use remaining 20% */
+  flex:0 0 20%; /* controls height */
   display:flex;
+  align-items:center; /* vertical centering of buttons */
+  justify-content:space-evenly; /* space buttons evenly */
 }
 .ctrl-btn{
-  flex:1;
+  flex:0 0 auto;
   background:rgba(255,255,255,.1);
   color:#fff;
   font-size:5vw;
   border:none;
+  padding:15px 0;
+  border-radius:6px;
 }
 .ctrl-btn:active{background:rgba(255,255,255,.3)}
 .overlay{
