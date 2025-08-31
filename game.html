@@ -29,7 +29,7 @@ canvas{
 }
 #swipeStrip{
   position:absolute;
-  bottom:0;
+  bottom:100px; /* moved higher from bottom */
   left:0;
   width:100%;
   height:60px; /* swipe area height */
@@ -90,7 +90,7 @@ ul{text-align:left;max-width:300px;padding-left:20px}
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const swipeStrip=document.getElementById('swipeStrip');
 let cup={},items=[],score,lives,go,st,si,fs,run;
-let dragging=false, dragOffsetX=0;
+let lastX=null;
 
 function resize(){
   cv.width=cv.clientWidth;
@@ -175,7 +175,6 @@ function loop(){
 }
 
 // Swipe strip controls
-let lastX=null;
 swipeStrip.addEventListener('touchstart',e=>{
   lastX = e.touches[0].clientX;
 });
@@ -183,7 +182,7 @@ swipeStrip.addEventListener('touchmove',e=>{
   const currentX = e.touches[0].clientX;
   if(lastX!==null){
     const dx = currentX - lastX;
-    cup.x += dx; // move cup by swipe delta
+    cup.x += dx;
   }
   lastX = currentX;
 });
