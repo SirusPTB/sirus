@@ -86,8 +86,9 @@ function resize(){
   cup.w=cv.width*.12;
   cup.h=cup.w*.6;
   cup.s=Math.max(3,cv.width*.012);
+  // Move cup higher: subtract more height from bottom
   cup.x=cv.width/2;
-  cup.y=cv.height-cup.h*1.5;
+  cup.y=cv.height - cup.h*3; // was *1.5
 }
 
 function reset(){
@@ -165,7 +166,6 @@ cv.addEventListener('touchstart',e=>{
   const t=e.touches[0];
   const tx=t.clientX - cv.getBoundingClientRect().left;
   const ty=t.clientY - cv.getBoundingClientRect().top;
-  // Check if touch is on cup
   if(tx>cup.x-cup.w/2 && tx<cup.x+cup.w/2 &&
      ty>cup.y-cup.h/2 && ty<cup.y+cup.h/2){
     dragging=true;
