@@ -86,13 +86,13 @@ function resize(){
   cup.w=cv.width*.12;
   cup.h=cup.w*.6;
   cup.s=Math.max(3,cv.width*.012);
-  // Move cup higher: subtract more height from bottom
   cup.x=cv.width/2;
-  cup.y=cv.height - cup.h*3; // was *1.5
+  cup.y=cv.height - cup.h*3; // raised cup
 }
 
 function reset(){
-  items=[];score=0;lives=3;go=0;st=0;si=700;fs=cv.height*.003;
+  items=[];score=0;lives=3;go=0;st=0;si=700;
+  fs=cv.height*.0025; // slowed initial fall speed (was .003)
   cup.x=cv.width/2; run=1; over.style.display='none';
 }
 
@@ -155,7 +155,8 @@ function loop(){
   st+=16.67;
   if(st>si){
     spawn(); st=0;
-    if(si>200) si-=8; fs+=cv.height*.00005;
+    if(si>200) si-=8;
+    fs+=cv.height*.00004; // slower acceleration (was .00005)
   }
   update(); drawItems(); drawCup(); hud();
   requestAnimationFrame(loop);
