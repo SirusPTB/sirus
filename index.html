@@ -198,6 +198,57 @@ button {
   pointer-events: none;
 }
 
+/* Set control input styles */
+#setControlContainer {
+  width: 80%;
+  margin: 20px auto;
+}
+
+#setControlContainer.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+#setControlInput {
+  background: #333;
+  color: #e0e0e0;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1em;
+  width: 120px;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#setControlInput:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+#setControlInput:disabled {
+  background: #222;
+  color: #666;
+  border-color: #333;
+  cursor: not-allowed;
+}
+
+#setControlButton {
+  background-color: #4CAF50;
+  padding: 8px 16px;
+  margin-left: 10px;
+}
+
+#setControlButton:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+#setControlButton:disabled {
+  background-color: #333;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Raw data panel styles - Updated for scrolling list */
 #rawDataDisplay {
   background: #1e1e1e; 
@@ -258,10 +309,6 @@ button {
   padding: 2px 5px;
 }
 
-/* #clearDataButton:hover {
-  color: #fff;
-} */
-
 /* Scrollbar styling for raw data display */
 #rawDataDisplay::-webkit-scrollbar {
   width: 8px;
@@ -311,7 +358,7 @@ button {
 
   <!-- Updated raw data display with clear button -->
   <div id="rawDataDisplay" class="raw-data-container">
-    <button id="clearDataButton" title="Clear data"></button>
+    <button id="clearDataButton" title="Clear data">×</button>
     <div class="data-entry">No data yet...</div>
   </div>
 
@@ -380,7 +427,7 @@ button {
     </div>
   </div>
 
-  <!-- Brightness Slider - Now matches chart width -->
+  <!-- Brightness Slider -->
   <div style="width: 80%; margin: 20px auto;">
     <div id="brightnessContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; gap: 15px;">
@@ -388,6 +435,17 @@ button {
         <input type="range" id="brightnessSlider" min="10" max="250" value="125" 
                style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;">
         <span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set Control Input -->
+  <div style="width: 80%; margin: 20px auto;">
+    <div id="setControlContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+        <span style="color: #e0e0e0; font-weight: bold;">Set Control:</span>
+        <input type="text" id="setControlInput" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*">
+        <button id="setControlButton">Set</button>
       </div>
     </div>
   </div>
@@ -409,7 +467,7 @@ button {
 // --- BLE Variables ---
 const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
 const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
-const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb"; // Common write characteristic
+const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb";
 let device, characteristic, writeCharacteristic;
 let tempChart, pressureChart, combinedChart;
 let paused = false;
@@ -420,17 +478,18 @@ let secondsCounter = 0;
 let chartData = { labels: [], temp: [], pressure: [] };
 let modalAction = "";
 let maxPointsValue = 50;
-let currentTempUnit = "C"; // Track current temperature unit
-let currentPressureUnit = "Bar"; // Track current pressure unit
-let tempToggleActive = false; // Track temperature toggle switch state
-let pressureToggleActive = false; // Track pressure toggle switch state
-let alwaysOnToggleActive = false; // Track always-on toggle switch state
-let rawDataToggleActive = true; // Track raw data toggle switch state (default to visible)
-let isConnected = false; // Track connection state
-let brightnessDataReceived = false; // Track if we've received brightness data
-let alwaysOnDataReceived = false; // Track if we've received always-on data
-let receivedDataCount = 0; // Count received data points to identify the sixth one
-let dataEntries = []; // Store data entries for the scrolling list
+let currentTempUnit = "C";
+let currentPressureUnit = "Bar";
+let tempToggleActive = false;
+let pressureToggleActive = false;
+let alwaysOnToggleActive = false;
+let rawDataToggleActive = true;
+let isConnected = false;
+let brightnessDataReceived = false;
+let alwaysOnDataReceived = false;
+let setControlDataReceived = false;
+let receivedDataCount = 0;
+let dataEntries = [];
 
 // --- Modal ---
 const modal = document.getElementById("popupModal");
@@ -459,24 +518,20 @@ confirmButton.onclick = () => {
     if(data){
       chartData = data; secondsCounter=data.labels.length;
       
-      // Update temperature chart
       tempChart.data.labels=chartData.labels;
       tempChart.data.datasets[0].data=chartData.temp;
       tempChart.update();
       
-      // Update pressure chart
       pressureChart.data.labels=chartData.labels;
       pressureChart.data.datasets[0].data=chartData.pressure;
       pressureChart.update();
       
-      // Update combined chart
       combinedChart.data.labels=chartData.labels;
       combinedChart.data.datasets[0].data=chartData.temp;
       combinedChart.data.datasets[1].data=chartData.pressure;
       combinedChart.update();
   
-  // Update gauges if in gauge view
-  updateGauges();
+      updateGauges();
     }
   } else if(modalAction==="delete"){
     localStorage.removeItem(key);
@@ -499,7 +554,6 @@ function fixCanvasDPI(canvas) {
 const currentValuePlugin = {
   id:'currentValue',
   afterDraw(chart){
-    // Plugin disabled - labels are now shown above the graphs
     return;
   }
 };
@@ -571,22 +625,19 @@ function drawGauge(canvas, value, min, max, unit, color) {
   const ctx = canvas.getContext('2d');
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const radius = 100; // Back to 100 from 120
+  const radius = 100;
   
-  // Clear canvas with page background color
   ctx.fillStyle = '#121212';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Draw outer circle
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius + 15, 0, 2 * Math.PI);
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 4;
   ctx.stroke();
   
-  // Draw gauge background arc (270 degrees)
-  const startAngle = 0.75 * Math.PI; // Start at 135 degrees
-  const endAngle = 2.25 * Math.PI;   // End at 405 degrees (270 degree arc)
+  const startAngle = 0.75 * Math.PI;
+  const endAngle = 2.25 * Math.PI;
   
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -594,14 +645,11 @@ function drawGauge(canvas, value, min, max, unit, color) {
   ctx.lineWidth = 20;
   ctx.stroke();
   
-  // Only draw value arc if connected and value is not placeholder
   if(isConnected && value !== null) {
-    // Calculate value angle
     const valueRange = max - min;
     const normalizedValue = Math.max(0, Math.min(1, (value - min) / valueRange));
     const valueAngle = startAngle + normalizedValue * (endAngle - startAngle);
     
-    // Draw value arc
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, startAngle, valueAngle);
     ctx.strokeStyle = color;
@@ -609,11 +657,10 @@ function drawGauge(canvas, value, min, max, unit, color) {
     ctx.stroke();
   }
   
-  // Draw tick marks and labels
   ctx.strokeStyle = '#666';
   ctx.lineWidth = 2;
   ctx.fillStyle = '#999';
-  ctx.font = '14px Arial'; // Back to 14px from 16px
+  ctx.font = '14px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -621,9 +668,8 @@ function drawGauge(canvas, value, min, max, unit, color) {
     const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
     const innerRadius = radius - 20;
     const outerRadius = radius + 10;
-    const labelRadius = radius + 30; // Back to 30 from 35
+    const labelRadius = radius + 30;
     
-    // Draw tick mark
     ctx.beginPath();
     ctx.moveTo(
       centerX + Math.cos(tickAngle) * innerRadius,
@@ -635,71 +681,63 @@ function drawGauge(canvas, value, min, max, unit, color) {
     );
     ctx.stroke();
     
-    // Draw tick value label
     const tickValue = min + (i / 10) * (max - min);
     const labelX = centerX + Math.cos(tickAngle) * labelRadius;
     const labelY = centerY + Math.sin(tickAngle) * labelRadius;
     ctx.fillText(Math.round(tickValue).toString(), labelX, labelY);
   }
   
-  // Draw center value
   ctx.fillStyle = color;
-  ctx.font = 'bold 28px Arial'; // Back to 28px from 32px
+  ctx.font = 'bold 28px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
-  // Show "--.-" if disconnected or null value, otherwise show the actual value
   if(!isConnected || value === null) {
     ctx.fillText("--.-", centerX, centerY - 15);
   } else {
     ctx.fillText(value.toFixed(1), centerX, centerY - 15);
   }
   
-  // Draw unit
   ctx.fillStyle = '#ccc';
-  ctx.font = '18px Arial'; // Back to 18px from 20px
+  ctx.font = '18px Arial';
   ctx.fillText(unit, centerX, centerY + 15);
 }
 
 function updateGauges() {
   if(!gaugeView) return;
   
-  // Determine units and values
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   
   let displayTemp = isConnected ? currentTemp : null;
   let displayPressure = isConnected ? currentPressure : null;
   
-  // Convert units for gauges if needed
   if (currentTempUnit === "F") {
-    displayTemp = (displayTemp * 9/5) + 32;
+    displayTemp = displayTemp;
   }
   
   if (currentPressureUnit === "PSI") {
-    displayPressure = displayPressure * 14.5038;
+    displayPressure = displayPressure;
   }
   
-  // Set gauge ranges according to specifications
   let tempMin, tempMax;
   if(currentTempUnit === "F") {
     tempMin = 0; 
-    tempMax = 302; // Fahrenheit: 0°F to 302°F
+    tempMax = 302;
   } else {
     tempMin = 0; 
-    tempMax = 150; // Celsius: 0°C to 150°C
+    tempMax = 150;
   }
   
   let pressureMin, pressureMax;
   if(currentPressureUnit === "PSI") {
     pressureMin = 0; 
-    pressureMax = 262; // PSI: 0 to 262 PSI
+    pressureMax = 262;
   } else {
     pressureMin = 0; 
-    pressureMax = 18; // Bar: 0 to 18 bar
+    pressureMax = 18;
   }
   
-  // Draw gauges
   const tempCanvas = document.getElementById('tempGauge');
   const pressureCanvas = document.getElementById('pressureGauge');
   
@@ -725,7 +763,6 @@ function updateTempToggleSwitch(unit) {
     slider.textContent = "F";
     tempToggleActive = true;
   } else {
-    // Default to C
     toggle.classList.remove("active");
     slider.textContent = "C";
     tempToggleActive = false;
@@ -749,7 +786,6 @@ function updatePressureToggleSwitch(unit) {
     slider.textContent = "PSI";
     pressureToggleActive = true;
   } else {
-    // Default to Bar
     toggle.classList.remove("active");
     slider.textContent = "Bar";
     pressureToggleActive = false;
@@ -792,12 +828,27 @@ function updateRawDataToggleSwitch(isVisible) {
   }
 }
 
+// --- Helper function to update set control input ---
+function updateSetControlInput(value) {
+  const input = document.getElementById("setControlInput");
+  
+  // Validate and format the value
+  const numValue = parseFloat(value);
+  if (!isNaN(numValue)) {
+    // Format to 2 decimal places and ensure it's within 4 characters
+    const formattedValue = numValue.toFixed(2);
+    if (formattedValue.length <= 4) {
+      input.value = formattedValue;
+      console.log(`Set control value updated from device: ${formattedValue}`);
+    }
+  }
+}
+
 // --- Helper function to update brightness slider ---
 function updateBrightnessSlider(brightnessValue) {
   const slider = document.getElementById("brightnessSlider");
   const valueDisplay = document.getElementById("brightnessValue");
   
-  // Ensure brightness value is within valid range (10-250)
   const clampedValue = Math.max(10, Math.min(250, parseInt(brightnessValue)));
   
   slider.value = clampedValue;
@@ -808,11 +859,40 @@ function updateBrightnessSlider(brightnessValue) {
 
 // --- Pressure conversion functions ---
 function barToPsi(bar) {
-  return bar * 14.5038; // 1 bar = 14.5038 PSI
+  return bar; 
 }
 
 function psiToBar(psi) {
-  return psi / 14.5038;
+  return psi;
+}
+
+// --- Helper function to update connection state ---
+function updateConnectionState(connected) {
+  const tempToggle = document.getElementById("tempToggle");
+  const pressureToggle = document.getElementById("pressureToggle");
+  const alwaysOnToggle = document.getElementById("alwaysOnToggle");
+  const brightnessContainer = document.getElementById("brightnessContainer");
+  const setControlContainer = document.getElementById("setControlContainer");
+  const setControlInput = document.getElementById("setControlInput");
+  const setControlButton = document.getElementById("setControlButton");
+  
+  if (connected) {
+    tempToggle.classList.remove("disabled");
+    pressureToggle.classList.remove("disabled");
+    alwaysOnToggle.classList.remove("disabled");
+    brightnessContainer.classList.remove("disabled");
+    setControlContainer.classList.remove("disabled");
+    setControlInput.disabled = false;
+    setControlButton.disabled = false;
+  } else {
+    tempToggle.classList.add("disabled");
+    pressureToggle.classList.add("disabled");
+    alwaysOnToggle.classList.add("disabled");
+    brightnessContainer.classList.add("disabled");
+    setControlContainer.classList.add("disabled");
+    setControlInput.disabled = true;
+    setControlButton.disabled = true;
+  }
 }
 
 // --- Connection Functions ---
@@ -824,23 +904,19 @@ async function connectToDevice() {
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(serviceUuid);
     
-    // Get the read/notify characteristic
     characteristic = await service.getCharacteristic(characteristicUuid);
     console.log("Read characteristic properties:", characteristic.properties);
     
-    // Try to get a separate write characteristic
     try {
       writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
       console.log("Write characteristic found with properties:", writeCharacteristic.properties);
     } catch(e) {
       console.log("Separate write characteristic not found, trying to use read characteristic for writing");
       
-      // Check if the read characteristic supports writing
       if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
         writeCharacteristic = characteristic;
         console.log("Using read characteristic for writing");
       } else {
-        // List all available characteristics
         console.log("Listing all characteristics in service:");
         const characteristics = await service.getCharacteristics();
         for (const char of characteristics) {
@@ -858,13 +934,13 @@ async function connectToDevice() {
     characteristic.addEventListener("characteristicvaluechanged",handleData);
 
     btn.textContent="Disconnect"; btn.className="connected";
-    isConnected = true; // Set connection state to true
-    updateConnectionState(true); // Enable toggles
+    isConnected = true;
+    updateConnectionState(true);
     btn.onclick = disconnectFromDevice;
     
-    // Reset brightness and always-on data tracking on new connection
     brightnessDataReceived = false;
     alwaysOnDataReceived = false;
+    setControlDataReceived = false;
     receivedDataCount = 0;
     
     if (writeCharacteristic) {
@@ -902,22 +978,19 @@ function handleDisconnection() {
   const btn = document.getElementById("connectButton");
   btn.textContent="Connect"; 
   btn.className="disconnected";
-  isConnected = false; // Set connection state to false
-  updateConnectionState(false); // Disable toggles
-  updateGauges(); // Update gauges to show "--.-"
+  isConnected = false;
+  updateConnectionState(false);
+  updateGauges();
   characteristic = null;
   writeCharacteristic = null;
   device = null;
   btn.onclick = connectToDevice;
   
-  // Reset brightness and always-on tracking on disconnection
   brightnessDataReceived = false;
   alwaysOnDataReceived = false;
+  setControlDataReceived = false;
   receivedDataCount = 0;
 }
-
-// --- Button Setup ---
-document.getElementById("connectButton").onclick = connectToDevice;
 
 // --- Send data function ---
 async function sendData(command) {
@@ -934,7 +1007,6 @@ async function sendData(command) {
       const encoder = new TextEncoder();
       const data = encoder.encode(command);
       
-      // Try writeWithoutResponse first, then regular write
       if (writeCharacteristic.properties.writeWithoutResponse) {
         console.log("Using writeWithoutResponse");
         await writeCharacteristic.writeValueWithoutResponse(data);
@@ -946,8 +1018,6 @@ async function sendData(command) {
       }
       
       console.log("Data sent successfully");
-      
-      // Add to data entries for scrolling display
       addDataEntry(command, "sent");
       
     } catch(error) {
@@ -963,31 +1033,11 @@ async function sendData(command) {
     } else if(!device.gatt.connected) {
       errorMsg += "Device not connected";
     } else if(!writeCharacteristic) {
-      errorMsg += "No writable characteristic found - check console for available characteristics";
+      errorMsg += "No writable characteristic found";
     }
     
     console.log("Send error:", errorMsg);
     addDataEntry(errorMsg, "error");
-  }
-}
-
-// --- Helper function to update connection state ---
-function updateConnectionState(connected) {
-  const tempToggle = document.getElementById("tempToggle");
-  const pressureToggle = document.getElementById("pressureToggle");
-  const alwaysOnToggle = document.getElementById("alwaysOnToggle");
-  const brightnessContainer = document.getElementById("brightnessContainer");
-  
-  if (connected) {
-    tempToggle.classList.remove("disabled");
-    pressureToggle.classList.remove("disabled");
-    alwaysOnToggle.classList.remove("disabled");
-    brightnessContainer.classList.remove("disabled");
-  } else {
-    tempToggle.classList.add("disabled");
-    pressureToggle.classList.add("disabled");
-    alwaysOnToggle.classList.add("disabled");
-    brightnessContainer.classList.add("disabled");
   }
 }
 
@@ -1000,15 +1050,12 @@ function addDataEntry(data, type) {
     type
   };
   
-  // Add to beginning of array (newest first)
   dataEntries.unshift(entry);
   
-  // Limit to 100 entries to prevent performance issues
   if (dataEntries.length > 100) {
     dataEntries.pop();
   }
   
-  // Update the display
   updateDataDisplay();
 }
 
@@ -1016,12 +1063,10 @@ function addDataEntry(data, type) {
 function updateDataDisplay() {
   const rawDataDisplay = document.getElementById("rawDataDisplay");
   
-  // Clear existing content (except the clear button)
   const clearButton = document.getElementById("clearDataButton");
   rawDataDisplay.innerHTML = "";
   rawDataDisplay.appendChild(clearButton);
   
-  // Add entries
   dataEntries.forEach(entry => {
     const entryElement = document.createElement("div");
     entryElement.className = `data-entry ${entry.type}`;
@@ -1038,7 +1083,6 @@ function updateDataDisplay() {
     rawDataDisplay.appendChild(entryElement);
   });
   
-  // If no data, show placeholder
   if (dataEntries.length === 0) {
     const placeholder = document.createElement("div");
     placeholder.className = "data-entry";
@@ -1053,23 +1097,72 @@ document.getElementById("clearDataButton").onclick = function() {
   updateDataDisplay();
 };
 
+// --- Set Control Input Handler ---
+document.getElementById("setControlInput").oninput = function() {
+  // Only allow input if connected
+  if (!isConnected) {
+    this.value = "";
+    return;
+  }
+  
+  let value = this.value;
+  
+  // Remove any non-numeric characters except decimal point
+  value = value.replace(/[^0-9.]/g, '');
+  
+  // Ensure only one decimal point
+  const decimalCount = (value.match(/\./g) || []).length;
+  if (decimalCount > 1) {
+    const parts = value.split('.');
+    value = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  // Limit to 4 characters
+  if (value.length > 4) {
+    value = value.substring(0, 4);
+  }
+  
+  this.value = value;
+};
+
+// --- Set Control Button Handler ---
+document.getElementById("setControlButton").onclick = async () => {
+  if (!isConnected) {
+    return;
+  }
+  
+  const input = document.getElementById("setControlInput");
+  const value = input.value.trim();
+  
+  if (value === "") {
+    alert("Please enter a value");
+    return;
+  }
+  
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) {
+    alert("Please enter a valid number");
+    return;
+  }
+  
+  const command = `SC${value}`;
+  console.log(`Sending set control command: ${command}`);
+  
+  await sendData(command);
+};
+
 // --- Temperature Toggle Switch Handler ---
 document.getElementById("tempToggle").onclick = async () => {
-  // Check if disabled (not connected)
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
   
   console.log("Temperature toggle switch clicked");
   
-  // Send the appropriate command based on new state
   const command = tempToggleActive ? "C" : "F";
-  
-  // Immediately update the toggle switch visual state
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
-  // Update charts and gauges with new units
   updateCharts();
   updateGauges();
   
@@ -1078,51 +1171,42 @@ document.getElementById("tempToggle").onclick = async () => {
 
 // --- Brightness Slider Handler ---
 let brightnessTimeout = null;
-let userInitiatedBrightnessChange = false; // Flag to track user-initiated changes
+let userInitiatedBrightnessChange = false;
 
 document.getElementById("brightnessSlider").oninput = function() {
   const value = this.value;
   document.getElementById("brightnessValue").textContent = value;
-  userInitiatedBrightnessChange = true; // Mark as user-initiated
+  userInitiatedBrightnessChange = true;
 };
 
 document.getElementById("brightnessSlider").onchange = function() {
   const value = this.value;
   
-  // Only send command if this was a user-initiated change and we're connected
   if (userInitiatedBrightnessChange && isConnected) {
-    // Clear existing timeout to prevent multiple rapid sends
     if (brightnessTimeout) {
       clearTimeout(brightnessTimeout);
     }
     
-    // Format the value to 3 digits (e.g., 125 -> "125", 10 -> "010")
     const formattedValue = value.padStart(3, '0');
-    const command = `L${formattedValue}`;  // L for brightness command
+    const command = `L${formattedValue}`;
     sendData(command);
   }
   
-  // Reset the flag after handling the change
   userInitiatedBrightnessChange = false;
 };
 
 // --- Pressure Toggle Switch Handler ---
 document.getElementById("pressureToggle").onclick = async () => {
-  // Check if disabled (not connected)
   if (document.getElementById("pressureToggle").classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
   
   console.log("Pressure toggle switch clicked");
   
-  // Send the appropriate command based on new state
-  const command = pressureToggleActive ? "bar" : "psi";
-  
-  // Immediately update the toggle switch visual state
+  const command = pressureToggleActive ? "B" : "P";
   const newUnit = pressureToggleActive ? "Bar" : "PSI";
   updatePressureToggleSwitch(newUnit);
   
-  // Update charts and gauges with new units
   updateCharts();
   updateGauges();
   
@@ -1131,18 +1215,15 @@ document.getElementById("pressureToggle").onclick = async () => {
 
 // --- Always-On Toggle Switch Handler ---
 document.getElementById("alwaysOnToggle").onclick = async () => {
-  // Check if disabled (not connected)
   if (document.getElementById("alwaysOnToggle").classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
   
   console.log("Always-on toggle switch clicked");
   
-  // Toggle the state and send appropriate command
   const newState = !alwaysOnToggleActive;
   const command = newState ? "S1" : "S0";
   
-  // Immediately update the toggle switch visual state
   updateAlwaysOnToggleSwitch(newState);
   
   await sendData(command);
@@ -1153,12 +1234,14 @@ document.getElementById("rawDataToggle").onclick = () => {
   updateRawDataToggleSwitch(!rawDataToggleActive);
 };
 
+// --- Button Event Handlers ---
+document.getElementById("connectButton").onclick = connectToDevice;
+
 document.getElementById("pauseResumeButton").onclick=()=>{
   const btn = document.getElementById("pauseResumeButton");
   paused=!paused;
   btn.textContent=paused?"Resume":"Pause";
   
-  // Add/remove the resume class for styling
   if(paused) {
     btn.classList.add("resume");
   } else {
@@ -1169,14 +1252,12 @@ document.getElementById("pauseResumeButton").onclick=()=>{
 document.getElementById("resetButton").onclick=()=>{
   chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
   
-  // Reset charts
   [tempChart,pressureChart,combinedChart].forEach(chart=>{
     chart.data.labels=[];
     chart.data.datasets.forEach(ds=>ds.data=[]);
     chart.update();
   });
   
-  // Reset current value displays
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   
@@ -1184,7 +1265,6 @@ document.getElementById("resetButton").onclick=()=>{
   document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
   document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
   
-  // Reset gauges
   updateGauges();
 };
 
@@ -1200,7 +1280,6 @@ document.getElementById("toggleGaugeButton").onclick=()=>{
   gaugeView=!gaugeView;
   localStorage.setItem("gaugeMode", gaugeView?"true":"false");
   updateView();
-  // Update gauges when switching to gauge view
   if(gaugeView) {
     setTimeout(() => {
       updateGauges();
@@ -1217,10 +1296,9 @@ function updateView(){
     document.getElementById("splitView").style.display="none";
     document.getElementById("combinedView").style.display="none";
     document.getElementById("gaugeView").style.display="flex";
-    toggleViewButton.style.display="none"; // Hide the toggle view button
-    saveLoadDeleteButtons.style.display="none"; // Hide save/load/delete buttons
+    toggleViewButton.style.display="none";
+    saveLoadDeleteButtons.style.display="none";
     
-    // Hide most chart control buttons, but keep pause/resume and toggle gauge
     chartControlButtons.style.display="flex";
     document.getElementById("pauseResumeButton").style.display="inline-block";
     document.getElementById("toggleViewButton").style.display="none";
@@ -1232,9 +1310,8 @@ function updateView(){
     document.getElementById("splitView").style.display=splitView?"flex":"none";
     document.getElementById("combinedView").style.display=splitView?"none":"flex";
     document.getElementById("gaugeView").style.display="none";
-    saveLoadDeleteButtons.style.display="flex"; // Show save/load/delete buttons
+    saveLoadDeleteButtons.style.display="flex";
     
-    // Show all chart control buttons
     chartControlButtons.style.display="flex";
     document.getElementById("pauseResumeButton").style.display="inline-block";
     document.getElementById("toggleViewButton").style.display="inline-block";
@@ -1251,7 +1328,6 @@ if(localStorage.getItem("viewChoice")==="combined") splitView=false;
 if(localStorage.getItem("gaugeMode")==="true") gaugeView=true;
 updateView();
 
-// Initialize gauges with default values (showing "--.-" since not connected)
 setTimeout(() => {
   updateGauges();
 }, 100);
@@ -1267,13 +1343,9 @@ document.getElementById("deleteButton").onclick=()=>{showModal("delete");};
 function handleData(event){
   const rawData = new TextDecoder().decode(event.target.value).trim();
   
-  // Add to data entries for scrolling display
   addDataEntry(rawData, "received");
-  
-  // Increment received data count
   receivedDataCount++;
   
-  // Check for third and fourth values and update UI accordingly
   const dataParts = rawData.split(",");
   let isFahrenheit = false;
   let isPSI = false;
@@ -1304,15 +1376,12 @@ function handleData(event){
       updatePressureToggleSwitch("PSI");
       isPSI = true;
     } else {
-      // Don't change toggle state if we get unknown data
       isPSI = (currentPressureUnit === "PSI");
     }
   } else {
-    // Don't change toggle state if no data received - keep current state
     isPSI = (currentPressureUnit === "PSI");
   }
   
-  // Check for fifth data point (always-on toggle) - only update toggle if we haven't received always-on data yet
   if(dataParts.length >= 5 && !alwaysOnDataReceived) {
     const fifthValue = dataParts[4].trim();
     if(fifthValue === "1") {
@@ -1326,12 +1395,10 @@ function handleData(event){
     }
   }
   
-  // Check for sixth data point (brightness) - only update slider if we haven't received brightness data yet
   if(dataParts.length >= 6 && !brightnessDataReceived) {
     const sixthValue = dataParts[5].trim();
     const brightnessValue = parseInt(sixthValue);
     
-    // Validate brightness value is a number and within range (10-250)
     if(!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
       updateBrightnessSlider(brightnessValue);
       brightnessDataReceived = true;
@@ -1339,9 +1406,19 @@ function handleData(event){
     }
   }
   
-  // Also check if this is specifically the 6th data packet received (alternative approach)
+  // Check for seventh data point (set control value)
+  if(dataParts.length >= 7 && !setControlDataReceived) {
+    const seventhValue = dataParts[6].trim();
+    const setValue = parseFloat(seventhValue);
+    
+    if(!isNaN(setValue)) {
+      updateSetControlInput(setValue);
+      setControlDataReceived = true;
+      console.log(`Initial set control value from device: ${setValue}`);
+    }
+  }
+  
   if(receivedDataCount === 6 && dataParts.length >= 1 && !brightnessDataReceived) {
-    // If the 6th packet is just a brightness value
     const brightnessValue = parseInt(dataParts[0].trim());
     if(!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
       updateBrightnessSlider(brightnessValue);
@@ -1352,7 +1429,6 @@ function handleData(event){
   
   if(paused) return;
   
-  // Parse temperature and pressure values
   if(dataParts.length >= 2) {
     const tempStr = dataParts[0];
     const pressureStr = dataParts[1];
@@ -1360,7 +1436,6 @@ function handleData(event){
     currentTemp = parseFloat(tempStr);
     currentPressure = Math.max(0, parseFloat(pressureStr));
     
-    // Update charts and gauges
     updateCharts();
     updateGauges();
   }
@@ -1379,14 +1454,12 @@ function updateCharts() {
     chartData.pressure.shift();
   }
 
-  // Update temperature chart with appropriate unit
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
   tempChart.data.labels = chartData.labels; 
   tempChart.data.datasets[0].data = chartData.temp;
   tempChart.data.datasets[0].label = `Temp (${tempUnit})`;
   tempChart.options.scales.y.title.text = `Temperature (${tempUnit})`;
   
-  // Update temperature current value label
   let displayTemp = currentTemp;
   if (currentTempUnit === "F") {
     displayTemp = (currentTemp * 9/5) + 32;
@@ -1395,7 +1468,6 @@ function updateCharts() {
   
   tempChart.update();
 
-  // Update pressure chart with appropriate unit
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   let displayPressure = currentPressure;
   
@@ -1410,12 +1482,10 @@ function updateCharts() {
   pressureChart.data.datasets[0].label = `Pressure (${pressureUnit})`;
   pressureChart.options.scales.y.title.text = `Pressure (${pressureUnit})`;
   
-  // Update pressure current value label
   document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}`;
   
   pressureChart.update();
 
-  // Update combined chart
   combinedChart.data.labels = chartData.labels;
   combinedChart.data.datasets[0].data = chartData.temp.map(t => {
     return currentTempUnit === "F" ? (t * 9/5) + 32 : t;
@@ -1426,7 +1496,6 @@ function updateCharts() {
   combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
   
-  // Update combined current value label
   document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
   
   combinedChart.update();
@@ -1441,20 +1510,20 @@ setInterval(()=>{
       if(!isConnected) {
         isConnected = true;
         updateConnectionState(true);
-        updateGauges(); // Update gauges when connection is restored
+        updateGauges();
       }
     } else {
       btn.textContent="Connect"; btn.className="disconnected";
       if(isConnected) {
         isConnected = false;
         updateConnectionState(false);
-        updateGauges(); // Update gauges to show "--.-" when disconnected
+        updateGauges();
       }
     }
   }
 },1000);
 
-// Initialize toggles and brightness slider as disabled on page load
+// Initialize everything as disabled on page load
 updateConnectionState(false);
 </script>
 </body>
