@@ -4,7 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SirusPTB</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+// --- Raw Data Toggle Handler ---
+let rawDataVisible = false;
+document.getElementById("rawDataToggle").onclick = () => {
+  rawDataVisible = !rawDataVisible;
+  const slider = document.querySelector("#rawDataToggle .toggle-slider");
+  const display = document.getElementById("rawDataDisplay");
+  if (rawDataVisible) {
+    slider.textContent = "On";
+    display.style.display = "block";
+  } else {
+    slider.textContent = "Off";
+    display.style.display = "none";
+  }
+};
+
+</script>
 <style>
 body {
   margin: 0;
@@ -369,6 +385,38 @@ footer a:hover .bean-icon {
   fill: #A0522D;
 }
 
+
+/* --- Raw Data Section Styles (Dark Theme) --- */
+#rawDataContainer {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+  padding: 6px 10px;
+  background: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+#rawDataContainer span {
+  margin-right: 10px;
+  font-weight: 500;
+  color: #eee;
+}
+
+#rawDataDisplay {
+  margin-top: 8px;
+  padding: 10px;
+  background: #121212;
+  border: 1px solid #333;
+  border-radius: 8px;
+  height: 150px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #0f0;
+}
+
 </style>
 </head>
 <body>
@@ -395,18 +443,12 @@ footer a:hover .bean-icon {
         <rect x="34" y="8" width="4" height="4" fill="#ccc"/>
       </svg>
     </div>
-    <div class="toggle-container">
-      <span>Raw Data:</span>
-      <div id="rawDataToggle" class="toggle-switch active">
-        <div class="toggle-slider">ON</div>
-      </div>
+    
     </div>
   </div>
 
   <!-- Updated raw data display with clear button -->
-  <div id="rawDataDisplay" class="raw-data-container">
-    <button id="clearDataButton" title="Clear data">×</button>
-    <div class="data-entry">No data yet...</div>
+  
   </div>
 
   <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
@@ -483,6 +525,10 @@ footer a:hover .bean-icon {
                style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;">
         <span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</span>
       </div>
+  
+
+  
+
     </div>
   </div>
 
@@ -495,8 +541,24 @@ footer a:hover .bean-icon {
         <button id="setControlButton">Set</button>
         <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
       </div>
+  <div id="rawDataContainer">
+  <span>Raw Data:</span>
+  <div id="rawDataToggle" class="toggle-switch">
+    <div class="toggle-slider">Off</div>
+  </div>
+</div>
+      </div>
+
+  <div id="rawDataDisplay" class="raw-data-container">
+    <button id="clearDataButton" title="Clear data">×</button>
+    <div class="data-entry">No data yet...</div>
+
     </div>
   </div>
+
+  
+
+  
 </div>
 
 <!-- Modal -->
@@ -1607,6 +1669,22 @@ setInterval(()=>{
 
 // Initialize everything as disabled on page load
 updateConnectionState(false);
+
+// --- Raw Data Toggle Handler ---
+let rawDataVisible = false;
+document.getElementById("rawDataToggle").onclick = () => {
+  rawDataVisible = !rawDataVisible;
+  const slider = document.querySelector("#rawDataToggle .toggle-slider");
+  const display = document.getElementById("rawDataDisplay");
+  if (rawDataVisible) {
+    slider.textContent = "On";
+    display.style.display = "block";
+  } else {
+    slider.textContent = "Off";
+    display.style.display = "none";
+  }
+};
+
 </script>
 
 <footer>
@@ -1633,6 +1711,22 @@ window.addEventListener('scroll', function() {
     footer.style.display = 'none';
   }
 });
+
+// --- Raw Data Toggle Handler ---
+let rawDataVisible = false;
+document.getElementById("rawDataToggle").onclick = () => {
+  rawDataVisible = !rawDataVisible;
+  const slider = document.querySelector("#rawDataToggle .toggle-slider");
+  const display = document.getElementById("rawDataDisplay");
+  if (rawDataVisible) {
+    slider.textContent = "On";
+    display.style.display = "block";
+  } else {
+    slider.textContent = "Off";
+    display.style.display = "none";
+  }
+};
+
 </script>
 
 </body>
