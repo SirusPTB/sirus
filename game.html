@@ -32,15 +32,15 @@ canvas{
   bottom:0;
   left:0;
   width:100%;
-  height:80px;
+  height:110px; /* bigger height */
   background:rgba(255,255,255,0.05);
   touch-action:none;
   display:flex;
   justify-content:center;
   align-items:center;
-  font-size:14px;
-  color:#aaa;
-  font-style:italic;
+  font-size:16px;
+  color:#fff;
+  font-weight:bold;
 }
 .overlay{
   position:absolute;
@@ -83,7 +83,7 @@ canvas{
 <body>
 <div class="container">
   <canvas id="cv"></canvas>
-  <div id="swipeStrip">⬅️ Swipe here to move cup ➡️</div>
+  <div id="swipeStrip">⬅️ Swipe here to move ➡️</div>
 
   <div class="overlay" id="start">
     <h2>How to Play</h2>
@@ -115,13 +115,13 @@ function resize(){
   cup.h=cup.w*.6;
   cup.s=Math.max(3,cv.width*.012);
   cup.x=cv.width/2;
-  const stripTop = cv.height - 80;
+  const stripTop = cv.height - 110; // match bigger strip height
   cup.y = stripTop - cup.h/2 - 10;
 }
 
 function reset(){
-  items=[];score=0;lives=3;go=0;st=0;si=900; // slower spawn rate
-  fs=cv.height*.0015; // slower start speed
+  items=[];score=0;lives=3;go=0;st=0;si=900;
+  fs=cv.height*.0015;
   cup.x=cv.width/2; run=1; over.style.display='none';
 }
 
@@ -185,13 +185,13 @@ function loop(){
   if(st>si){
     spawn(); st=0;
     if(si>200) si-=8;
-    fs+=cv.height*.00002; // slower acceleration
+    fs+=cv.height*.00002;
   }
   update(); drawItems(); drawCup(); hud();
   requestAnimationFrame(loop);
 }
 
-// Swipe strip controls
+// Swipe controls
 swipeStrip.addEventListener('touchstart',e=>{
   lastX = e.touches[0].clientX;
 });
