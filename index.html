@@ -488,6 +488,7 @@ footer a:hover .bean-icon {
         <span style="color: #e0e0e0; font-weight: bold;">Pressure calibration:</span>
         <input type="text" id="setControlInput" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*">
         <button id="setControlButton">Set</button>
+        <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
       </div>
     </div>
   </div>
@@ -920,6 +921,7 @@ function updateConnectionState(connected) {
   const setControlContainer = document.getElementById("setControlContainer");
   const setControlInput = document.getElementById("setControlInput");
   const setControlButton = document.getElementById("setControlButton");
+  const zeroPressureButton = document.getElementById("zeroPressureButton");
   
   if (connected) {
     tempToggle.classList.remove("disabled");
@@ -929,6 +931,7 @@ function updateConnectionState(connected) {
     setControlContainer.classList.remove("disabled");
     setControlInput.disabled = false;
     setControlButton.disabled = false;
+    zeroPressureButton.disabled = false;
   } else {
     tempToggle.classList.add("disabled");
     pressureToggle.classList.add("disabled");
@@ -937,6 +940,7 @@ function updateConnectionState(connected) {
     setControlContainer.classList.add("disabled");
     setControlInput.disabled = true;
     setControlButton.disabled = true;
+    zeroPressureButton.disabled = true;
   }
 }
 
@@ -1194,6 +1198,16 @@ document.getElementById("setControlButton").onclick = async () => {
   console.log(`Sending set control command: ${command}`);
   
   await sendData(command);
+};
+
+
+// --- Zero Pressure Button Handler ---
+document.getElementById("zeroPressureButton").onclick = async () => {
+  if (!isConnected) {
+    return;
+  }
+  console.log("Zero Pressure button clicked");
+  await sendData("g");
 };
 
 // --- Temperature Toggle Switch Handler ---
