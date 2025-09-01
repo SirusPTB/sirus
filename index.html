@@ -328,40 +328,47 @@ button {
   background: #555;
 }
 
-/* Bean icon styles */
-.bean-link {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  background: #2a2a2a;
-  border-radius: 50%;
+
+
+
+footer {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  text-align: center;
+  padding: 12px;
+  font-size: 0.9em;
+  border-top: 1px solid #333;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+footer a {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #2a2a2a;
+  border-radius: 50%;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  z-index: 100;
 }
-
-.bean-link:hover {
+footer a:hover {
   background: #3a3a3a;
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
-
-.bean-icon {
-  width: 24px;
-  height: 24px;
+footer .bean-icon {
+  width: 18px;
+  height: 18px;
   fill: #8B4513;
   transition: fill 0.3s ease;
 }
-
-.bean-link:hover .bean-icon {
+footer a:hover .bean-icon {
   fill: #A0522D;
 }
+
 </style>
 </head>
 <body>
@@ -498,15 +505,6 @@ button {
   </div>
 </div>
 
-<!-- Bean Link Icon -->
-<a href="game.html" class="bean-link" title="Play Bean Game">
-  <svg class="bean-icon" viewBox="0 0 24 24">
-    <path d="M12 2C8 2 4 4 4 8c0 2.5 1.5 5 3 7 1.5 2 3 3.5 5 3.5s3.5-1.5 5-3.5c1.5-2 3-4.5 3-7 0-4-4-6-8-6zm0 2c3 0 6 1.5 6 4 0 2-1.2 4.2-2.5 5.8-1.3 1.6-2.5 2.7-3.5 2.7s-2.2-1.1-3.5-2.7C7.2 12.2 6 10 6 8c0-2.5 3-4 6-4z"/>
-    <circle cx="9" cy="8" r="1"/>
-    <circle cx="15" cy="8" r="1"/>
-  </svg>
-</a>
-
 <script>
 // --- BLE Variables ---
 const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
@@ -615,7 +613,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f"}}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f",callback:function(value){return value.toFixed(1);}}}
       }
     },
     plugins:[currentValuePlugin]
@@ -704,7 +702,7 @@ function drawGauge(canvas, value, min, max, unit, color) {
   ctx.strokeStyle = '#666';
   ctx.lineWidth = 2;
   ctx.fillStyle = '#999';
-  ctx.font = '14px Arial';
+  ctx.font = '12px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -1508,7 +1506,7 @@ function updateCharts() {
   if (currentTempUnit === "F") {
     displayTemp = (currentTemp * 9/5) + 32;
   }
-  document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(2)} ${tempUnit}`;
+  document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
   
   tempChart.update();
 
@@ -1540,7 +1538,7 @@ function updateCharts() {
   combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
   
-  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
+  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
   
   combinedChart.update();
 }
@@ -1570,6 +1568,33 @@ setInterval(()=>{
 // Initialize everything as disabled on page load
 updateConnectionState(false);
 </script>
+
+<footer>
+  <span>SirusPTB</span>
+  <a href="game.html" title="Play Bean Game">
+    
+<svg class="bean-icon" viewBox="0 0 64 64">
+  <path d="M45 10c-8-4-20 0-25 7-5 6-6 15-4 23 2 8 8 14 16 15 7 1 13-4 17-10 4-6 6-13 6-19 0-8-4-13-10-16z"
+        fill="#8B4513" />
+</svg>
+
+  </a>
+</footer>
+
+
+<script>
+window.addEventListener('scroll', function() {
+  const footer = document.querySelector('footer');
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const pageHeight = document.body.offsetHeight;
+  if (scrollPosition >= pageHeight - 2) {
+    footer.style.display = 'flex';
+  } else {
+    footer.style.display = 'none';
+  }
+});
+</script>
+
 </body>
 </html>
     
