@@ -1576,6 +1576,26 @@ function handleData(event){
     }
   }
   
+
+  if (dataParts.length >= 9) {
+    const ninthValue = dataParts[8].trim();
+    const batteryIcon = document.getElementById("batteryIcon");
+    if (ninthValue === "1") {
+      if (!document.getElementById("boltIcon")) {
+        const bolt = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        bolt.setAttribute("id", "boltIcon");
+        bolt.setAttribute("d", "M16 2 L10 12 H14 L8 22 L18 10 H14 Z");
+        bolt.setAttribute("fill", "yellow");
+        batteryIcon.appendChild(bolt);
+      }
+    } else {
+      const existingBolt = document.getElementById("boltIcon");
+      if (existingBolt) {
+        batteryIcon.removeChild(existingBolt);
+      }
+    }
+  }
+
   if(paused) return;
   
   if(dataParts.length >= 2) {
