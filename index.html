@@ -532,6 +532,9 @@ let alwaysOnDataReceived = false;
 let setControlDataReceived = false;
 let receivedDataCount = 0;
 let dataEntries = [];
+let ignoreTempUntil = 0;
+let ignorePressureUntil = 0;
+
 
 // --- Modal ---
 const modal = document.getElementById("popupModal");
@@ -1195,6 +1198,9 @@ document.getElementById("setControlButton").onclick = async () => {
 
 // --- Temperature Toggle Switch Handler ---
 document.getElementById("tempToggle").onclick = async () => {
+  if (document.getElementById("tempToggle").classList.contains("disabled")) return;
+  console.log("Temperature toggle switch clicked");
+  ignoreTempUntil = Date.now() + 2000;
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
     return;
   }
@@ -1239,6 +1245,9 @@ document.getElementById("brightnessSlider").onchange = function() {
 
 // --- Pressure Toggle Switch Handler ---
 document.getElementById("pressureToggle").onclick = async () => {
+  if (document.getElementById("pressureToggle").classList.contains("disabled")) return;
+  console.log("Pressure toggle switch clicked");
+  ignorePressureUntil = Date.now() + 2000;
   if (document.getElementById("pressureToggle").classList.contains("disabled")) {
     return;
   }
@@ -1394,15 +1403,17 @@ function handleData(event){
   
   if(dataParts.length >= 3){
     const thirdValue = dataParts[2].trim();
-    if(thirdValue === "C"){
-      updateTempToggleSwitch("C");
-      isFahrenheit = false;
-    } else if(thirdValue === "F"){
-      updateTempToggleSwitch("F");
-      isFahrenheit = true;
-    } else {
-      updateTempToggleSwitch("C");
-      isFahrenheit = false;
+    if (Date.now() > ignoreTempUntil) {
+      if(thirdValue === "C"){
+        updateTempToggleSwitch("C");
+        isFahrenheit = false;
+      } else if(thirdValue === "F"){
+        updateTempToggleSwitch("F");
+        isFahrenheit = true;
+      } else {
+        updateTempToggleSwitch("C");
+        isFahrenheit = false;
+      }
     }
   } else {
     updateTempToggleSwitch("C");
@@ -1411,14 +1422,16 @@ function handleData(event){
   
   if(dataParts.length >= 4){
     const fourthValue = dataParts[3].trim();
-    if(fourthValue === "bar"){
-      updatePressureToggleSwitch("Bar");
-      isPSI = false;
-    } else if(fourthValue === "psi"){
-      updatePressureToggleSwitch("PSI");
-      isPSI = true;
-    } else {
-      isPSI = (currentPressureUnit === "PSI");
+    if (Date.now() > ignorePressureUntil) {
+      if(fourthValue === "bar"){
+        updatePressureToggleSwitch("Bar");
+        isPSI = false;
+      } else if(fourthValue === "psi"){
+        updatePressureToggleSwitch("PSI");
+        isPSI = true;
+      } else {
+        isPSI = (currentPressureUnit === "PSI");
+      }
     }
   } else {
     isPSI = (currentPressureUnit === "PSI");
@@ -1503,9 +1516,6 @@ function updateCharts() {
   tempChart.options.scales.y.title.text = `Temperature (${tempUnit})`;
   
   let displayTemp = currentTemp;
-  if (currentTempUnit === "F") {
-    displayTemp = (currentTemp * 9/5) + 32;
-  }
   document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
   
   tempChart.update();
@@ -1529,16 +1539,14 @@ function updateCharts() {
   pressureChart.update();
 
   combinedChart.data.labels = chartData.labels;
-  combinedChart.data.datasets[0].data = chartData.temp.map(t => {
-    return currentTempUnit === "F" ? (t * 9/5) + 32 : t;
-  });
+  combinedChart.data.datasets[0].data = chartData.temp;
   combinedChart.data.datasets[1].data = chartData.pressure.map(p => {
     return currentPressureUnit === "PSI" ? barToPsi(p) : p;
   });
   combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
   
-  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
+  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${currentTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
   
   combinedChart.update();
 }
