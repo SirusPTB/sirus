@@ -22,6 +22,31 @@ document.getElementById("rawDataToggle").onclick = () => {
 
 </script>
 <style>
+
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  flex: 1;
+}
+footer {
+  background: #222;
+  color: white;
+  text-align: center;
+  padding: 10px;
+}
+
+
+
+
+
+
+
+
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -352,18 +377,7 @@ button {
 
 
 
-footer {
-  background: #1e1e1e;
-  color: #e0e0e0;
-  text-align: center;
-  padding: 12px;
-  font-size: 0.9em;
-  border-top: 1px solid #333;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
+
 
 footer a {
   display: flex;
@@ -425,6 +439,7 @@ footer a:hover .bean-icon {
 </style>
 </head>
 <body>
+  <main>
 <header>SirusPTB</header>
 
 <!-- Main Page -->
@@ -1713,6 +1728,7 @@ document.getElementById("rawDataToggle").onclick = () => {
 </svg>
 
   </a>
+</main>
 </footer>
 
 
