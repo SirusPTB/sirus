@@ -327,6 +327,41 @@ button {
 #rawDataDisplay::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Bean icon styles */
+.bean-link {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: #2a2a2a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 100;
+}
+
+.bean-link:hover {
+  background: #3a3a3a;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.bean-icon {
+  width: 24px;
+  height: 24px;
+  fill: #8B4513;
+  transition: fill 0.3s ease;
+}
+
+.bean-link:hover .bean-icon {
+  fill: #A0522D;
+}
 </style>
 </head>
 <body>
@@ -462,6 +497,15 @@ button {
     </div>
   </div>
 </div>
+
+<!-- Bean Link Icon -->
+<a href="game.html" class="bean-link" title="Play Bean Game">
+  <svg class="bean-icon" viewBox="0 0 24 24">
+    <path d="M12 2C8 2 4 4 4 8c0 2.5 1.5 5 3 7 1.5 2 3 3.5 5 3.5s3.5-1.5 5-3.5c1.5-2 3-4.5 3-7 0-4-4-6-8-6zm0 2c3 0 6 1.5 6 4 0 2-1.2 4.2-2.5 5.8-1.3 1.6-2.5 2.7-3.5 2.7s-2.2-1.1-3.5-2.7C7.2 12.2 6 10 6 8c0-2.5 3-4 6-4z"/>
+    <circle cx="9" cy="8" r="1"/>
+    <circle cx="15" cy="8" r="1"/>
+  </svg>
+</a>
 
 <script>
 // --- BLE Variables ---
@@ -1528,3 +1572,4 @@ updateConnectionState(false);
 </script>
 </body>
 </html>
+    
