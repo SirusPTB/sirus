@@ -29,12 +29,18 @@ canvas{
 }
 #swipeStrip{
   position:absolute;
-  bottom:100px;
+  bottom:0;
   left:0;
   width:100%;
   height:80px;
   background:rgba(255,255,255,0.05);
   touch-action:none;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:14px;
+  color:#aaa;
+  font-style:italic;
 }
 .overlay{
   position:absolute;
@@ -77,12 +83,12 @@ canvas{
 <body>
 <div class="container">
   <canvas id="cv"></canvas>
-  <div id="swipeStrip"></div>
+  <div id="swipeStrip">⬅️ Swipe here to move cup ➡️</div>
 
   <div class="overlay" id="start">
     <h2>How to Play</h2>
     <ul>
-      <li>Swipe left or right on the strip below the cup to move it</li>
+      <li>Swipe left or right on the strip at the bottom to move the cup</li>
       <li>Catch 🫘 beans to score points</li>
       <li>💀 skulls cost 1 life</li>
       <li>💣 bombs end the game instantly</li>
@@ -109,7 +115,7 @@ function resize(){
   cup.h=cup.w*.6;
   cup.s=Math.max(3,cv.width*.012);
   cup.x=cv.width/2;
-  const stripTop = cv.height - 100 - 80;
+  const stripTop = cv.height - 80;
   cup.y = stripTop - cup.h/2 - 10;
 }
 
