@@ -29,10 +29,10 @@ canvas{
 }
 #swipeStrip{
   position:absolute;
-  bottom:100px; /* higher from bottom */
+  bottom:100px;
   left:0;
   width:100%;
-  height:80px; /* bigger swipe area */
+  height:80px;
   background:rgba(255,255,255,0.05);
   touch-action:none;
 }
@@ -51,21 +51,21 @@ canvas{
   box-sizing:border-box;
 }
 .overlay h2{
-  font-size:2em; /* bigger heading */
+  font-size:2em;
   margin-bottom:15px;
 }
 .overlay ul{
   text-align:left;
   max-width:320px;
   padding-left:20px;
-  font-size:1.2em; /* bigger instructions */
+  font-size:1.2em;
   line-height:1.5em;
 }
 .btn{
   background:#ffb84d;
   border:none;
-  padding:14px 28px; /* bigger button */
-  font-size:20px; /* bigger text */
+  padding:14px 28px;
+  font-size:20px;
   font-weight:bold;
   border-radius:6px;
   cursor:pointer;
@@ -109,14 +109,13 @@ function resize(){
   cup.h=cup.w*.6;
   cup.s=Math.max(3,cv.width*.012);
   cup.x=cv.width/2;
-  // Position cup just above the swipe strip
-  const stripTop = cv.height - 100 - 80; // bottom offset + strip height
-  cup.y = stripTop - cup.h/2 - 10; // 10px gap above strip
+  const stripTop = cv.height - 100 - 80;
+  cup.y = stripTop - cup.h/2 - 10;
 }
 
 function reset(){
-  items=[];score=0;lives=3;go=0;st=0;si=700;
-  fs=cv.height*.0025; // slower start
+  items=[];score=0;lives=3;go=0;st=0;si=900; // slower spawn rate
+  fs=cv.height*.0015; // slower start speed
   cup.x=cv.width/2; run=1; over.style.display='none';
 }
 
@@ -180,7 +179,7 @@ function loop(){
   if(st>si){
     spawn(); st=0;
     if(si>200) si-=8;
-    fs+=cv.height*.00004; // slower acceleration
+    fs+=cv.height*.00002; // slower acceleration
   }
   update(); drawItems(); drawCup(); hud();
   requestAnimationFrame(loop);
