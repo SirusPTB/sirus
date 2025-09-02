@@ -78,7 +78,7 @@ canvas {
   margin: 10px 0 30px;
 }
 button {
-  padding: 10px 18px;
+  padding: 6px 12px; font-size: 0.85em;
   border: none;
   border-radius: 8px;
   font-size: 1em;
@@ -103,8 +103,8 @@ button {
 
 .toggle-switch {
   position: relative;
-  width: 60px;
-  height: 30px;
+  width: 45px;
+  height: 22px;
   background-color: #555;
   border-radius: 15px;
   cursor: pointer;
@@ -162,8 +162,8 @@ button {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   background-color: white;
   border-radius: 50%;
   transition: transform 0.3s;
@@ -176,7 +176,7 @@ button {
 }
 
 .toggle-switch.active .toggle-slider {
-  transform: translateX(30px);
+  transform: translateX(22px);
 }
 
 /* Modal styles */
@@ -457,7 +457,7 @@ footer a:hover .bean-icon {
       <div id="pressureToggle" class="toggle-switch">
         <div class="toggle-slider">Bar</div>
       </div>
-      <svg id="batteryIcon" viewBox="0 0 40 20" width="60" height="30" style="margin-left:12px;">
+      <svg id="batteryIcon" viewBox="0 0 40 20" width="40" height="20" style="margin-left:12px;">
         <rect x="1" y="4" width="32" height="12" stroke="#ccc" fill="none" stroke-width="2" rx="2" ry="2"/>
         <rect id="batteryLevel" x="3" y="6" width="0" height="8" fill="#4CAF50"/>
         <path id="boltIcon" d="M18 6 L14 12 H18 L16 16 L22 10 H18 Z" fill="#ffffff" style="display:none"/>
