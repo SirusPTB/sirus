@@ -570,21 +570,23 @@ footer a:hover .bean-icon {
         <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
       </div>
   
-  </details>
-</div>
-<div id="rawDataContainer" style="display:none;">
+  
+<div id="rawDataContainer">
   <span>Raw Data:</span>
   <div id="rawDataToggle" class="toggle-switch">
-    <div class="toggle-slider">Off</div>
+    <div class="toggle-slider">OFF</div>
   </div>
 </div>
       </div>
 
-  <div id="rawDataDisplay" class="raw-data-container" style="display:none;">
+  <div id="rawDataDisplay" class="raw-data-container hidden">
     <button id="clearDataButton" title="Clear data">×</button>
     <div class="data-entry">No data yet...</div>
 
     </div>
+</details>
+</div>
+
   </div>
 
   
@@ -624,7 +626,7 @@ let currentPressureUnit = "Bar";
 let tempToggleActive = false;
 let pressureToggleActive = false;
 let alwaysOnToggleActive = false;
-let rawDataToggleActive = true;
+let rawDataToggleActive = false;
 let isConnected = false;
 let brightnessDataReceived = false;
 let alwaysOnDataReceived = false;
@@ -1393,9 +1395,7 @@ document.getElementById("alwaysOnToggle").onclick = async () => {
 };
 
 // --- Raw Data Toggle Switch Handler ---
-document.getElementById("rawDataToggle").onclick = () => {
-  updateRawDataToggleSwitch(!rawDataToggleActive);
-};
+document.getElementById("rawDataToggle").onclick = () => { updateRawDataToggleSwitch(!rawDataToggleActive); };
 
 // --- Button Event Handlers ---
 document.getElementById("connectButton").onclick = connectToDevice;
