@@ -717,7 +717,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f",callback:function(value){return value.toFixed(1);}}}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:40,max:115}
       }
     },
     plugins:[currentValuePlugin]
@@ -756,7 +756,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f"}},
+        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:40,max:115},
         y2:{display:true,title:{display:false},ticks:{color:"#7fbfff"}}
       }
     },
