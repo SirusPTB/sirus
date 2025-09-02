@@ -579,7 +579,7 @@ footer a:hover .bean-icon {
 </div>
       </div>
 
-  <div id="rawDataDisplay" class="raw-data-container hidden">
+  <div id="rawDataDisplay" class="raw-data-container hidden" style="overflow-y:auto;">
     <button id="clearDataButton" title="Clear data">×</button>
     <div class="data-entry">No data yet...</div>
 
@@ -1237,7 +1237,8 @@ function updateDataDisplay() {
     placeholder.className = "data-entry";
     placeholder.textContent = "No data yet...";
     rawDataDisplay.appendChild(placeholder);
-  }
+  
+  rawDataDisplay.scrollTop = rawDataDisplay.scrollHeight;}
 }
 
 // --- Clear data entries ---
@@ -1769,6 +1770,48 @@ document.getElementById("rawDataToggle").onclick = () => {
   }
 };
 
+</script>
+
+
+<script>
+(function() {
+  function scrollRawToBottom() {
+    var el = document.getElementById('rawDataDisplay');
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function initRawAutoScroll() {
+    var el = document.getElementById('rawDataDisplay');
+    if (!el) return;
+
+    // Always try to scroll on load
+    scrollRawToBottom();
+
+    try {
+      // Observe content changes and text updates
+      var observer = new MutationObserver(function() {
+        scrollRawToBottom();
+      });
+      observer.observe(el, { childList: true, subtree: true, characterData: true });
+    } catch (e) {}
+
+    // Also scroll when the toggle is clicked (after visibility change)
+    var tog = document.getElementById('rawDataToggle');
+    if (tog && !tog.dataset.rawAutoScrollHooked) {
+      tog.addEventListener('click', function() {
+        setTimeout(scrollRawToBottom, 0);
+      });
+      tog.dataset.rawAutoScrollHooked = "1";
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRawAutoScroll);
+  } else {
+    initRawAutoScroll();
+  }
+})();
 </script>
 
 </body>
