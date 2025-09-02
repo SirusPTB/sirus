@@ -538,13 +538,13 @@ footer a:hover .bean-icon {
   </div>
 
   <!-- Brightness Slider -->
-  <div style="width: 80%; margin: 20px auto;">
+  <div style="width: 98%; margin: 20px auto;">
     <div id="brightnessContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; gap: 15px;">
-        <span style="color: #e0e0e0; font-weight: bold; min-width: 120px;">Device brightness:</span>
+        <span style="color: #e0e0e0; font-weight: bold; min-width: 100px; font-size: 0.9em;">Device brightness:</span>
         <input type="range" id="brightnessSlider" min="10" max="250" value="125" 
                style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;">
-        <span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</span>
+        <span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right; font-size: 0.9em;">125</span>
       </div>
   
 
@@ -554,17 +554,17 @@ footer a:hover .bean-icon {
   </div>
 
   <!-- Set Control Input -->
-  <div style="width: 80%; margin: 20px auto;">
+  <div style="width: 98%; margin: 20px auto;">
     <div id="setControlContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-        <span style="color: #e0e0e0; font-weight: bold;">Pressure calibration:</span>
+        <span style="color: #e0e0e0; font-weight: bold; font-size: 0.9em;">Pressure calibration:</span>
         <input type="text" id="setControlInput" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*">
         <button id="setControlButton">Set</button>
       </div>
       <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
         <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
       </div>
-  <div id="rawDataContainer">
+  <div id="rawDataContainer" style="display:none;">
   <span>Raw Data:</span>
   <div id="rawDataToggle" class="toggle-switch">
     <div class="toggle-slider">Off</div>
@@ -572,7 +572,7 @@ footer a:hover .bean-icon {
 </div>
       </div>
 
-  <div id="rawDataDisplay" class="raw-data-container">
+  <div id="rawDataDisplay" class="raw-data-container" style="display:none;">
     <button id="clearDataButton" title="Clear data">×</button>
     <div class="data-entry">No data yet...</div>
 
