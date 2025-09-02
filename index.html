@@ -60,7 +60,7 @@ header {
   font-weight: bold;
 }
 .canvas-container {
-  width: 90%;
+  width: 98%;
   margin: 10px auto;
   height: 300px;
 }
@@ -192,7 +192,7 @@ button {
   background: #1e1e1e;
   padding: 20px;
   border-radius: 10px;
-  width: 90%;
+  width: 98%;
   max-width: 400px;
   text-align: center;
 }
@@ -301,7 +301,7 @@ button {
   color: #00ff00; 
   padding: 10px; 
   margin: 10px auto; 
-  width: 90%; 
+  width: 98%; 
   border-radius: 8px; 
   font-family: monospace; 
   text-align: left; 
@@ -473,18 +473,18 @@ footer a:hover .bean-icon {
   </div>
 
   <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
-    <div style="width: 90%; margin: 0 auto;">
+    <div style="width: 98%; margin: 0 auto;">
       <div id="tempCurrentValue" style="background: #121212; color: #ff7f7f; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">Temperature: -- °C</div>
       <div class="canvas-container"><canvas id="tempChart"></canvas></div>
     </div>
-    <div style="width: 90%; margin: 0 auto;">
+    <div style="width: 98%; margin: 0 auto;">
       <div id="pressureCurrentValue" style="background: #121212; color: #7fbfff; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">Pressure: -- bar</div>
       <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
     </div>
   </div>
 
   <div id="combinedView" style="display:none; width:100%; align-items:center;">
-    <div style="width: 90%; margin: 0 auto;">
+    <div style="width: 98%; margin: 0 auto;">
       <div id="combinedCurrentValue" style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
         <span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
       </div>
@@ -493,7 +493,7 @@ footer a:hover .bean-icon {
   </div>
 
   <div id="gaugeView" style="display:none; width:100%; align-items:center;">
-    <div style="width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+    <div style="width: 98%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
       <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
         <!-- Temperature Gauge -->
         <div style="display: flex; flex-direction: column; align-items: center;">
@@ -553,7 +553,11 @@ footer a:hover .bean-icon {
     </div>
   </div>
 
-  <!-- Set Control Input -->
+  <!-- Advanced Panel -->
+<div style="width: 98%; margin: 20px auto;">
+  <details style="background:#1e1e1e; border-radius:8px; padding:10px;">
+    <summary style="color:#e0e0e0; font-weight:bold; cursor:pointer;">Advanced</summary>
+<!-- Set Control Input -->
   <div style="width: 98%; margin: 20px auto;">
     <div id="setControlContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
       <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
@@ -562,9 +566,13 @@ footer a:hover .bean-icon {
         <button id="setControlButton">Set</button>
       </div>
       <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
+        <span style="color: #e0e0e0; font-weight: bold; margin-right: 10px;">Zero offset:</span>
         <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
       </div>
-  <div id="rawDataContainer" style="display:none;">
+  
+  </details>
+</div>
+<div id="rawDataContainer" style="display:none;">
   <span>Raw Data:</span>
   <div id="rawDataToggle" class="toggle-switch">
     <div class="toggle-slider">Off</div>
