@@ -309,7 +309,7 @@ button {
   overflow-y: auto;
   transition: all 0.3s ease;
   display: flex;
-  flex-direction: column-reverse; /* Newest at the bottom */
+  flex-direction: column; /* Newest at the bottom */
 }
 
 #rawDataDisplay.hidden {
@@ -1199,7 +1199,7 @@ function addDataEntry(data, type) {
     type
   };
   
-  dataEntries.unshift(entry);
+  dataEntries.push(entry);
   
   if (dataEntries.length > 100) {
     dataEntries.pop();
