@@ -717,7 +717,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:40,max:115}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:0,max:120}
       }
     },
     plugins:[currentValuePlugin]
@@ -756,7 +756,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:40,max:115},
+        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f",stepSize:5,callback:function(value){return Math.round(value);}},min:0,max:120},
         y2:{display:true,title:{display:false},ticks:{color:"#7fbfff"}}
       }
     },
@@ -1610,15 +1610,20 @@ function handleData(event){
   
   if(paused) return;
   
-  if(dataParts.length >= 2) {
+  if (dataParts.length >= 2) {
     const tempStr = dataParts[0];
     const pressureStr = dataParts[1];
-    
-    currentTemp = parseFloat(tempStr);
-    currentPressure = Math.max(0, parseFloat(pressureStr));
-    
-    updateCharts();
-    updateGauges();
+
+    const parsedTemp = parseFloat(tempStr);
+    const parsedPressure = parseFloat(pressureStr);
+
+    if (!isNaN(parsedTemp) && !isNaN(parsedPressure)) {
+      currentTemp = parsedTemp;
+      currentPressure = Math.max(0, parsedPressure);
+
+      updateCharts();
+      updateGauges();
+    }
   }
 
 // 9th data point (index 8): show a white lightning bolt over the battery when value == 1
@@ -1654,7 +1659,17 @@ function updateCharts() {
   let displayTemp = currentTemp;
   document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
   
+  // --- Dynamic Y-axis scaling for temperature ---
+  if (displayTemp > 50) {
+    tempChart.options.scales.y.min = 45;
+    tempChart.options.scales.y.max = 120;
+  } else {
+    tempChart.options.scales.y.min = 0;
+    tempChart.options.scales.y.max = 120;
+  }
+  
   tempChart.update();
+
 
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   let displayPressure = currentPressure;
