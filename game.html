@@ -106,7 +106,7 @@ canvas{
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 const swipeStrip=document.getElementById('swipeStrip');
-let cup={},items=[],score,lives,go,st,si,fs,run;
+let cup={},items=[],score,lives,go,st,si,fs,run,highScore=0;
 let lastX=null;
 
 function resize(){
@@ -121,6 +121,8 @@ function resize(){
 }
 
 function reset(){
+  let stored = localStorage.getItem('coffeeHighScore');
+  if(stored) highScore = parseInt(stored);
   items=[];score=0;lives=3;go=0;st=0;si=900;
   fs=cv.height*.0015;
   cup.x=cv.width/2; run=1; over.style.display='none';
@@ -171,13 +173,18 @@ function hud(){
   ctx.fillStyle='#fff';
   ctx.font=`${cv.width*.04}px sans-serif`;
   ctx.textAlign='left'; ctx.fillText('Score:'+score,10,30);
+  ctx.textAlign='center'; ctx.fillText('High:'+highScore,cv.width/2,30);
   ctx.textAlign='right'; ctx.fillText('Lives:'+lives,cv.width-10,30);
 }
 
 function loop(){
   if(!run) return;
   if(go){
-    final.textContent=`Game Over — Score: ${score}`;
+    if(score > highScore){
+      highScore = score;
+      localStorage.setItem('coffeeHighScore', highScore);
+    }
+    final.textContent=`Game Over — Score: ${score} | High Score: ${highScore}`;
     over.style.display='flex'; run=0; return;
   }
   ctx.clearRect(0,0,cv.width,cv.height);
