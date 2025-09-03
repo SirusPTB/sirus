@@ -37,7 +37,7 @@ canvas{
   touch-action:none;
   display:flex;
   justify-content:center;
-  align-items:flex-start; /* move label higher */
+  align-items:flex-start;
   padding-top:10px;
   font-size:16px;
   color:#fff;
@@ -79,6 +79,27 @@ canvas{
   color:#000;
   margin-top:15px;
 }
+#final {
+  font-size:24px;
+  margin-bottom:10px;
+}
+#newHigh {
+  font-size:22px;
+  color:limegreen;
+  display:none;
+  margin-bottom:15px;
+  animation:none;
+}
+@keyframes flashScale {
+  0%   { transform: scale(1);   opacity:1; }
+  25%  { transform: scale(1.3); opacity:0.7; }
+  50%  { transform: scale(1);   opacity:1; }
+  75%  { transform: scale(1.3); opacity:0.7; }
+  100% { transform: scale(1);   opacity:1; }
+}
+#newHigh.animate {
+  animation: flashScale 1s ease-in-out 2;
+}
 </style>
 </head>
 <body>
@@ -98,7 +119,8 @@ canvas{
   </div>
 
   <div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
-    <div id="final" style="font-size:24px;margin-bottom:15px">Game Over</div>
+    <div id="final">Game Over</div>
+    <div id="newHigh"></div>
     <button class="btn" id="again">Play Again</button>
   </div>
 </div>
@@ -125,7 +147,11 @@ function reset(){
   if(stored) highScore = parseInt(stored);
   items=[];score=0;lives=3;go=0;st=0;si=900;
   fs=cv.height*.0015;
-  cup.x=cv.width/2; run=1; over.style.display='none';
+  cup.x=cv.width/2; run=1; 
+  over.style.display='none';
+  const nh = document.getElementById('newHigh');
+  nh.style.display='none';
+  nh.classList.remove('animate');
 }
 
 function spawn(){
@@ -183,8 +209,12 @@ function loop(){
     if(score > highScore){
       highScore = score;
       localStorage.setItem('coffeeHighScore', highScore);
+      const nh = document.getElementById('newHigh');
+      nh.textContent = `🎉 New High Score: ${highScore}`;
+      nh.style.display='block';
+      nh.classList.add('animate');
     }
-    final.textContent=`Game Over — Score: ${score} | High Score: ${highScore}`;
+    final.textContent=`Game Over — Score: ${score}`;
     over.style.display='flex'; run=0; return;
   }
   ctx.clearRect(0,0,cv.width,cv.height);
