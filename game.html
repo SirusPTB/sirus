@@ -1,256 +1,284 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Coffee Catch</title>
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<style>
-html,body{
-  margin:0;
-  padding:0;
-  height:100%;
-  background:#0f0f12;
-  font-family:"Segoe UI",sans-serif;
-}
-.container{
-  display:flex;
-  flex-direction:column;
-  height:100vh;
-  width:100%;
-  position:relative;
-}
-canvas{
-  flex:1;
-  background:linear-gradient(#1d2230,#0f0f12);
-  border:2px solid #333;
-  border-radius:8px;
-  touch-action:none;
-  display:block;
-}
-#swipeStrip{
-  position:absolute;
-  bottom:0;
-  left:0;
-  width:100%;
-  height:110px;
-  background:rgba(255,255,255,0.05);
-  touch-action:none;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  padding-top:10px;
-  font-size:16px;
-  color:#fff;
-  font-weight:bold;
-}
-.overlay{
-  position:absolute;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,.85);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  color:#fff;
-  text-align:center;
-  padding:20px;
-  box-sizing:border-box;
-}
-.overlay h2{
-  font-size:2em;
-  margin-bottom:15px;
-}
-.overlay ul{
-  text-align:left;
-  max-width:320px;
-  padding-left:20px;
-  font-size:1.2em;
-  line-height:1.5em;
-}
-.btn{
-  background:#ffb84d;
-  border:none;
-  padding:14px 28px;
-  font-size:20px;
-  font-weight:bold;
-  border-radius:6px;
-  cursor:pointer;
-  color:#000;
-  margin-top:15px;
-}
-#final {
-  font-size:24px;
-  margin-bottom:10px;
-}
-#newHigh {
-  font-size:22px;
-  color:limegreen;
-  display:none;
-  margin-bottom:15px;
-  animation:none;
-}
-@keyframes flashScale {
-  0%   { transform: scale(1);   opacity:1; }
-  25%  { transform: scale(1.3); opacity:0.7; }
-  50%  { transform: scale(1);   opacity:1; }
-  75%  { transform: scale(1.3); opacity:0.7; }
-  100% { transform: scale(1);   opacity:1; }
-}
-#newHigh.animate {
-  animation: flashScale 1s ease-in-out 2;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Coffee Catch</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0f0f12;
+      font-family: "Segoe UI", sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      position: relative;
+    }
+    canvas {
+      flex: 1;
+      background: linear-gradient(#1d2230, #0f0f12);
+      border: 2px solid #333;
+      border-radius: 8px;
+      touch-action: none;
+      display: block;
+    }
+    #swipeStrip {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 110px;
+      background: rgba(255,255,255,0.05);
+      touch-action: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 10px;
+      font-size: 16px;
+      color: #fff;
+      font-weight: bold;
+    }
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .overlay h2 {
+      font-size: 2em;
+      margin-bottom: 15px;
+    }
+    .overlay ul {
+      text-align: left;
+      max-width: 320px;
+      padding-left: 20px;
+      font-size: 1.2em;
+      line-height: 1.5em;
+    }
+    .btn {
+      background: #ffb84d;
+      border: none;
+      padding: 14px 28px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #000;
+      margin-top: 15px;
+    }
+    #final {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #newHigh {
+      font-size: 22px;
+      color: limegreen;
+      display: none;
+      margin-bottom: 15px;
+      animation: none;
+    }
+    @keyframes flashScale {
+      0%   { transform: scale(1);   opacity:1; }
+      25%  { transform: scale(1.3); opacity:0.7; }
+      50%  { transform: scale(1);   opacity:1; }
+      75%  { transform: scale(1.3); opacity:0.7; }
+      100% { transform: scale(1);   opacity:1; }
+    }
+    #newHigh.animate {
+      animation: flashScale 1s ease-in-out 2;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <canvas id="cv"></canvas>
-  <div id="swipeStrip">⬅️ Swipe here to move ➡️</div>
+  <div class="container">
+    <canvas id="cv"></canvas>
+    <div id="swipeStrip">⬅️ Swipe or use ⬅️ ➡️ keys to move ➡️</div>
 
-  <div class="overlay" id="start">
-    <h2>How to Play</h2>
-    <ul>
-      <li>Swipe left or right on the strip at the bottom to move the cup</li>
-      <li>Catch 🫘 beans to score points</li>
-      <li>💀 skulls cost 1 life</li>
-      <li>💣 bombs end the game instantly</li>
-    </ul>
-    <button class="btn" id="goBtn">Start Game</button>
+    <div class="overlay" id="start">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Swipe left/right or use ⬅️ ➡️ keys to move the cup</li>
+        <li>Catch 🫘 beans to score points</li>
+        <li>💀 skulls cost 1 life</li>
+        <li>💣 bombs end the game instantly</li>
+      </ul>
+      <button class="btn" id="goBtn">Start Game</button>
+    </div>
+
+    <div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
+      <div id="final">Game Over</div>
+      <div id="newHigh"></div>
+      <button class="btn" id="again">Play Again</button>
+    </div>
   </div>
 
-  <div class="overlay" id="over" style="display:none;background:rgba(0,0,0,.6)">
-    <div id="final">Game Over</div>
-    <div id="newHigh"></div>
-    <button class="btn" id="again">Play Again</button>
-  </div>
-</div>
+  <script>
+    const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+    const swipeStrip = document.getElementById('swipeStrip');
+    const over = document.getElementById('over');
+    const start = document.getElementById('start');
+    const final = document.getElementById('final');
+    const goBtn = document.getElementById('goBtn');
+    const again = document.getElementById('again');
+    let cup = {}, items = [], score, lives, go, st, si, fs, run, highScore = 0;
+    let lastX = null;
 
-<script>
-const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
-const swipeStrip=document.getElementById('swipeStrip');
-let cup={},items=[],score,lives,go,st,si,fs,run,highScore=0;
-let lastX=null;
-
-function resize(){
-  cv.width=cv.clientWidth;
-  cv.height=cv.clientHeight;
-  cup.w=cv.width*.12;
-  cup.h=cup.w*.6;
-  cup.s=Math.max(3,cv.width*.012);
-  cup.x=cv.width/2;
-  const stripTop = cv.height - 110;
-  cup.y = stripTop - cup.h/2 - 10;
-}
-
-function reset(){
-  let stored = localStorage.getItem('coffeeHighScore');
-  if(stored) highScore = parseInt(stored);
-  items=[];score=0;lives=3;go=0;st=0;si=900;
-  fs=cv.height*.0015;
-  cup.x=cv.width/2; run=1; 
-  over.style.display='none';
-  const nh = document.getElementById('newHigh');
-  nh.style.display='none';
-  nh.classList.remove('animate');
-}
-
-function spawn(){
-  let hc=Math.min(.25+score*.01,.6);
-  let t=Math.random()<hc?(Math.random()<.8?'skull':'bomb'):'bean';
-  items.push({x:Math.random()*(cv.width-30)+15,y:-20,t});
-}
-
-function drawCup(){
-  ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-  ctx.strokeRect(cup.x-cup.w/2,cup.y-cup.h/2,cup.w,cup.h);
-  ctx.fillStyle='#6b4226';
-  ctx.fillRect(cup.x-cup.w/2+2,cup.y-cup.h/2+2,cup.w-4,cup.h/3);
-  ctx.beginPath();
-  ctx.arc(cup.x+cup.w/2,cup.y,cup.w/4,Math.PI/4,-Math.PI/4,1);
-  ctx.stroke();
-}
-
-function drawItems(){
-  ctx.font=`${cv.width*.06}px sans-serif`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  items.forEach(it=>{
-    ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=4;
-    ctx.fillText(it.t=='bean'?'🫘':it.t=='bomb'?'💣':'💀',it.x,it.y);
-    ctx.shadowBlur=0;
-  });
-}
-
-function update(){
-  items.forEach(it=>it.y+=fs);
-  items=items.filter(it=>{
-    if(it.y>cv.height+20) return 0;
-    if(it.y+12>cup.y-cup.h/2 && it.y-12<cup.y+cup.h/2 &&
-       it.x>cup.x-cup.w/2 && it.x<cup.x+cup.w/2){
-      if(it.t=='bean') score++;
-      else if(it.t=='skull'){ if(--lives<=0) go=1; }
-      else go=1;
-      return 0;
+    function resize() {
+      cv.width = cv.clientWidth;
+      cv.height = cv.clientHeight;
+      cup.w = cv.width * 0.12;
+      cup.h = cup.w * 0.6;
+      cup.s = Math.max(3, cv.width * 0.012);
+      const stripTop = cv.height - 110;
+      cup.y = stripTop - cup.h / 2 - 10;
     }
-    return 1;
-  });
-}
 
-function hud(){
-  ctx.fillStyle='#fff';
-  ctx.font=`${cv.width*.04}px sans-serif`;
-  ctx.textAlign='left'; ctx.fillText('Score:'+score,10,30);
-  ctx.textAlign='center'; ctx.fillText('High:'+highScore,cv.width/2,30);
-  ctx.textAlign='right'; ctx.fillText('Lives:'+lives,cv.width-10,30);
-}
-
-function loop(){
-  if(!run) return;
-  if(go){
-    if(score > highScore){
-      highScore = score;
-      localStorage.setItem('coffeeHighScore', highScore);
+    function reset() {
+      let stored = localStorage.getItem('coffeeHighScore');
+      if (stored) highScore = parseInt(stored);
+      items = []; score = 0; lives = 3; go = 0; st = 0; si = 900;
+      fs = cv.height * 0.0015;
+      cup.x = cv.width / 2; run = 1;
+      over.style.display = 'none';
       const nh = document.getElementById('newHigh');
-      nh.textContent = `🎉 New High Score: ${highScore}`;
-      nh.style.display='block';
-      nh.classList.add('animate');
+      nh.style.display = 'none';
+      nh.classList.remove('animate');
     }
-    final.textContent=`Game Over — Score: ${score}`;
-    over.style.display='flex'; run=0; return;
-  }
-  ctx.clearRect(0,0,cv.width,cv.height);
-  cup.x=Math.max(cup.w/2,Math.min(cv.width-cup.w/2,cup.x));
-  st+=16.67;
-  if(st>si){
-    spawn(); st=0;
-    if(si>200) si-=8;
-    fs+=cv.height*.00002;
-  }
-  update(); drawItems(); drawCup(); hud();
-  requestAnimationFrame(loop);
-}
 
-// Swipe controls
-swipeStrip.addEventListener('touchstart',e=>{
-  lastX = e.touches[0].clientX;
-});
-swipeStrip.addEventListener('touchmove',e=>{
-  const currentX = e.touches[0].clientX;
-  if(lastX!==null){
-    const dx = currentX - lastX;
-    cup.x += dx;
-  }
-  lastX = currentX;
-});
-swipeStrip.addEventListener('touchend',()=>{
-  lastX=null;
-});
+    function spawn() {
+      let hc = Math.min(0.25 + score * 0.01, 0.6);
+      let t = Math.random() < hc ? (Math.random() < 0.8 ? 'skull' : 'bomb') : 'bean';
+      items.push({ x: Math.random() * (cv.width - 30) + 15, y: -20, t });
+    }
 
-again.ontouchstart=()=>{resize();reset();requestAnimationFrame(loop)};
-goBtn.ontouchstart=()=>{start.style.display='none';resize();reset();requestAnimationFrame(loop)};
+    function drawCup() {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      ctx.strokeRect(cup.x - cup.w / 2, cup.y - cup.h / 2, cup.w, cup.h);
+      ctx.fillStyle = '#6b4226';
+      ctx.fillRect(cup.x - cup.w / 2 + 2, cup.y - cup.h / 2 + 2, cup.w - 4, cup.h / 3);
+      ctx.beginPath();
+      ctx.arc(cup.x + cup.w / 2, cup.y, cup.w / 4, Math.PI / 4, -Math.PI / 4, 1);
+      ctx.stroke();
+    }
 
-addEventListener('resize',resize);
-addEventListener('orientationchange',()=>setTimeout(resize,200));
-resize();
-</script>
+    function drawItems() {
+      ctx.font = `${cv.width * 0.06}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      items.forEach(it => {
+        ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 4;
+        ctx.fillText(it.t === 'bean' ? '🫘' : it.t === 'bomb' ? '💣' : '💀', it.x, it.y);
+        ctx.shadowBlur = 0;
+      });
+    }
+
+    function update() {
+      items.forEach(it => it.y += fs);
+      items = items.filter(it => {
+        if (it.y > cv.height + 20) return false;
+        if (it.y + 12 > cup.y - cup.h / 2 && it.y - 12 < cup.y + cup.h / 2 &&
+          it.x > cup.x - cup.w / 2 && it.x < cup.x + cup.w / 2) {
+          if (it.t === 'bean') score++;
+          else if (it.t === 'skull') { if (--lives <= 0) go = 1; }
+          else go = 1;
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function hud() {
+      ctx.fillStyle = '#fff';
+      ctx.font = `${cv.width * 0.04}px sans-serif`;
+      ctx.textAlign = 'left'; ctx.fillText('Score:' + score, 10, 30);
+      ctx.textAlign = 'center'; ctx.fillText('High:' + highScore, cv.width / 2, 30);
+      ctx.textAlign = 'right'; ctx.fillText('Lives:' + lives, cv.width - 10, 30);
+    }
+
+    function loop() {
+      if (!run) return;
+      if (go) {
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('coffeeHighScore', highScore);
+          const nh = document.getElementById('newHigh');
+          nh.textContent = `🎉 New High Score: ${highScore}`;
+          nh.style.display = 'block';
+          nh.classList.add('animate');
+        }
+        final.textContent = `Game Over — Score: ${score}`;
+        over.style.display = 'flex'; run = 0; return;
+      }
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      cup.x = Math.max(cup.w / 2, Math.min(cv.width - cup.w / 2, cup.x));
+      st += 16.67;
+      if (st > si) {
+        spawn(); st = 0;
+        if (si > 200) si -= 8;
+        fs += cv.height * 0.00002;
+      }
+      update(); drawItems(); drawCup(); hud();
+      requestAnimationFrame(loop);
+    }
+
+    // Touch controls
+    swipeStrip.addEventListener('touchstart', e => {
+      lastX = e.touches[0].clientX;
+    });
+    swipeStrip.addEventListener('touchmove', e => {
+      const currentX = e.touches[0].clientX;
+      if (lastX !== null) {
+        const dx = currentX - lastX;
+        cup.x += dx;
+      }
+      lastX = currentX;
+    });
+    swipeStrip.addEventListener('touchend', () => {
+      lastX = null;
+    });
+
+    // Keyboard controls
+    document.addEventListener('keydown', e => {
+      if (!run) return;
+      if (e.key === 'ArrowLeft') cup.x -= cup.s * 3;
+      else if (e.key === 'ArrowRight') cup.x += cup.s * 3;
+    });
+
+    // Buttons
+    goBtn.addEventListener('click', () => {
+      start.style.display = 'none';
+      resize();
+      reset();
+      requestAnimationFrame(loop);
+    });
+    again.addEventListener('click', () => {
+      resize();
+      reset();
+      requestAnimationFrame(loop);
+    });
+
+    // Fix for initial mobile layout shift
+    window.addEventListener('load', () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          resize(); // Delayed to fix layout issue
+        });
+      });
+    });
+
+    window.addEventListener('resize', resize);
+  </script>
 </body>
 </html>
