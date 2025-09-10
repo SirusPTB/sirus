@@ -436,9 +436,89 @@ footer a:hover .bean-icon {
   color: #0f0;
 }
 
+
+/* Floating help icon */
+#helpIcon {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  background: #444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1000;
+  transition: background 0.3s ease;
+}
+#helpIcon:hover {
+  background: #666;
+}
+
+/* Help popup modal */
+#helpPopup {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+}
+#helpPopup .popup-content {
+  background: #1e1e1e;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  text-align: center;
+}
+#helpPopup button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+}
+#helpPopup button:hover {
+  background: #45a049;
+}
+
 </style>
 </head>
 <body>
+
+<!-- Floating Help Icon -->
+<div id="helpIcon">?</div>
+
+<!-- Help Popup -->
+<div id="helpPopup">
+  <div class="popup-content">
+    
+    <h3>Device Button Usage</h3>
+    <p>Device button uses - </p>
+    <ul style='text-align:left; line-height:1.6;'>
+      <li>Three quick presses of the <b>P</b> button = Turn device off</li>
+      <li>Two quick presses of the <b>P</b> button = Brightness setting</li>
+      <li>Long press <b>P</b> button = Zero pressure</li>
+      <li>Two quick presses of the <b>T</b> button = Toggle keep screen on</li>
+      <li>Long press <b>T</b> button = Calibrate pressure</li>
+    </ul>
+
+    <button id="closeHelp">Close</button>
+  </div>
+</div>
+
   <main>
 <header>SirusPTB</header>
 
@@ -1831,6 +1911,20 @@ document.getElementById("rawDataToggle").onclick = () => {
 })();
 </script>
 
+<script>
+// Help icon functionality
+document.getElementById("helpIcon").onclick = function() {
+  document.getElementById("helpPopup").style.display = "flex";
+};
+document.getElementById("closeHelp").onclick = function() {
+  document.getElementById("helpPopup").style.display = "none";
+};
+window.onclick = function(event) {
+  if (event.target === document.getElementById("helpPopup")) {
+    document.getElementById("helpPopup").style.display = "none";
+  }
+};
+</script>
 </body>
 </html>
     
