@@ -855,9 +855,21 @@ function handleData(event) {
     if (!isNaN(batteryValue)) {
       const level = Math.max(0, Math.min(100, batteryValue));
       const batteryFill = document.getElementById("batteryLevel");
+      const batteryOutline = document.querySelector('#batteryIcon rect[stroke="#ccc"]');
+      const batteryTerminal = document.querySelector('#batteryIcon rect[fill="#ccc"]');
+      
       if (batteryFill) {
         batteryFill.setAttribute("width", (level / 100) * 28);
         batteryFill.setAttribute("fill", level < 20 ? "#f44336" : "#4CAF50");
+      }
+      
+      // Turn battery icon red when below 5%
+      if (level < 5) {
+        if (batteryOutline) batteryOutline.setAttribute("stroke", "#f44336");
+        if (batteryTerminal) batteryTerminal.setAttribute("fill", "#f44336");
+      } else {
+        if (batteryOutline) batteryOutline.setAttribute("stroke", "#ccc");
+        if (batteryTerminal) batteryTerminal.setAttribute("fill", "#ccc");
       }
     }
   }
