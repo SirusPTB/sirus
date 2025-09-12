@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SirusPTB</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+document.getElementById("setSleepButton").onclick = async () => {
+  if (!isConnected) return;
+  const val = parseInt(document.getElementById("sleepTimeInput").value, 10);
+  if (isNaN(val) || val < 1 || val > 60) { alert("Enter a value between 1 and 60 minutes."); return; }
+  await sendData(`n${val}`);
+};
+
+</script>
 <style>
 html, body { height: 100%; margin: 0; display: flex; flex-direction: column; }
 main { flex: 1; }
@@ -90,6 +98,161 @@ footer a:hover .bean-icon { fill: #A0522D; }
 #helpPopup .popup-content { background: #1e1e1e; color: #fff; padding: 20px; border-radius: 10px; max-width: 400px; text-align: center; }
 #helpPopup button { margin-top: 15px; padding: 8px 16px; border: none; border-radius: 6px; background: #4CAF50; color: white; cursor: pointer; }
 #helpPopup button:hover { background: #45a049; }
+
+<style>
+/* Hide number input arrows */
+#sleepTimeInput::-webkit-outer-spin-button,
+#sleepTimeInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#sleepTimeInput[type=number] {
+  -moz-appearance: textfield;
+}
+
+.advanced-section {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+.advanced-section summary {
+  color: #e0e0e0;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.1em;
+}
+.advanced-content {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+.controls-table {
+  width: 100%;
+  max-width: 500px;
+  border-spacing: 0;
+  border-collapse: separate;
+}
+
+.controls-table tr {
+  margin-bottom: 25px;
+  display: table-row;
+}
+
+.controls-table tr:not(:last-child) {
+  border-bottom: 25px solid transparent;
+}
+
+.control-label {
+  color: #e0e0e0;
+  font-weight: bold;
+  font-size: 0.95em;
+  text-align: left;
+  padding: 8px 15px 8px 0;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.input-cell {
+  text-align: center;
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.button-cell {
+  text-align: center;
+  padding: 8px 0 8px 10px;
+  vertical-align: middle;
+}
+
+.toggle-cell {
+  text-align: center;
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.raw-data-cell {
+  padding: 20px 0 0 0;
+}
+
+.control-input {
+  background: #333;
+  color: #e0e0e0;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1em;
+  text-align: center;
+  width: 120px;
+}
+
+.control-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.control-input:disabled {
+  background: #222;
+  color: #666;
+  border-color: #333;
+  cursor: not-allowed;
+}
+
+.control-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  min-width: 60px;
+}
+
+.control-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.control-button:disabled {
+  background-color: #333;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.zero-pressure-button {
+  background-color: #FF6B35;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.zero-pressure-button:hover:not(:disabled) {
+  background-color: #E55A2B;
+}
+
+.zero-pressure-button:disabled {
+  background-color: #333;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.raw-data-container {
+  background: #1e1e1e;
+  border-radius: 8px;
+  padding: 10px;
+  position: relative;
+}
+
+</style>
+
 </style>
 </head>
 <body>
@@ -215,34 +378,53 @@ footer a:hover .bean-icon { fill: #A0522D; }
   </div>
 
   <div style="width: 98%; margin: 20px auto;">
-    <details style="background:#1e1e1e; border-radius:8px; padding:10px;">
-      <summary style="color:#e0e0e0; font-weight:bold; cursor:pointer;">Advanced</summary>
-      <div style="width: 98%; margin: 20px auto;">
-        <div id="setControlContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
-          <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-            <span style="color: #e0e0e0; font-weight: bold; font-size: 0.9em;">Pressure calibration:</span>
-            <input type="text" id="setControlInput" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*">
-            <button id="setControlButton">Set</button>
+    
+<details class="advanced-section">
+  <summary>Advanced</summary>
+  <div class="advanced-content">
+    
+    <table class="controls-table">
+      <tr>
+        <td class="control-label">Device sleep time (min):</td>
+        <td class="input-cell"><input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="1"></td>
+        <td class="button-cell"><button id="setSleepButton" class="control-button">Set</button></td>
+      </tr>
+      
+      <tr>
+        <td class="control-label">Pressure calibration:</td>
+        <td class="input-cell"><input type="text" id="setControlInput" class="control-input" placeholder="0.00" maxlength="4" pattern="[0-9]*\.?[0-9]*"></td>
+        <td class="button-cell"><button id="setControlButton" class="control-button">Set</button></td>
+      </tr>
+      
+      <tr>
+        <td class="control-label">Zero pressure offset:</td>
+        <td class="input-cell"></td>
+        <td class="button-cell"><button id="zeroPressureButton" class="control-button" style="background-color: #FF6B35;" title="Zero pressure to compensate for atmospheric pressure">Zero</button></td>
+      </tr>
+      
+      <tr>
+        <td class="control-label">Raw Data:</td>
+        <td class="toggle-cell">
+          <div id="rawDataToggle" class="toggle-switch">
+            <div class="toggle-slider">OFF</div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-            <span style="color: #e0e0e0; font-weight: bold; margin-right: 10px;">Zero offset:</span>
-            <button id="zeroPressureButton" title="Zero pressure to compensate for atmospheric pressure">Zero pressure</button>
+        </td>
+        <td class="button-cell"></td>
+      </tr>
+      
+      <tr>
+        <td colspan="3" class="raw-data-cell">
+          <div id="rawDataDisplay" class="raw-data-container hidden">
+            <button id="clearDataButton" title="Clear data">×</button>
+            <div class="data-entry">No data yet...</div>
           </div>
+        </td>
+      </tr>
+    </table>
 
-          <div id="rawDataContainer">
-            <span>Raw Data:</span>
-            <div id="rawDataToggle" class="toggle-switch">
-              <div class="toggle-slider">OFF</div>
-            </div>
-          </div>
-        </div>
+  </div>
+</details>
 
-        <div id="rawDataDisplay" class="raw-data-container hidden" style="overflow-y:auto;">
-          <button id="clearDataButton" title="Clear data">×</button>
-          <div class="data-entry">No data yet...</div>
-        </div>
-      </div>
-    </details>
   </div>
 </div>
 
@@ -268,7 +450,7 @@ let paused = false, currentTemp = 0, currentPressure = 0, splitView = true, gaug
 let secondsCounter = 0, chartData = { labels: [], temp: [], pressure: [] }, modalAction = "", maxPointsValue = 50;
 let currentTempUnit = "C", currentPressureUnit = "Bar";
 let tempToggleActive = false, pressureToggleActive = false, alwaysOnToggleActive = false, rawDataToggleActive = false;
-let isConnected = false, brightnessDataReceived = false, alwaysOnDataReceived = false, setControlDataReceived = false;
+let isConnected = false, brightnessDataReceived = false, alwaysOnDataReceived = false, setControlDataReceived = false, sleepTimeDataReceived = false;
 let receivedDataCount = 0, dataEntries = [], ignoreTempUntil = 0, ignorePressureUntil = 0;
 
 // Modal Functions
@@ -500,6 +682,14 @@ function updateSetControlInput(value) {
   }
 }
 
+function updateSleepTimeInput(value) {
+  const input = document.getElementById("sleepTimeInput");
+  const numValue = parseInt(value);
+  if (!isNaN(numValue) && numValue >= 1 && numValue <= 60) {
+    input.value = numValue;
+  }
+}
+
 function updateBrightnessSlider(brightnessValue) {
   const slider = document.getElementById("brightnessSlider");
   const valueDisplay = document.getElementById("brightnessValue");
@@ -510,7 +700,7 @@ function updateBrightnessSlider(brightnessValue) {
 
 function updateConnectionState(connected) {
   const elements = ["tempToggle", "pressureToggle", "alwaysOnToggle", "brightnessContainer", "setControlContainer"];
-  const inputs = ["setControlInput", "setControlButton", "zeroPressureButton"];
+  const inputs = ["setControlInput", "setControlButton", "zeroPressureButton", "sleepTimeInput", "setSleepButton"];
   
   elements.forEach(id => document.getElementById(id).classList.toggle("disabled", !connected));
   inputs.forEach(id => document.getElementById(id).disabled = !connected);
@@ -546,7 +736,7 @@ async function connectToDevice() {
     updateConnectionState(true);
     btn.onclick = disconnectFromDevice;
 
-    brightnessDataReceived = alwaysOnDataReceived = setControlDataReceived = false;
+    brightnessDataReceived = alwaysOnDataReceived = setControlDataReceived = sleepTimeDataReceived = false;
     receivedDataCount = 0;
 
     device.addEventListener("gattserverdisconnected", handleDisconnection);
@@ -574,7 +764,7 @@ function handleDisconnection() {
   updateGauges();
   characteristic = writeCharacteristic = device = null;
   btn.onclick = connectToDevice;
-  brightnessDataReceived = alwaysOnDataReceived = setControlDataReceived = false;
+  brightnessDataReceived = alwaysOnDataReceived = setControlDataReceived = sleepTimeDataReceived = false;
   receivedDataCount = 0;
 }
 
@@ -666,6 +856,13 @@ document.getElementById("setControlButton").onclick = async () => {
 
 document.getElementById("zeroPressureButton").onclick = async () => {
   if (isConnected) await sendData("g");
+};
+
+document.getElementById("setSleepButton").onclick = async () => {
+  if (!isConnected) return;
+  const val = parseInt(document.getElementById("sleepTimeInput").value, 10);
+  if (isNaN(val) || val < 1 || val > 60) { alert("Enter a value between 1 and 60 minutes."); return; }
+  await sendData(`n${val}`);
 };
 
 // Toggle Handlers
@@ -880,6 +1077,15 @@ function handleData(event) {
     if (bolt) bolt.style.display = dataParts[8].trim() === "1" ? "block" : "none";
   }
 
+  // Handle sleep time (10th data point)
+  if (dataParts.length >= 10 && !sleepTimeDataReceived) {
+    const sleepTimeValue = parseInt(dataParts[9].trim());
+    if (!isNaN(sleepTimeValue)) {
+      updateSleepTimeInput(sleepTimeValue);
+      sleepTimeDataReceived = true;
+    }
+  }
+
   // Handle backup brightness data
   if (receivedDataCount === 6 && dataParts.length >= 1 && !brightnessDataReceived) {
     const brightnessValue = parseInt(dataParts[0].trim());
@@ -1029,6 +1235,7 @@ window.addEventListener('scroll', () => {
     initRawAutoScroll();
   }
 })();
+
 </script>
 
 </main>
