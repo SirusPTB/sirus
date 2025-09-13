@@ -618,6 +618,352 @@ button {
 /* Ensure the general .adv-controls input rules don't force a fixed size on the brightness slider */
 .adv-controls input[type="range"] { flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; }
 
+
+/* --- Strong overrides to maximize brightness slider width --- */
+/* Reduce label width for brightness row so slider gets more room */
+.adv-row label[for="brightnessSlider"] {
+  flex: 0 0 110px;
+  min-width: 90px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Make the brightness controls use full available space */
+#brightnessControls {
+  display: flex;
+  align-items: center;
+  gap: 8px !important;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Force the range input to take up as much space as possible */
+#brightnessControls input[type="range"]#brightnessSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 0%;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Slightly shrink the numeric value to free space for the slider */
+#brightnessValue {
+  flex: 0 0 36px !important;
+  width: 36px !important;
+  min-width: 32px !important;
+  max-width: 56px !important;
+  text-align: right;
+  margin-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Extra override to negate other .adv-controls sizing rules */
+.adv-controls input[type="range"] {
+  flex: 1 1 0% !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* Media tweaks for small screens */
+@media (max-width: 420px) {
+  .adv-row label[for="brightnessSlider"] {
+    flex: 0 0 90px;
+    min-width: 60px;
+  }
+  #brightnessValue {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+  }
+  #brightnessControls { gap: 6px !important; }
+}
+
+
+/* --- Minimalistic Advanced Panel --- */
+.advanced-panel {
+  background: #181818;
+  border-radius: 8px;
+  padding: 12px;
+  color: #e0e0e0;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #2a2a2a;
+}
+
+.adv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.adv-row label {
+  flex: 0 0 auto;
+  min-width: 120px;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.adv-controls {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.adv-controls input, .adv-controls button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #222;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.adv-btn {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.adv-btn:hover {
+  background: #2e2e2e;
+}
+
+.adv-btn:disabled, .adv-controls input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.raw-data-container {
+  background: #111;
+  border-radius: 6px;
+  border: 1px solid #222;
+  padding: 8px;
+  max-height: 200px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 12px;
+  color: #9f9;
+}
+
+/* Minimal brightness slider */
+#brightnessSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  flex: 1;
+}
+
+#brightnessSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+}
+
+#brightnessSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4caf50;
+  cursor: pointer;
+}
+
+#brightnessValue {
+  min-width: 40px;
+  text-align: right;
+  font-size: 13px;
+}
+
+
+/* --- Left-justified minimal advanced panel overrides --- */
+.advanced-panel {
+  text-align: left !important;
+  padding: 12px 12px 12px 14px !important;
+  border-radius: 6px !important;
+  background: #141414 !important;
+  border: 1px solid #222 !important;
+  box-shadow: none !important;
+}
+
+/* Rows: label at fixed width on left, controls start immediately to the right */
+.adv-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 10px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  justify-content: flex-start !important;
+}
+
+/* Left-aligned labels with a consistent fixed width */
+.adv-row label {
+  flex: 0 0 140px !important;
+  min-width: 100px !important;
+  max-width: 160px !important;
+  text-align: left !important;
+  color: #c8ced1 !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Controls take remaining width and align left */
+.adv-controls {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+}
+
+/* Inputs and buttons should not force the row to center */
+.adv-controls input, .adv-controls button {
+  width: auto !important;
+  min-width: 56px !important;
+  padding: 6px 8px !important;
+  background: #1b1b1b !important;
+  border: 1px solid #272727 !important;
+  color: #e6eef6 !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+}
+
+/* Make the brightness slider expand to the available width of the controls area */
+.brightness-row input[type="range"]#brightnessSlider {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  height: 8px !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(to right, #2a2a2a, #444) !important;
+  border-radius: 4px !important;
+}
+
+/* Place the brightness value to the right but don't steal width from slider */
+.brightness-row > div, .brightness-row > .adv-controls { width: 100%; }
+.brightness-row #brightnessValue {
+  flex: 0 0 56px !important;
+  min-width: 40px !important;
+  text-align: right !important;
+  color: #d7dfe6 !important;
+  font-weight: 700 !important;
+  margin-left: 8px !important;
+}
+
+/* Raw data container left align and compact */
+.raw-data-container {
+  text-align: left !important;
+  padding: 8px !important;
+  border-radius: 6px !important;
+  background: #0f0f0f !important;
+  border: 1px solid #191919 !important;
+}
+
+/* Responsive adjustments: stack label above controls on narrow screens but left aligned */
+@media (max-width: 420px) {
+  .adv-row { flex-direction: column !important; align-items: stretch !important; gap: 6px !important; }
+  .adv-row label { flex: 0 0 auto !important; min-width: 0 !important; }
+  .adv-controls { justify-content: flex-start !important; }
+  .brightness-row #brightnessValue { text-align: right; margin-left: 0; }
+}
+
+
+/* --- Table-based advanced panel layout --- */
+.adv-table { width:100%; border-collapse: collapse; }
+.adv-table td { padding: 6px 0; vertical-align: middle; }
+.adv-table .label-cell { width: 180px; padding-right: 12px; text-align: left; color: #c8ced1; font-weight: 600; }
+.adv-table .control-cell { padding-left: 0; }
+
+.control-input, .control-btn {
+  height: 40px;
+  min-width: 120px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #1b1b1b;
+  border: 1px solid #272727;
+  color: #e6eef6;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.control-btn { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+
+.control-range {
+  -webkit-appearance: none; appearance: none;
+  height: 8px;
+  background: linear-gradient(to right, #2a2a2a, #444);
+  border-radius: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.control-range::-webkit-slider-thumb { -webkit-appearance: none; appearance:none; width:16px; height:16px; border-radius:50%; background:#4CAF50; border:2px solid #fff; cursor:pointer; }
+.control-range::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:#4CAF50; border:2px solid #fff; cursor:pointer; }
+
+.brightness-value { min-width: 56px; text-align: right; font-weight:700; color:#e0e0e0; display:inline-block; }
+
+/* Make input and button elements share same visual size */
+.adv-table .control-cell input.control-input { width: 160px; margin-right: 8px; }
+.adv-table .control-cell button.control-btn { width: 96px; }
+
+/* On very small screens, stack label above controls */
+@media (max-width: 420px) {
+  .adv-table .label-cell { width: auto; min-width: 0; padding-bottom: 6px; }
+  .adv-table tr { display: block; margin-bottom: 8px; }
+  .adv-table .control-cell { display: flex; gap: 8px; }
+  .adv-table .control-cell input.control-input { width: 100%; }
+  .adv-table .control-cell button.control-btn { width: 100%; }
+  .brightness-value { min-width: 40px; }
+}
+
+
+/* --- Adjusted input box width --- */
+.adv-table .control-cell input.control-input { width: 130px; margin-right: 8px; }
+.adv-table .control-cell button.control-btn { width: 96px; }
+
+
+/* --- Raw data container full width --- */
+.raw-data-container {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.adv-table td[colspan="2"] { padding: 0 !important; }
+
+
+/* Ensure raw data moved out of table spans full width */
+.advanced-panel > .raw-data-container.fullwidth {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 8px !important;
+  background: #0f0f0f !important;
+  border: 1px solid #191919 !important;
+  border-radius: 6px !important;
+}
+
 </style>
 </head>
 <body>
@@ -708,57 +1054,53 @@ button {
     Advance ▼
   </button>
 
+
 <div id="advanceContent" class="advanced-panel" style="display:none;">
-  <div class="adv-row" style="margin-bottom:8px;">
-    <div style="display:flex; gap:10px; align-items:center; width:100%; justify-content:flex-start;">
-      <n style="font-weight:700; color:#ffffff;">Zero pressure:</n>
-      <button id="zeroPressureButton" class="adv-btn" disabled>Zero</button>
-    </div>
+  <table class="adv-table" role="presentation">
+    <tbody>
+      <tr>
+        <td class="label-cell"><label>Zero pressure:</label></td>
+        <td class="control-cell"><button id="zeroPressureButton" class="adv-btn control-btn" disabled>Zero</button></td>
+      </tr>
+      <tr>
+        <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
+        <td class="control-cell">
+          <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" />
+          <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="label-cell"><label for="pressureCalibrationInput">Pressure calibration:</label></td>
+        <td class="control-cell">
+          <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" />
+          <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
+        <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
+          <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
+          <span id="brightnessValue" class="brightness-value">125</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="label-cell"><label>Raw Data:</label></td>
+        <td class="control-cell">
+          <div class="toggle-container" style="display:inline-block;">
+            <div class="toggle-switch active" id="rawDataToggle">
+              <div class="toggle-slider">ON</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+  </table>
+  <div class="raw-data-container fullwidth" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px;">
+<div class="data-entry">No data yet...
   </div>
 
-  <div class="adv-row">
-    <label for="sleepTimeInput">Device sleep time (min):</label>
-    <div class="adv-controls">
-      <input type="number" id="sleepTimeInput" min="1" max="60" value="5"  />
-      <button id="setSleepTimeButton" class="adv-btn" disabled>Set</button>
-    </div>
-  </div>
-
-  <div class="adv-row">
-    <label for="pressureCalibrationInput">Pressure calibration:</label>
-    <div class="adv-controls">
-      <input type="number" id="pressureCalibrationInput" step="0.01" min="-5" max="5" placeholder="0.00" />
-      <button id="setPressureCalibrationButton" class="adv-btn" disabled>Set</button>
-    </div>
-  </div>
-
-  
-  
-  
-  <div class="adv-row">
-    <label for="brightnessSlider">Device brightness:</label>
-    <div class="adv-controls" style="flex: 1; display: grid; grid-template-columns: 1fr 60px; gap: 10px; align-items: center;">
-      <input id="brightnessSlider" type="range" min="10" max="250" value="125" style="width: 100%;" />
-      <n id="brightnessValue" style="color: #e0e0e0; font-weight: bold; text-align: right;">125</n>
-    </div>
-  </div>
-
-
-<div class="adv-row" style="align-items:center; gap:18px; margin-top:4px;">
-    <div class="toggle-container" style="display:flex; align-items:center; gap:8px;">
-      <n style="color:#cbd5e1; font-weight:600;">Raw Data:</n>
-      <div class="toggle-switch active" id="rawDataToggle">
-        <div class="toggle-slider">ON</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="raw-data-container" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:12px;">
-    <div class="data-entry">No data yet...</div>
-  </div>
 </div>
 
-</div>
 <!-- Modal -->
 <div class="modal" id="popupModal">
 <div class="modal-content">
