@@ -964,6 +964,73 @@ button {
   border-radius: 6px !important;
 }
 
+
+/* --- Pressure toggle override: always blue --- */
+#pressureToggle, #pressureToggle.active {
+  background-color: #1E90FF !important; /* DodgerBlue */
+}
+#pressureToggle .toggle-slider {
+  color: #fff !important;
+}
+
+
+/* --- Pressure toggle: styled like temp toggle but blue --- */
+#pressureToggle {
+  background-color: #1E90FF !important; /* blue track */
+  border-radius: 15px !important;
+  width: 60px !important;
+  height: 30px !important;
+  position: relative !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+  padding: 3px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+#pressureToggle .toggle-slider {
+  position: absolute !important;
+  top: 3px !important;
+  left: 3px !important;
+  width: 24px !important;
+  height: 24px !important;
+  background: #ffffff !important; /* white thumb */
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #000 !important; /* black text inside thumb */
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  transition: transform 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+}
+
+/* When active, move the thumb to the right (same movement as temp toggle) */
+#pressureToggle.active .toggle-slider {
+  transform: translateX(30px) !important;
+}
+
+/* Ensure pressure toggle's text inside thumb doesn't get hidden */
+#pressureToggle .toggle-slider * { color: inherit !important; }
+
+/* Keep pressure toggle color same when active */
+#pressureToggle.active { background-color: #1E90FF !important; }
+
+
+/* --- Pressure toggle lighter blue --- */
+#pressureToggle,
+#pressureToggle.active {
+  background-color: #5DAEFF !important; /* lighter washed-out blue */
+}
+
+
+/* --- Smaller buttons for pause, combined gauges, and reset --- */
+#pauseButton, #combinedGaugesButton, #resetButton {
+  padding: 4px 10px !important;
+  font-size: 13px !important;
+  border-radius: 6px !important;
+}
+
 </style>
 </head>
 <body>
@@ -980,8 +1047,7 @@ button {
 </div>
 <div class="toggle-container">
 <n>Bar/PSI:</n>
-<div class="toggle-switch" id="pressureToggle">
-<div class="toggle-slider">Bar</div>
+<div class="toggle-switch" id="pressureToggle"><div class="toggle-slider">Bar</div></div>
 </div>
 </div>
 </div>
@@ -1307,6 +1373,36 @@ function initCharts(){
 }
 
 initCharts();
+
+// --- Ensure pressure y-axis shows one decimal place ---
+try {
+  if (typeof pressureChart !== 'undefined' && pressureChart && pressureChart.options && pressureChart.options.scales && pressureChart.options.scales.y) {
+    pressureChart.options.scales.y.ticks = pressureChart.options.scales.y.ticks || {};
+    pressureChart.options.scales.y.ticks.callback = function(value) { return Number(value).toFixed(1); };
+    pressureChart.update();
+  }
+  if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y2) {
+    combinedChart.options.scales.y2.ticks = combinedChart.options.scales.y2.ticks || {};
+    combinedChart.options.scales.y2.ticks.callback = function(value) { return Number(value).toFixed(1); };
+    combinedChart.update();
+  }
+} catch(e) { console.log('Pressure axis formatting error:', e); }
+
+
+// --- Ensure temperature y-axis shows no decimal places ---
+try {
+  if (typeof tempChart !== 'undefined' && tempChart && tempChart.options && tempChart.options.scales && tempChart.options.scales.y) {
+    tempChart.options.scales.y.ticks = tempChart.options.scales.y.ticks || {};
+    tempChart.options.scales.y.ticks.callback = function(value) { return Number(value).toFixed(1); };
+    tempChart.update();
+  }
+  if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y1) {
+    combinedChart.options.scales.y1.ticks = combinedChart.options.scales.y1.ticks || {};
+    combinedChart.options.scales.y1.ticks.callback = function(value) { return Number(value).toFixed(1); };
+    combinedChart.update();
+  }
+} catch(e) { console.log('Temp axis formatting error:', e); }
+
 
 // --- Gauge Drawing Functions ---
 function drawGauge(canvas, value, min, max, unit, color) {
@@ -2230,7 +2326,7 @@ function updateCharts() {
   if (currentTempUnit === "F") {
     displayTemp = currentTemp;
   }
-  document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(2)} ${tempUnit}`;
+  document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
   
   tempChart.update();
 
@@ -2250,7 +2346,7 @@ function updateCharts() {
   pressureChart.options.scales.y.title.text = `Pressure (${pressureUnit})`;
   
   // Update pressure current value label
-  document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}`;
+  document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}`;
   
   pressureChart.update();
 
@@ -2266,7 +2362,7 @@ function updateCharts() {
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
   
   // Update combined current value label
-  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(2)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(2)} ${pressureUnit}</span>`;
+  document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}</span>`;
   
   combinedChart.update();
 }
