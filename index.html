@@ -2020,6 +2020,28 @@ function updateDataDisplay() {
 // --- Clear data entries removed (no Clear button)
 
 // --- Temperature Toggle Switch Handler ---
+
+// --- Reset charts function ---
+function resetCharts() {
+  if (tempChart && pressureChart && combinedChart) {
+    chartData = { labels: [], temp: [], pressure: [] };
+    secondsCounter = 0;
+
+    tempChart.data.labels = [];
+    tempChart.data.datasets[0].data = [];
+    tempChart.update();
+
+    pressureChart.data.labels = [];
+    pressureChart.data.datasets[0].data = [];
+    pressureChart.update();
+
+    combinedChart.data.labels = [];
+    combinedChart.data.datasets[0].data = [];
+    combinedChart.data.datasets[1].data = [];
+    combinedChart.update();
+  }
+}
+
 document.getElementById("tempToggle").onclick = async () => {
   // Check if disabled (not connected)
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
@@ -2035,7 +2057,8 @@ document.getElementById("tempToggle").onclick = async () => {
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
-  // Update charts and gauges with new units
+  // Reset and update charts with new units
+  resetCharts();
   updateCharts();
   updateGauges();
   
@@ -2091,7 +2114,8 @@ document.getElementById("pressureToggle").onclick = async () => {
   // Update UI/internal state
   updatePressureToggleSwitch(newUnit);
 
-  // Update charts and gauges with new units
+  // Reset and update charts with new units
+  resetCharts();
   updateCharts();
   updateGauges();
 
