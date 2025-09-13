@@ -1018,11 +1018,11 @@ function updateGauges() {
   
   // Convert units for gauges if needed
   if (currentTempUnit === "F") {
-    displayTemp = (displayTemp * 9/5) + 32;
+    displayTemp = displayTemp;
   }
   
   if (currentPressureUnit === "PSI") {
-    displayPressure = displayPressure * 14.5038;
+    displayPressure = displayPressure;
   }
   
   // Set gauge ranges according to specifications
@@ -1153,11 +1153,11 @@ function updateBrightnessSlider(brightnessValue) {
 
 // --- Pressure conversion functions ---
 function barToPsi(bar) {
-  return bar * 14.5038; // 1 bar = 14.5038 PSI
+  return bar; // 1 bar = 14.5038 PSI
 }
 
 function psiToBar(psi) {
-  return psi / 14.5038;
+  return psi;
 }
 
 // --- Connection Functions ---
@@ -1831,7 +1831,7 @@ function updateCharts() {
   // Update temperature current value label
   let displayTemp = currentTemp;
   if (currentTempUnit === "F") {
-    displayTemp = (currentTemp * 9/5) + 32;
+    displayTemp = currentTemp;
   }
   document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(2)} ${tempUnit}`;
   
@@ -1860,7 +1860,7 @@ function updateCharts() {
   // Update combined chart
   combinedChart.data.labels = chartData.labels;
   combinedChart.data.datasets[0].data = chartData.temp.map(t => {
-    return currentTempUnit === "F" ? (t * 9/5) + 32 : t;
+    return currentTempUnit === "F" ? t : t;
   });
   combinedChart.data.datasets[1].data = chartData.pressure.map(p => {
     return currentPressureUnit === "PSI" ? barToPsi(p) : p;
