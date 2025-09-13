@@ -568,6 +568,56 @@ button {
   filter: grayscale(10%);
 }
 
+
+/* --- Brightness slider responsive overrides --- */
+#brightnessControls { flex: 1 1 auto; min-width: 0; }
+#brightnessControls input[type="range"]#brightnessSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  background: linear-gradient(to right, #333, #666, #999, #ccc);
+  border-radius: 4px;
+  outline: none;
+}
+#brightnessControls input[type="range"]#brightnessSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+#brightnessControls input[type="range"]#brightnessSlider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+#brightnessValue {
+  flex: 0 0 56px;
+  text-align: right;
+  min-width: 40px;
+  margin-left: 8px;
+  color: #e0e0e0;
+  font-weight: bold;
+}
+@media (max-width: 420px) {
+  #brightnessValue { flex: 0 0 48px; }
+  #brightnessControls { gap: 8px; }
+}
+/* Ensure the general .adv-controls input rules don't force a fixed size on the brightness slider */
+.adv-controls input[type="range"] { flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; }
+
 </style>
 </head>
 <body>
@@ -648,14 +698,7 @@ button {
 </div>
 </div>
 </div>
-<!-- Brightness Slider - Now matches chart width -->
-<div style="width: 80%; margin: 20px auto;">
-<div id="brightnessContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
-<div style="display: flex; align-items: center; gap: 15px;">
-<n style="color: #e0e0e0; font-weight: bold; min-width: 120px;">Device brightness:</n>
-<input id="brightnessSlider" max="250" min="10" style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;" type="range" value="125"/>
-<n id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</n>
-</div>
+
 </div>
 </div>
 </div>
@@ -689,7 +732,19 @@ button {
     </div>
   </div>
 
-  <div class="adv-row" style="align-items:center; gap:18px; margin-top:4px;">
+  
+  
+  
+  <div class="adv-row">
+    <label for="brightnessSlider">Device brightness:</label>
+    <div class="adv-controls" style="flex: 1; display: grid; grid-template-columns: 1fr 60px; gap: 10px; align-items: center;">
+      <input id="brightnessSlider" type="range" min="10" max="250" value="125" style="width: 100%;" />
+      <n id="brightnessValue" style="color: #e0e0e0; font-weight: bold; text-align: right;">125</n>
+    </div>
+  </div>
+
+
+<div class="adv-row" style="align-items:center; gap:18px; margin-top:4px;">
     <div class="toggle-container" style="display:flex; align-items:center; gap:8px;">
       <n style="color:#cbd5e1; font-weight:600;">Raw Data:</n>
       <div class="toggle-switch active" id="rawDataToggle">
