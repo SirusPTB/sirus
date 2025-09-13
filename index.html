@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>SirusPTB SPA</title>
+<title>SirusPTB </title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js">
 document.getElementById("zeroPressureButton").onclick = async () => {
   await sendData('g');
@@ -558,22 +558,32 @@ button {
   }
 }
 
+
+/* Disabled button styling for adv-btn */
+.adv-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  filter: grayscale(10%);
+}
+
 </style>
 </head>
 <body>
-<header>SirusPTB SPA</header>
+<header>SirusPTB </header>
 <!-- Graphs Page -->
 <div id="graphPage">
 <div class="button-row">
 <button class="disconnected" id="connectButton">Connect</button>
 <div class="toggle-container">
-<span>°C/°F:</span>
+<n>°C/°F:</n>
 <div class="toggle-switch" id="tempToggle">
 <div class="toggle-slider">C</div>
 </div>
 </div>
 <div class="toggle-container">
-<span>Bar/PSI:</span>
+<n>Bar/PSI:</n>
 <div class="toggle-switch" id="pressureToggle">
 <div class="toggle-slider">Bar</div>
 </div>
@@ -593,7 +603,7 @@ button {
 <div id="combinedView" style="display:none; width:100%; align-items:center;">
 <div style="width: 90%; margin: 0 auto;">
 <div id="combinedCurrentValue" style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
-<span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
+<n style="color: #ff7f7f;">Temperature: -- °C</n> | <n style="color: #7fbfff;">Pressure: -- bar</n>
 </div>
 <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
 </div>
@@ -631,7 +641,7 @@ button {
 <div style="width: 80%; margin: 10px auto;">
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
-<span style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</span>
+<n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
 <div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
 <div class="toggle-slider">OFF</div>
 </div>
@@ -642,9 +652,9 @@ button {
 <div style="width: 80%; margin: 20px auto;">
 <div id="brightnessContainer" style="padding: 15px; background: #1e1e1e; border-radius: 8px;">
 <div style="display: flex; align-items: center; gap: 15px;">
-<span style="color: #e0e0e0; font-weight: bold; min-width: 120px;">Device brightness:</span>
+<n style="color: #e0e0e0; font-weight: bold; min-width: 120px;">Device brightness:</n>
 <input id="brightnessSlider" max="250" min="10" style="flex: 1; height: 6px; background: #333; border-radius: 3px; outline: none; -webkit-appearance: none;" type="range" value="125"/>
-<span id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</span>
+<n id="brightnessValue" style="color: #e0e0e0; font-weight: bold; min-width: 40px; text-align: right;">125</n>
 </div>
 </div>
 </div>
@@ -658,16 +668,16 @@ button {
 <div id="advanceContent" class="advanced-panel" style="display:none;">
   <div class="adv-row" style="margin-bottom:8px;">
     <div style="display:flex; gap:10px; align-items:center; width:100%; justify-content:flex-start;">
-      <span style="font-weight:700; color:#ffffff;">Zero pressure:</span>
-      <button id="zeroPressureButton" class="adv-btn">Zero</button>
+      <n style="font-weight:700; color:#ffffff;">Zero pressure:</n>
+      <button id="zeroPressureButton" class="adv-btn" disabled>Zero</button>
     </div>
   </div>
 
   <div class="adv-row">
     <label for="sleepTimeInput">Device sleep time (min):</label>
     <div class="adv-controls">
-      <input type="number" id="sleepTimeInput" min="1" max="60" value="5" oninput="if(this.value>60) this.value=60; if(this.value<1) this.value=1;" />
-      <button id="setSleepTimeButton" class="adv-btn">Set</button>
+      <input type="number" id="sleepTimeInput" min="1" max="60" value="5"  />
+      <button id="setSleepTimeButton" class="adv-btn" disabled>Set</button>
     </div>
   </div>
 
@@ -675,13 +685,13 @@ button {
     <label for="pressureCalibrationInput">Pressure calibration:</label>
     <div class="adv-controls">
       <input type="number" id="pressureCalibrationInput" step="0.01" min="-5" max="5" placeholder="0.00" />
-      <button id="setPressureCalibrationButton" class="adv-btn">Set</button>
+      <button id="setPressureCalibrationButton" class="adv-btn" disabled>Set</button>
     </div>
   </div>
 
   <div class="adv-row" style="align-items:center; gap:18px; margin-top:4px;">
     <div class="toggle-container" style="display:flex; align-items:center; gap:8px;">
-      <span style="color:#cbd5e1; font-weight:600;">Raw Data:</span>
+      <n style="color:#cbd5e1; font-weight:600;">Raw Data:</n>
       <div class="toggle-switch active" id="rawDataToggle">
         <div class="toggle-slider">ON</div>
       </div>
@@ -1345,20 +1355,30 @@ function updateConnectionState(connected) {
   const pressureToggle = document.getElementById("pressureToggle");
   const alwaysOnToggle = document.getElementById("alwaysOnToggle");
   const brightnessContainer = document.getElementById("brightnessContainer");
-    
+  const zeroBtn = document.getElementById("zeroPressureButton");
+  const setSleepBtn = document.getElementById("setSleepTimeButton");
+  const setCalBtn = document.getElementById("setPressureCalibrationButton");
+
   if (connected) {
-    tempToggle.classList.remove("disabled");
-    pressureToggle.classList.remove("disabled");
-    alwaysOnToggle.classList.remove("disabled");
-    brightnessContainer.classList.remove("disabled");
-    
+    if (tempToggle) tempToggle.classList.remove("disabled");
+    if (pressureToggle) pressureToggle.classList.remove("disabled");
+    if (alwaysOnToggle) alwaysOnToggle.classList.remove("disabled");
+    if (brightnessContainer) brightnessContainer.classList.remove("disabled");
+
+    if (zeroBtn) zeroBtn.disabled = false;
+    if (setSleepBtn) setSleepBtn.disabled = false;
+    if (setCalBtn) setCalBtn.disabled = false;
   } else {
-    tempToggle.classList.add("disabled");
-    pressureToggle.classList.add("disabled");
-    alwaysOnToggle.classList.add("disabled");
-    brightnessContainer.classList.add("disabled");
-    
+    if (tempToggle) tempToggle.classList.add("disabled");
+    if (pressureToggle) pressureToggle.classList.add("disabled");
+    if (alwaysOnToggle) alwaysOnToggle.classList.add("disabled");
+    if (brightnessContainer) brightnessContainer.classList.add("disabled");
+
+    if (zeroBtn) zeroBtn.disabled = true;
+    if (setSleepBtn) setSleepBtn.disabled = true;
+    if (setCalBtn) setCalBtn.disabled = true;
   }
+
 }
 
 // --- Add data entry to scrolling list ---
@@ -1903,7 +1923,7 @@ document.addEventListener("DOMContentLoaded", function(){
 // --- Sleep Time Button Handler ---
 document.getElementById("setSleepTimeButton").onclick = async () => {
   const input = document.getElementById("sleepTimeInput");
-  let val = parseInt(input.value);
+  let val = parseInt(input.value, 10);
   if (isNaN(val) || val < 1 || val > 60) {
     alert("Please enter a number between 1 and 60.");
     return;
@@ -1984,6 +2004,17 @@ document.getElementById("setPressureCalibrationButton").onclick = async () => {
     if(z) z.addEventListener("click", handleZeroClick);
   }
 })();
+
+document.addEventListener("DOMContentLoaded", function(){
+  try {
+    const zeroBtn = document.getElementById("zeroPressureButton");
+    const setSleepBtn = document.getElementById("setSleepTimeButton");
+    const setCalBtn = document.getElementById("setPressureCalibrationButton");
+    if (zeroBtn) zeroBtn.disabled = true;
+    if (setSleepBtn) setSleepBtn.disabled = true;
+    if (setCalBtn) setCalBtn.disabled = true;
+  } catch(e) { console.log("init button disable error", e); }
+});
 </script>
 
 </body>
