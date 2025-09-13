@@ -1119,6 +1119,23 @@ body { padding-bottom: 0 !important; }
   font-size: 0.85em !important;
 }
 
+
+/* --- FORCE RIGHT ALIGN for specific numeric inputs --- */
+input#sleepTimeInput.control-input,
+input#pressureCalibrationInput.control-input,
+input#sleepTimeInput,
+input#pressureCalibrationInput {
+  text-align: right !important;
+  padding-right: 6px !important; /* give a little breathing room from the edge */
+  direction: ltr !important;
+  box-sizing: border-box !important;
+}
+/* Also ensure number inputs don't get weird alignment from vendor rules */
+input[type="number"]#sleepTimeInput,
+input[type="number"]#pressureCalibrationInput {
+  -moz-appearance: textfield !important;
+  text-align: right !important;
+}
 </style>
 </head>
 <body>
@@ -1220,14 +1237,14 @@ body { padding-bottom: 0 !important; }
       <tr>
         <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
         <td class="control-cell">
-          <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" />
+          <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" / style="text-align: right !important; padding-right:6px !important;">
           <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
       <tr>
         <td class="label-cell"><label for="pressureCalibrationInput">Pressure calibration:</label></td>
         <td class="control-cell">
-          <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" />
+          <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" / style="text-align: right !important; padding-right:6px !important;">
           <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
@@ -1297,6 +1314,7 @@ let receivedDataCount = 0; // Count received data points to identify the sixth o
 let dataEntries = []; // Store data entries for the scrolling list
 let sleepDataReceived = false;
 let calibrationDataReceivedOnce = false;
+let skipNextData = false; // Flag to skip one dataset after toggles
 
 // Ensure the advance panel is fully visible after expansion (tries to show the whole panel when possible)
 function ensureAdvancePanelVisible(element) {
@@ -2024,7 +2042,10 @@ function updateDataDisplay() {
 // --- Reset charts function ---
 function resetCharts() {
   if (tempChart && pressureChart && combinedChart) {
-    chartData = { labels: [], temp: [], pressure: [] };
+    chartData = { labels: [], temp: [], pressure: [] }
+
+
+;
     secondsCounter = 0;
 
     tempChart.data.labels = [];
@@ -2042,6 +2063,16 @@ function resetCharts() {
   }
 }
 
+// --- Auto-reset charts every 20 seconds ---
+setInterval(() => {
+  console.log("Auto-resetting charts after 20 seconds");
+  resetCharts();
+  updateCharts();
+  updateGauges();
+}, 60000);
+
+
+
 document.getElementById("tempToggle").onclick = async () => {
   // Check if disabled (not connected)
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
@@ -2057,12 +2088,17 @@ document.getElementById("tempToggle").onclick = async () => {
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
+
   // Reset and update charts with new units
   resetCharts();
   updateCharts();
   updateGauges();
-  
+
+  // Set flag so the next dataset is ignored
+  skipNextData = true;
+
   await sendData(command);
+
 };
 
 // --- Brightness Slider Handler ---
@@ -2118,6 +2154,11 @@ document.getElementById("pressureToggle").onclick = async () => {
   resetCharts();
   updateCharts();
   updateGauges();
+
+  // Set flag so the next dataset is ignored
+  skipNextData = true;
+
+
 
   // Send 'P' for PSI, 'B' for Bar
   const command = newUnit === "PSI" ? "P" : "B";
@@ -2254,6 +2295,15 @@ function handleData(event){
   
   // Increment received data count
   receivedDataCount++;
+
+  // If flag is set, ignore this dataset once
+  if (skipNextData) {
+    console.log("Skipped dataset after toggle:", rawData);
+    skipNextData = false;
+    return;
+  }
+
+
   
   // Check for third and fourth values and update UI accordingly
   const dataParts = rawData.split(",");
