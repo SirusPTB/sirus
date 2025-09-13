@@ -1031,9 +1031,97 @@ button {
   border-radius: 6px !important;
 }
 
+
+/* --- Minimal footer with coffee bean icon --- */
+body { padding-bottom: 56px !important; } /* make room for sticky footer */
+
+.minimal-footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: rgba(20,20,20,0.95);
+  border-top: 1px solid #222;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bfc7cc;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  text-decoration: none;
+}
+
+.footer-link svg { display:block; width:20px; height:20px; }
+
+.footer-link:hover, .footer-link:focus {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.footer-text { color: #9aa3ad; font-weight: 600; }
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+
+/* Anchor footer: use flex layout so footer sits at bottom of page when content is short */
+html, body { height: 100% !important; }
+body { display: flex !important; flex-direction: column !important; min-height: 100vh !important; margin: 0 !important; padding: 0 !important; }
+#page-wrapper { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; }
+
+/* Ensure the footer behaves as part of page flow (not fixed) */
+.minimal-footer {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  z-index: auto !important;
+  box-shadow: none !important;
+}
+
+/* Remove body bottom padding added previously */
+body { padding-bottom: 0 !important; }
+
+/* Small safety: ensure footer is visible above most content */
+.minimal-footer { z-index: 9999; }
+
 </style>
 </head>
 <body>
+<div id="page-wrapper">
 <header>SirusPTB </header>
 <!-- Graphs Page -->
 <div id="graphPage">
@@ -2509,6 +2597,29 @@ document.addEventListener("DOMContentLoaded", function(){
   } catch(e) { console.log("init button disable error", e); }
 });
 </script>
+
+
+
+
+<!-- Minimal footer with coffee-bean icon link to game.html -->
+
+</div>
+<footer id="pageFooter" class="minimal-footer" role="contentinfo" aria-label="Site footer">
+  <div class="footer-inner">
+    <a href="game.html" class="footer-link" aria-label="Play Game" title="Play Game">
+      <!-- Coffee bean SVG icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+        <path d="M21.36 11.04c-1.04-3.12-4.08-6.36-8.04-6.36-0.84 0-1.68 0.12-2.46 0.36 0.9 0.54 1.74 1.32 2.46 2.28 1.74 2.4 2.04 5.04 2.16 6.48 0.12 1.44-0.24 3.18-1.38 4.74 2.64-0.72 5.1-3 6.36-7.5 0.42-1.32 0.36-2.22 0.24-2.99z" fill="#6b4f4b"/>
+        <path d="M3.24 12.96c1.04 3.12 4.08 6.36 8.04 6.36 0.84 0 1.68-0.12 2.46-0.36-0.9-0.54-1.74-1.32-2.46-2.28-1.74-2.4-2.04-5.04-2.16-6.48-0.12-1.44 0.24-3.18 1.38-4.74-2.64 0.72-5.1 3-6.36 7.5-0.42 1.32-0.36 2.22-0.24 2.99z" fill="#704942"/>
+      </svg>
+      <span class="sr-only">Play Game</span>
+    </a>
+    <div class="footer-text">SirusPTB</div>
+  </div>
+</footer>
+
+
+
 
 </body>
 </html>
