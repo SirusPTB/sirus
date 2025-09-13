@@ -508,6 +508,56 @@ button {
   background: linear-gradient(180deg, #0d47a1 0%, #093170 100%);
 }
 
+
+/* Equalize buttons and inputs sizes (use a CSS variable for easy tuning) */
+:root { --adv-control-width: 96px; }
+
+.adv-btn {
+  height: 44px;
+  min-width: var(--adv-control-width);
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Ensure zero button shares same size via class (it already has adv-btn) */
+#zeroPressureButton.adv-btn {}
+
+/* Make set buttons explicitly inherit adv-btn style (IDs already styled for color) */
+#setSleepTimeButton.adv-btn, #setPressureCalibrationButton.adv-btn {}
+
+/* Inputs: same width/height as buttons for visual balance */
+.adv-controls input {
+  height: 44px;
+  min-width: var(--adv-control-width);
+  max-width: 120px;
+  flex: 0 0 var(--adv-control-width);
+  box-sizing: border-box;
+  padding: 10px 12px;
+}
+
+/* On small screens, make them stack but remain the same width (full width for easier tapping) */
+@media (max-width: 420px) {
+  :root { --adv-control-width: 100%; }
+  .adv-row { gap: 6px; }
+  .adv-controls {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+  .adv-controls input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+  .adv-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 </style>
 </head>
 <body>
