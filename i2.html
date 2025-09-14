@@ -136,13 +136,13 @@ button {
   background-color: #5F9EA0;
 }
 
-/* Always on toggle - green when active */
+/* Always On toggle - customizable colors */
 #alwaysOnToggle {
-  background-color: #666;
+  background-color: var(--alwaysOn-off, #666); /* Default OFF = gray */
 }
 
 #alwaysOnToggle.active {
-  background-color: #4CAF50;
+  background-color: var(--alwaysOn-on, #4CAF50); /* Default ON = green */
 }
 
 /* Raw data toggle - purple when active */
@@ -510,7 +510,9 @@ button {
 
 
 /* Equalize buttons and inputs sizes (use a CSS variable for easy tuning) */
-:root { --adv-control-width: 96px; }
+:root {
+  --alwaysOn-off: #666;   /* OFF default gray */
+  --alwaysOn-on: #4CAF50; /* ON default green */ --adv-control-width: 96px; }
 
 .adv-btn {
   height: 44px;
@@ -540,7 +542,9 @@ button {
 
 /* On small screens, make them stack but remain the same width (full width for easier tapping) */
 @media (max-width: 420px) {
-  :root { --adv-control-width: 100%; }
+  :root {
+  --alwaysOn-off: #666;   /* OFF default gray */
+  --alwaysOn-on: #4CAF50; /* ON default green */ --adv-control-width: 100%; }
   .adv-row { gap: 6px; }
   .adv-controls {
     flex-direction: row;
@@ -1119,6 +1123,22 @@ body { padding-bottom: 0 !important; }
   font-size: 0.85em !important;
 }
 
+
+/* --- alwaysOn toggle: ensure variables and override inline style --- */
+:root {
+  --alwaysOn-off: #666;   /* default OFF (gray) */
+  --alwaysOn-on: #4CAF50; /* default ON (green) */
+}
+
+/* Strong override so any inline styles won't prevent the toggle color changing */
+#alwaysOnToggle {
+  background-color: var(--alwaysOn-off, #666) !important;
+}
+
+#alwaysOnToggle.active {
+  background-color: var(--alwaysOn-on, #4CAF50) !important;
+}
+
 </style>
 </head>
 <body>
@@ -1193,7 +1213,7 @@ body { padding-bottom: 0 !important; }
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
+<div class="toggle-switch" id="alwaysOnToggle">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
