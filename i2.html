@@ -3169,6 +3169,7 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 
+
 <script>
 (function(){
   const getBtn = document.getElementById('getFirmwareButton');
@@ -3177,10 +3178,35 @@ document.addEventListener("DOMContentLoaded", function(){
   if(!getBtn || !firmwareSpan || !updateBtn) return;
   const textDecoder = new TextDecoder();
 
+  function decodeDataView(dv){
+    try{
+      // dv is typically a DataView from Web Bluetooth
+      if(!dv) return '';
+      if (dv instanceof DataView) {
+        return textDecoder.decode(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
+      }
+      // Some browsers may give a Uint8Array or ArrayBuffer directly
+      if (dv.buffer && dv.byteLength !== undefined) {
+        return textDecoder.decode(new Uint8Array(dv.buffer, dv.byteOffset || 0, dv.byteLength));
+      }
+      if (dv instanceof ArrayBuffer) {
+        return textDecoder.decode(new Uint8Array(dv));
+      }
+      // Fallback: try decode directly
+      return textDecoder.decode(dv);
+    }catch(e){
+      try {
+        return String(dv);
+      } catch(e2) {
+        return '';
+      }
+    }
+  }
+
   function compareVersions(a,b){
     if(!a || !b) return 0;
-    const pa = a.split('.').map(x=>parseInt(x)||0);
-    const pb = b.split('.').map(x=>parseInt(x)||0);
+    const pa = (''+a).split('.').map(x=>parseInt(x.replace(/\D.*$/,''))||0);
+    const pb = (''+b).split('.').map(x=>parseInt(x.replace(/\D.*$/,''))||0);
     const len = Math.max(pa.length,pb.length);
     for(let i=0;i<len;i++){
       const na = pa[i]||0;
@@ -3193,7 +3219,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function parseVersionFromString(s){
     if(!s) return null;
-    const m = s.match(/(\d+\.\d+(?:\.\d+)?)/);
+    // Match versions like v1, 1.2, 1.2.3, 2021.01.02 etc.
+    const m = s.match(/v?\s*(\d+(?:\.\d+){0,})/i);
     return m ? m[1] : null;
   }
 
@@ -3202,41 +3229,42 @@ document.addEventListener("DOMContentLoaded", function(){
     addDataEntry("Firmware response: "+text,"received");
     let deviceVer = null;
     let availableVer = null;
-    // Try labelled patterns first
-    const mDevice = text.match(/(?:FW|VER|VERSION)[:=]\s*(\d+\.\d+(?:\.\d+)?)/i);
-    if(mDevice) deviceVer = mDevice[1];
-    const mAvail = text.match(/(?:LATEST|AVAILABLE|ONLINE)[:=]\s*(\d+\.\d+(?:\.\d+)?)/i);
-    if(mAvail) availableVer = mAvail[1];
 
-    // If not found, try splitting common separators
+    // Try labelled patterns first (allow various separators and labels)
+    const mDevice = text.match(/(?:FW|DEV|VER|VERSION)[:=]?\s*(v?\d+(?:\.\d+){0,})/i);
+    if(mDevice) deviceVer = parseVersionFromString(mDevice[1]);
+    const mAvail = text.match(/(?:LATEST|AVAILABLE|ONLINE|UPDATE)[:=]?\s*(v?\d+(?:\.\d+){0,})/i);
+    if(mAvail) availableVer = parseVersionFromString(mAvail[1]);
+
+    // Arrow notation "1.0 -> 1.2" or "1.0 => 1.2"
+    if(!availableVer){
+      const m2 = text.match(/(v?\d+(?:\.\d+){0,})\s*(?:[-–]|->|=>)\s*(v?\d+(?:\.\d+){0,})/);
+      if(m2){ deviceVer = deviceVer || parseVersionFromString(m2[1]); availableVer = parseVersionFromString(m2[2]); }
+    }
+
+    // If still no labelled device version, try to pick the first version-looking token as device
     if(!deviceVer){
       const parts = text.split(/[,\s;\/|]+/).filter(Boolean);
-      if(parts.length>0) deviceVer = parseVersionFromString(parts[0]);
-      if(parts.length>1) availableVer = parseVersionFromString(parts[1]);
+      for(const p of parts){
+        const v = parseVersionFromString(p);
+        if(v){ deviceVer = deviceVer || v; continue; }
+      }
     }
 
-    // Arrow notation "1.0 -> 1.2"
-    if(!availableVer){
-      const m2 = text.match(/(\d+\.\d+(?:\.\d+)?)\s*[-–>]+\s*(\d+\.\d+(?:\.\d+)?)/);
-      if(m2){ deviceVer = deviceVer || m2[1]; availableVer = m2[2]; }
-    }
-
-    // Fallback: find any single version
-    if(!deviceVer){
-      deviceVer = parseVersionFromString(text);
-    }
+    // If we still don't have an available version but the text explicitly mentions "update" or "available", enable update as unknown-version case
+    const mentionsUpdate = /(?:update|available|new version|upgrade|outdated|older)/i.test(text);
 
     // Update UI
     firmwareSpan.textContent = deviceVer || "--";
 
     if(availableVer){
       if(!deviceVer) {
-        // if no device version but available version exists, show available only
         firmwareSpan.textContent = "Available: " + availableVer;
         updateBtn.disabled = false;
         updateBtn.textContent = "Update";
+        updateBtn.classList.add('update-available');
+        addDataEntry("Update available: " + availableVer, "sent");
       } else {
-        // compare semantic version
         const cmp = compareVersions(availableVer, deviceVer);
         if(cmp > 0){
           firmwareSpan.textContent = deviceVer + " (update: " + availableVer + ")";
@@ -3248,12 +3276,22 @@ document.addEventListener("DOMContentLoaded", function(){
           firmwareSpan.textContent = deviceVer + " (up-to-date)";
           updateBtn.disabled = true;
           updateBtn.textContent = "Up-to-date";
+          updateBtn.classList.remove('update-available');
         }
       }
+    } else if (mentionsUpdate) {
+      // We have a textual signal that an update exists even if we couldn't parse a version number
+      firmwareSpan.textContent = (deviceVer? deviceVer + " ":"") + "(update available)";
+      updateBtn.disabled = false;
+      updateBtn.textContent = "Update";
+      updateBtn.classList.add('update-available');
+      addDataEntry("Update flagged by text (no parsed version)","sent");
     } else {
-      // no info about available version => keep update disabled
+      // no info about available version => keep update disabled but allow manual override via long-press (not implemented) 
       updateBtn.disabled = true;
       updateBtn.textContent = "Update";
+      updateBtn.classList.remove('update-available');
+      addDataEntry("No available-version info found in firmware response","error");
     }
   }
 
@@ -3263,13 +3301,12 @@ document.addEventListener("DOMContentLoaded", function(){
       let resolved=false;
       const onValue = (ev)=>{
         try{
-          const val = ev.target.value;
-          const text = textDecoder.decode(val.buffer ? val.buffer : val);
+          const txt = decodeDataView(ev.target.value);
           // accept if looks like a version response
-          if(/(?:FW|VER|VERSION|LATEST|AVAILABLE)/i.test(text) || /(\d+\.\d+(?:\.\d+)?)/.test(text)){
+          if(/(?:FW|VER|VERSION|LATEST|AVAILABLE|UPDATE)/i.test(txt) || /v?\d+(?:\.\d+){0,}/.test(txt)){
             resolved=true;
             characteristic.removeEventListener('characteristicvaluechanged', onValue);
-            resolve(text);
+            resolve(txt);
           }
         }catch(e){}
       };
@@ -3291,9 +3328,9 @@ document.addEventListener("DOMContentLoaded", function(){
         throw new Error('Device not connected');
       }
 
-      if(characteristic && characteristic.properties.read){
+      if(characteristic && characteristic.properties && characteristic.properties.read){
         const val = await characteristic.readValue();
-        const txt = textDecoder.decode(val.buffer ? val.buffer : val);
+        const txt = decodeDataView(val);
         processFirmwareResponse(txt);
       } else {
         // send a firmware request command - common choices: 'V' or 'v' or 'F'
@@ -3316,6 +3353,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }catch(err){
       addDataEntry('Firmware check error: '+(err && err.message?err.message:err),'error');
+      console.error(err);
     }finally{
       getBtn.disabled = false; getBtn.textContent = 'Check';
     }
@@ -3337,10 +3375,12 @@ document.addEventListener("DOMContentLoaded", function(){
       addDataEntry('Firmware update failed: '+(e.message||e),'error');
       updateBtn.disabled=false;
       updateBtn.textContent='Update';
+      console.error(e);
     }
   });
 })();
 </script>
+
 
 </body>
 </html>
