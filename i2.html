@@ -136,13 +136,13 @@ button {
   background-color: #5F9EA0;
 }
 
-/* Always On toggle - customizable colors */
+/* Always on toggle - green when active */
 #alwaysOnToggle {
-  background-color: var(--alwaysOn-off, #666); /* Default OFF = gray */
+  background-color: #666;
 }
 
 #alwaysOnToggle.active {
-  background-color: var(--alwaysOn-on, #4CAF50); /* Default ON = green */
+  background-color: #4CAF50;
 }
 
 /* Raw data toggle - purple when active */
@@ -510,9 +510,7 @@ button {
 
 
 /* Equalize buttons and inputs sizes (use a CSS variable for easy tuning) */
-:root {
-  --alwaysOn-off: #666;   /* OFF default gray */
-  --alwaysOn-on: #4CAF50; /* ON default green */ --adv-control-width: 96px; }
+:root { --adv-control-width: 96px; }
 
 .adv-btn {
   height: 44px;
@@ -542,9 +540,7 @@ button {
 
 /* On small screens, make them stack but remain the same width (full width for easier tapping) */
 @media (max-width: 420px) {
-  :root {
-  --alwaysOn-off: #666;   /* OFF default gray */
-  --alwaysOn-on: #4CAF50; /* ON default green */ --adv-control-width: 100%; }
+  :root { --adv-control-width: 100%; }
   .adv-row { gap: 6px; }
   .adv-controls {
     flex-direction: row;
@@ -1123,22 +1119,6 @@ body { padding-bottom: 0 !important; }
   font-size: 0.85em !important;
 }
 
-
-/* --- alwaysOn toggle: ensure variables and override inline style --- */
-:root {
-  --alwaysOn-off: #666;   /* default OFF (gray) */
-  --alwaysOn-on: #4CAF50; /* default ON (green) */
-}
-
-/* Strong override so any inline styles won't prevent the toggle color changing */
-#alwaysOnToggle {
-  background-color: var(--alwaysOn-off, #666) !important;
-}
-
-#alwaysOnToggle.active {
-  background-color: var(--alwaysOn-on, #4CAF50) !important;
-}
-
 </style>
 </head>
 <body>
@@ -1213,7 +1193,7 @@ body { padding-bottom: 0 !important; }
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle">
+<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
@@ -2735,6 +2715,191 @@ document.addEventListener("DOMContentLoaded", function(){
   const advToggle = document.getElementById('advanceToggle') || document.getElementById('advToggle') || document.querySelector('.advance-toggle');
   if (advToggle) {
     advToggle.addEventListener('click', tryShow);
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  // Semver-like comparison (handles numeric segments and pre-release after '-')
+  function normalizeVersion(v) {
+    if(!v) return '';
+    v = v.trim();
+    v = v.replace(/^v/i,''); // strip leading v
+    return v;
+  }
+
+  function parseVersion(v) {
+    v = normalizeVersion(v);
+    const parts = v.split('-');
+    const main = parts[0].split('.').map(p => {
+      const n = parseInt(p,10);
+      return isNaN(n) ? p : n;
+    });
+    const pre = parts.slice(1).join('-') || null;
+    return { main, pre };
+  }
+
+  // returns -1 if a<b, 0 if equal, 1 if a>b
+  function compareSemver(a, b) {
+    try {
+      if(a === b) return 0;
+      const A = parseVersion(a);
+      const B = parseVersion(b);
+      const len = Math.max(A.main.length, B.main.length);
+      for(let i=0;i<len;i++) {
+        const aa = (i < A.main.length) ? A.main[i] : 0;
+        const bb = (i < B.main.length) ? B.main[i] : 0;
+        // numeric compare when both are numbers
+        if (typeof aa === 'number' && typeof bb === 'number') {
+          if (aa < bb) return -1;
+          if (aa > bb) return 1;
+        } else {
+          const sa = String(aa), sb = String(bb);
+          if (sa < sb) return -1;
+          if (sa > sb) return 1;
+        }
+      }
+      // main parts equal: handle pre-release (pre-release is lower priority)
+      if (A.pre && !B.pre) return -1;
+      if (!A.pre && B.pre) return 1;
+      if (A.pre && B.pre) {
+        if (A.pre === B.pre) return 0;
+        return A.pre < B.pre ? -1 : 1;
+      }
+      return 0;
+    } catch(e) {
+      console.error('compareSemver error', e);
+      return 0;
+    }
+  }
+
+  async function fetchFirmwareMeta(path) {
+    path = path || 'firmware.json';
+    // Try fetch first
+    try {
+      const res = await fetch(path, {cache: 'no-store'});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      return j;
+    } catch (e) {
+      // fallback: check for embedded JSON in the page
+      try {
+        const el = document.getElementById('firmwareMeta');
+        if (el) {
+          return JSON.parse(el.textContent || el.innerText || '{}');
+        }
+      } catch (ee) {
+        // ignore
+      }
+      throw e;
+    }
+  }
+
+  // Replace existing click handler safely by cloning the button
+  function attachEnhancedHandler() {
+    const btn = document.getElementById('getFirmwareButton');
+    const span = document.getElementById('firmwareVersion');
+    if (!btn) return;
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', async function() {
+      const origText = newBtn.textContent;
+      newBtn.disabled = true;
+      newBtn.textContent = 'Requesting...';
+      try {
+        const ver = await requestFirmwareVersion({timeout:4000, command:'V'}); // uses existing function
+        if (span) {
+          span.textContent = ver;
+          span.classList.remove('update-available','up-to-date','ahead','unknown');
+        }
+
+        // Try to load firmware metadata JSON and compare
+        let meta = null;
+        try {
+          meta = await fetchFirmwareMeta();
+        } catch (e) {
+          console.warn('Failed to fetch firmware metadata:', e);
+        }
+
+        if (meta && meta.version) {
+          const latest = String(meta.version).trim();
+          const cmp = compareSemver(ver, latest);
+          if (cmp < 0) {
+            // device is older
+            if (span) {
+              span.classList.add('update-available');
+              span.title = `Device: ${ver} — Latest: ${latest}\n${meta.notes ? meta.notes : ''}`;
+            }
+            if (typeof addDataEntry === 'function') addDataEntry(`Firmware update available: device ${ver} < latest ${latest}`, 'received');
+          } else if (cmp === 0) {
+            if (span) {
+              span.classList.add('up-to-date');
+              span.title = `Device: ${ver} — Latest: ${latest}`;
+            }
+            if (typeof addDataEntry === 'function') addDataEntry(`Firmware up-to-date: ${ver}`, 'received');
+          } else {
+            if (span) {
+              span.classList.add('ahead');
+              span.title = `Device: ${ver} — Latest: ${latest}`;
+            }
+            if (typeof addDataEntry === 'function') addDataEntry(`Device firmware (${ver}) is newer than JSON (${latest})`, 'received');
+          }
+        } else {
+          // no metadata available
+          if (span) {
+            span.classList.add('unknown');
+            span.title = 'No firmware metadata (firmware.json) found';
+          }
+          if (typeof addDataEntry === 'function') addDataEntry('Could not load firmware metadata to compare versions', 'error');
+        }
+      } catch (e) {
+        console.error('Enhanced firmware request error', e);
+        if (typeof addDataEntry === 'function') addDataEntry('Firmware request failed: ' + (e && e.message ? e.message : e), 'error');
+        if (span) { span.textContent = '(no response)'; span.classList.add('unknown'); }
+      } finally {
+        newBtn.disabled = false;
+        newBtn.textContent = origText;
+      }
+    });
+  }
+
+  // Add some visual CSS for version states
+  function injectCss() {
+    const css = `
+#firmwareVersion.up-to-date { color: #62c462 !important; font-weight: 700; }
+#firmwareVersion.update-available { color: #ffb020 !important; font-weight: 700; }
+#firmwareVersion.ahead { color: #00bfff !important; font-weight: 700; }
+#firmwareVersion.unknown { color: #c8ced1 !important; font-weight: 700; }
+`;
+    const s = document.createElement('style');
+    s.type = 'text/css';
+    s.appendChild(document.createTextNode(css));
+    document.head.appendChild(s);
+  }
+
+  // Hook into updateConnectionState so button initial enabled/disabled works
+  function hookConnectionState() {
+    const btn = document.getElementById('getFirmwareButton');
+    if (btn && typeof updateConnectionState === 'function') {
+      try {
+        btn.disabled = !(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected);
+      } catch(e){}
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){
+      injectCss();
+      attachEnhancedHandler();
+      hookConnectionState();
+    });
+  } else {
+    injectCss();
+    attachEnhancedHandler();
+    hookConnectionState();
   }
 })();
 </script>
