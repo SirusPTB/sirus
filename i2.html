@@ -1778,7 +1778,7 @@ async function connectToDevice() {
       writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
       console.log("Write characteristic found with properties:", writeCharacteristic.properties);
     } catch(e) {
-      console.log("Separate write characteristic not found, trying to use read characteristic for writing");
+      console.log("Separate write characteristic , trying to use read characteristic for writing");
       
       // Check if the read characteristic supports writing
       if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
@@ -2715,12 +2715,12 @@ document.addEventListener("DOMContentLoaded", function(){
   function tryShow(){
     fetchVersion().then(ver => {
       if (ver) {
-        showLabel('Latest firmware: ' + ver);
+        showLabel('' + ver);
       } else {
-        showLabel('Latest firmware: (not found)');
+        showLabel('');
       }
     }).catch(() => {
-      showLabel('Latest firmware: (not found)');
+      showLabel('');
     });
   }
 
