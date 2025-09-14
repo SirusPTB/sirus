@@ -3099,5 +3099,73 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 <!-- END FW ENHANCEMENT -->
+
+<script>
+// Fallback polyfill: ensure a global requestFirmwareVersion exists and ensure alwaysOn toggle CSS/inline styles are fixed
+(function(){
+  if (typeof window.requestFirmwareVersion === 'undefined') {
+    window.requestFirmwareVersion = function(opts) {
+      opts = opts || {};
+      const timeout = typeof opts.timeout === 'number' ? opts.timeout : 4000;
+      const command = typeof opts.command === 'string' ? opts.command : 'V';
+
+      return new Promise(async function(resolve, reject){
+        // Ensure connected (attempt to connect if not)
+        if (!(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected)) {
+          if (typeof connectToDevice === 'function') {
+            try { await connectToDevice(); } catch(e) { return reject(new Error('Not connected')); }
+          } else {
+            return reject(new Error('Not connected'));
+          }
+        }
+
+        window.pendingFirmwareRequests = window.pendingFirmwareRequests || [];
+        const id = Math.random().toString(36).substr(2,9);
+
+        const timer = setTimeout(function(){
+          window.pendingFirmwareRequests = (window.pendingFirmwareRequests || []).filter(r => r.id !== id);
+          reject(new Error('Timeout waiting for firmware response'));
+        }, timeout);
+
+        window.pendingFirmwareRequests.push({
+          id: id,
+          resolve: function(ver){ clearTimeout(timer); window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); resolve(ver); },
+          reject: function(err){ clearTimeout(timer); window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); reject(err); }
+        });
+
+        if (typeof sendData === 'function') {
+          try { await sendData(command); } catch(err){ window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); clearTimeout(timer); reject(err); }
+        } else {
+          window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id);
+          clearTimeout(timer);
+          reject(new Error('sendData function not available'));
+        }
+      });
+    };
+    console.log("requestFirmwareVersion polyfill installed");
+  } else {
+    console.log("requestFirmwareVersion already defined");
+  }
+
+  // Ensure alwaysOn toggle has no inline style, and inject strong CSS variables if missing
+  try {
+    const alwaysEl = document.getElementById('alwaysOnToggle');
+    if (alwaysEl) {
+      alwaysEl.removeAttribute('style');
+    }
+    if (!document.getElementById('__alwayson_override')) {
+      const s = document.createElement('style');
+      s.id = '__alwayson_override';
+      s.type = 'text/css';
+      s.appendChild(document.createTextNode(" :root{ --alwaysOn-off: #666; --alwaysOn-on: #4CAF50; } #alwaysOnToggle{ background-color:var(--alwaysOn-off) !important;} #alwaysOnToggle.active{ background-color:var(--alwaysOn-on) !important;} "));
+      document.head.appendChild(s);
+      console.log("Injected alwaysOn override CSS");
+    }
+  } catch(e){
+    console.error("alwaysOn fix error", e);
+  }
+})();
+</script>
+
 </body>
 </html>
