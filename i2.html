@@ -1119,6 +1119,14 @@ body { padding-bottom: 0 !important; }
   font-size: 0.85em !important;
 }
 
+
+/* --- Ensure alwaysOn toggle variables and strong override --- */
+:root {
+  --alwaysOn-off: #666;   /* OFF default gray */
+  --alwaysOn-on:  #4CAF50; /* ON default green */
+}
+#alwaysOnToggle { background-color: var(--alwaysOn-off) !important; }
+#alwaysOnToggle.active { background-color: var(--alwaysOn-on) !important; }
 </style>
 </head>
 <body>
@@ -1193,7 +1201,7 @@ body { padding-bottom: 0 !important; }
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
+<div class="toggle-switch" id="alwaysOnToggle">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
@@ -1231,6 +1239,14 @@ body { padding-bottom: 0 !important; }
           <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
+      <tr>
+        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td>
+        <td class="control-cell">
+          <span id="firmwareVersion" class="version-label">--</span>
+          <button id="getFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px;">Request</button>
+        </td>
+      </tr>
+
       <tr>
         <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
         <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
@@ -2904,5 +2920,184 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 
+
+<!-- START FW ENHANCEMENT -->
+
+<script>
+(function(){
+  // Safe helper: add pendingRequests array and a resolver via MutationObserver on rawDataDisplay
+  window.pendingFirmwareRequests = window.pendingFirmwareRequests || [];
+
+  function detectFirmwareInText(raw) {
+    const patterns = [
+      /firmware[:\s]*v?([\w\.\-\+]+)/i,
+      /version[:\s]*v?([\w\.\-\+]+)/i,
+      /fw[:\s]*v?([\w\.\-\+]+)/i,
+      /ver[:\s]*v?([\w\.\-\+]+)/i,
+      /\bV\s*([0-9]+\.[0-9]+\.[0-9]+)/i
+    ];
+    for (const p of patterns) {
+      const m = raw.match(p);
+      if (m) return m[1];
+    }
+    // fallback: short token
+    const token = raw.trim();
+    if (token.length > 0 && token.length <= 60 && /^[\dA-Za-z\.\-\+]+$/.test(token)) return token;
+    return null;
+  }
+
+  // MutationObserver watches the rawDataDisplay list for new entries and resolves pending requests if a firmware-like token appears
+  const rawDisplay = document.getElementById('rawDataDisplay');
+  if (rawDisplay) {
+    const obs = new MutationObserver(function(muts){
+      muts.forEach(m => {
+        m.addedNodes.forEach(node => {
+          try {
+            if (!node || !node.textContent) return;
+            const txt = node.textContent || '';
+            const ver = detectFirmwareInText(txt);
+            if (ver && window.pendingFirmwareRequests && window.pendingFirmwareRequests.length) {
+              // Resolve all pending requests with the found version
+              window.pendingFirmwareRequests.forEach(r => { try { r.resolve(ver); } catch(e){} });
+              window.pendingFirmwareRequests = [];
+            }
+          } catch(e) { console.error('observer error', e); }
+        });
+      });
+    });
+    obs.observe(rawDisplay, { childList: true, subtree: true });
+  }
+
+  // Request function that uses sendData and waits for observer to pick up response
+  function requestFirmwareVersionSimple(timeout, command) {
+    timeout = typeof timeout === 'number' ? timeout : 4000;
+    command = command || 'V';
+    return new Promise(async function(resolve, reject) {
+      // Ensure connected (attempt to connect if not)
+      if (!(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected)) {
+        if (typeof connectToDevice === 'function') {
+          try { await connectToDevice(); } catch(e) { return reject(new Error('Not connected')); }
+        } else {
+          return reject(new Error('Not connected'));
+        }
+      }
+      const id = Math.random().toString(36).substr(2,9);
+      const timer = setTimeout(function(){
+        window.pendingFirmwareRequests = (window.pendingFirmwareRequests || []).filter(r => r.id !== id);
+        reject(new Error('Timeout waiting for firmware response'));
+      }, timeout);
+
+      window.pendingFirmwareRequests = window.pendingFirmwareRequests || [];
+      window.pendingFirmwareRequests.push({
+        id: id,
+        resolve: function(ver){ clearTimeout(timer); window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); resolve(ver); },
+        reject: function(err){ clearTimeout(timer); window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); reject(err); }
+      });
+
+      if (typeof sendData === 'function') {
+        try { await sendData(command); } catch(err){ window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id); clearTimeout(timer); reject(err); }
+      } else {
+        // fallback - reject
+        window.pendingFirmwareRequests = window.pendingFirmwareRequests.filter(r => r.id !== id);
+        clearTimeout(timer);
+        reject(new Error('sendData function not available'));
+      }
+    });
+  }
+
+  // Attach click handler to the getFirmwareButton; compare with firmware.json if possible
+  function attachButton() {
+    const btn = document.getElementById('getFirmwareButton');
+    const span = document.getElementById('firmwareVersion');
+    if (!btn || !span) return;
+    // ensure button enabled/disabled matches connection state
+    try { btn.disabled = !(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected); } catch(e){}
+    btn.addEventListener('click', async function(){
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Requesting...';
+      try {
+        const ver = await requestFirmwareVersionSimple(4000, 'V');
+        if (span) { span.textContent = ver; span.className = 'version-label'; }
+        // try fetch firmware.json
+        let meta = null;
+        try {
+          const res = await fetch('firmware.json', {cache:'no-store'});
+          if (res.ok) { meta = await res.json(); }
+        } catch(e) { /* ignore */ }
+        if (meta && meta.version) {
+          // semver-like compare
+          function normalize(v){ if(!v) return ''; return v.trim().replace(/^v/i,''); }
+          function cmp(a,b){
+            a = normalize(a).split('-')[0].split('.'); b = normalize(b).split('-')[0].split('.');
+            for (let i=0;i<Math.max(a.length,b.length);i++){ const ai = parseInt(a[i]||'0',10), bi = parseInt(b[i]||'0',10); if (ai<bi) return -1; if (ai>bi) return 1; }
+            return 0;
+          }
+          const c = cmp(ver, String(meta.version));
+          span.classList.remove('update-available','up-to-date','ahead','unknown');
+          if (c < 0) { span.classList.add('update-available'); span.title = `Device: ${ver} — Latest: ${meta.version}\n${meta.notes||''}`; }
+          else if (c === 0) { span.classList.add('up-to-date'); span.title = `Device: ${ver} — Latest: ${meta.version}`; }
+          else { span.classList.add('ahead'); span.title = `Device: ${ver} — Latest: ${meta.version}`; }
+        } else {
+          if (span) { span.classList.add('unknown'); span.title = 'No firmware.json found'; }
+        }
+      } catch(err) {
+        console.error('Firmware request error', err);
+        if (span) { span.textContent = '(no response)'; span.classList.add('unknown'); }
+      } finally {
+        btn.disabled = false; btn.textContent = orig;
+      }
+    });
+  }
+
+  // Restore inline style removal if previously present
+  const alwaysEl = document.getElementById('alwaysOnToggle');
+  if (alwaysEl) { alwaysEl.removeAttribute('style'); }
+
+  // Ensure the CSS variables/overrides are present in head (guard against duplicates)
+  try {
+    if (!document.getElementById('__alwayson_override')) {
+      const s = document.createElement('style');
+      s.id = '__alwayson_override';
+      s.type = 'text/css';
+      s.appendChild(document.createTextNode(" :root{ --alwaysOn-off: #666; --alwaysOn-on: #4CAF50; } #alwaysOnToggle{ background-color:var(--alwaysOn-off) !important;} #alwaysOnToggle.active{ background-color:var(--alwaysOn-on) !important;} "));
+      document.head.appendChild(s);
+    }
+  } catch(e){}
+
+  // If button missing for some reason, try to insert it into the adv table (best effort)
+  if (!document.getElementById('getFirmwareButton')) {
+    const rel = document.querySelector('.advanced-panel .adv-table tbody');
+    if (rel) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td><td class="control-cell"><span id="firmwareVersion" class="version-label">--</span><button id="getFirmwareButton" class="adv-btn control-btn" style="margin-left:8px;" disabled>Request</button></td>';
+      rel.appendChild(tr);
+    }
+  }
+
+  // Attach the handler
+  attachButton();
+
+  // Hook into updateConnectionState to toggle the button enabled status
+  if (typeof window.updateConnectionState === 'function') {
+    const orig = window.updateConnectionState;
+    window.updateConnectionState = function(connected){
+      try { orig(connected); } catch(e){}
+      const btn = document.getElementById('getFirmwareButton');
+      if (btn) btn.disabled = !connected;
+    };
+  }
+
+  // Add small CSS for states if not present
+  if (!document.getElementById('__fwstate_css')) {
+    const css = document.createElement('style');
+    css.id = '__fwstate_css';
+    css.type = 'text/css';
+    css.appendChild(document.createTextNode('#firmwareVersion.up-to-date{color:#62c462!important;font-weight:700} #firmwareVersion.update-available{color:#ffb020!important;font-weight:700} #firmwareVersion.ahead{color:#00bfff!important;font-weight:700} #firmwareVersion.unknown{color:#c8ced1!important;font-weight:700}'));
+    document.head.appendChild(css);
+  }
+})();
+</script>
+
+<!-- END FW ENHANCEMENT -->
 </body>
 </html>
