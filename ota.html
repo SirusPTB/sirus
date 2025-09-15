@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SirusPTB Firmware Update</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00bcd4;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+    .instructions {
+      margin-top: 1.5rem;
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: #00bcd4;
+      color: #121212;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .button:hover {
+      background-color: #0097a7;
+    }
+    .warning {
+      background-color: #ff5252;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 5px;
+      margin-top: 2rem;
+      font-weight: bold;
+    }
+    .warning ul {
+      margin: 0.5rem 0 0 1rem;
+      padding: 0;
+    }
+    a {
+      color: #80d8ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SirusPTB Firmware Update</h1>
+    <p class="instructions">
+      To update your SirusPTB firmware, follow these steps:
+      <ol>
+        <li>Click the button below to download the latest firmware file.</li>
+        <li>Once downloaded, connect your Wi-Fi to <strong>SirusPTB-OTA</strong>.</li>
+        <li>Click this link: <a href="http://esp32.local">http://esp32.local</a>.</li>
+        <li>Upload the firmware file and follow the on-screen instructions.</li>
+      </ol>
+    </p>
+    <a class="button" href="https://sirusptb.github.io/sirus/SirusPTB.bin" download>
+      Download Firmware
+    </a>
+
+    <div class="warning">
+      ⚠️ Important:
+      <ul>
+        <li>Do <strong>not</strong> disconnect your device during the update.</li>
+        <li>Ensure your device remains <strong>powered on</strong> throughout the process.</li>
+        <li>Make sure the battery is <strong>fully charged</strong> before starting.</li>
+      </ul>
+      Interrupting the update may cause firmware corruption or device malfunction.
+    </div>
+  </div>
+</body>
+</html>
