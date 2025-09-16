@@ -1128,27 +1128,6 @@ body { padding-bottom: 0 !important; }
 #alwaysOnToggle { background-color: var(--alwaysOn-off) !important; }
 #alwaysOnToggle.active { background-color: var(--alwaysOn-on) !important; }
 </style>
-
-<style>
-/* Make advance panel width 98% on small screens (mobile) */
-@media (max-width: 420px) {
-  /* Make the whole advance section almost full-width of the phone viewport */
-  #advanceSection {
-    width: 98vw !important;
-    margin: 8px 1% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Ensure the advance content / panel inside uses the same width */
-  #advanceContent,
-  #advanceContent.advanced-panel,
-  .advanced-panel {
-    width: 98% !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
-  }
-}
-</style>
 </head>
 <body>
 <div id="page-wrapper">
@@ -1261,20 +1240,20 @@ body { padding-bottom: 0 !important; }
         </td>
       </tr>
       <tr>
-        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td>
+        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label> <span id="firmwareVersion" class="version-label" style="margin-left:16px;">--</span></td>
         <td class="control-cell">
           
           <button id="getFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px;">Check</button>
-          <button id="updateFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px; background: linear-gradient(180deg, #f4511e 0%, #d84315 100%);">Update</button><span id="firmwareVersion" class="version-label" style="margin-left:16px;">--</span>
+          <button id="updateFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px; background: linear-gradient(180deg, #f4511e 0%, #d84315 100%);">Update</button>
           
         </td>
       </tr>
 
       <tr>
-        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
+        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label> <span id="brightnessValue" class="brightness-value">125</span></td>
         <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
           <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
-          <span id="brightnessValue" class="brightness-value">125</span>
+          
         </td>
       </tr>
       <tr>
