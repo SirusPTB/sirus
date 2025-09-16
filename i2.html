@@ -1240,20 +1240,20 @@ body { padding-bottom: 0 !important; }
         </td>
       </tr>
       <tr>
-        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label> <span id="firmwareVersion" class="version-label" style="margin-left:16px;">--</span></td>
+        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td>
         <td class="control-cell">
           
           <button id="getFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px;">Check</button>
-          <button id="updateFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px; background: linear-gradient(180deg, #f4511e 0%, #d84315 100%);">Update</button>
+          <button id="updateFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px; background: linear-gradient(180deg, #f4511e 0%, #d84315 100%);">Update</button><span id="firmwareVersion" class="version-label" style="margin-left:16px;">--</span>
           
         </td>
       </tr>
 
       <tr>
-        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label> <span id="brightnessValue" class="brightness-value">125</span></td>
+        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
         <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
           <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
-          
+          <span id="brightnessValue" class="brightness-value">125</span>
         </td>
       </tr>
       <tr>
@@ -1432,7 +1432,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f"}}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#ff7f7f"}}
       }
     },
     plugins:[currentValuePlugin]
@@ -1450,7 +1450,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{color:"#7fbfff"}}
+        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#7fbfff"}}
       }
     },
     plugins:[currentValuePlugin]
@@ -1471,8 +1471,8 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f"}},
-        y2:{display:true,title:{display:false},ticks:{color:"#7fbfff"}}
+        y1:{display:true,title:{display:false},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#ff7f7f"}},
+        y2:{display:true,title:{display:false},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#7fbfff"}}
       }
     },
     plugins:[currentValuePlugin]
