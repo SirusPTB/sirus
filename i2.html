@@ -1128,6 +1128,41 @@ body { padding-bottom: 0 !important; }
 #alwaysOnToggle { background-color: var(--alwaysOn-off) !important; }
 #alwaysOnToggle.active { background-color: var(--alwaysOn-on) !important; }
 </style>
+
+<style>
+/* Force consistent label/control alignment for advanced panel tables */
+.advanced-panel .adv-table { width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important; }
+.advanced-panel .adv-table td.label-cell { width: 34% !important; padding-right: 12px !important; vertical-align: middle !important; text-align: left !important; display: flex !important; align-items: center !important; gap: 8px !important; }
+.advanced-panel .adv-table td.control-cell { width: 66% !important; vertical-align: middle !important; display: flex !important; align-items: center !important; gap: 10px !important; }
+/* Keep inline spans (version, brightness) aligned and unwrapped */
+.advanced-panel .adv-table td.label-cell label,
+.advanced-panel .adv-table td.label-cell span,
+.advanced-panel .adv-table td.label-cell #brightnessValue,
+.advanced-panel .adv-table td.label-cell .version-label {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Ensure the brightness value has a stable width so labels align */
+#brightnessValue, .brightness-value {
+  margin-left: 6px !important;
+  min-width: 36px !important;
+  text-align: right !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+}
+/* Make sure control-cell children don't force wrapping */
+.advanced-panel .adv-table td.control-cell > * { max-width: 100% !important; box-sizing: border-box !important; }
+/* Slight mobile tweaks */
+@media (max-width: 600px) {
+  .advanced-panel .adv-table td.label-cell { width: 40% !important; }
+  .advanced-panel .adv-table td.control-cell { width: 60% !important; }
+  #brightnessValue, .brightness-value { min-width: 32px !important; font-weight: 600 !important; }
+}
+</style>
+
 </head>
 <body>
 <div id="page-wrapper">
@@ -1222,7 +1257,7 @@ body { padding-bottom: 0 !important; }
   <table class="adv-table" role="presentation">
     <tbody>
       <tr>
-        <td class="label-cell"><label>Zero pressure:</label></td>
+        <td class="label-cell"><label>Zero pressure:</label> </td>
         <td class="control-cell"><button id="zeroPressureButton" class="adv-btn control-btn" disabled>Zero</button></td>
       </tr>
       <tr>
@@ -1240,7 +1275,7 @@ body { padding-bottom: 0 !important; }
         </td>
       </tr>
       <tr>
-        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td>
+        <td class="label-cell"><label for="firmwareVersion">Firmware version:</label> </td>
         <td class="control-cell">
           
           <button id="getFirmwareButton" class="adv-btn control-btn" disabled style="margin-left:8px;">Check</button>
@@ -1250,10 +1285,10 @@ body { padding-bottom: 0 !important; }
       </tr>
 
       <tr>
-        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
+        <td class="label-cell"><label for="brightnessSlider">Device brightness:</label> <span id="brightnessValue" class="brightness-value">125</span></td>
         <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
           <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
-          <span id="brightnessValue" class="brightness-value">125</span>
+          
         </td>
       </tr>
       <tr>
@@ -1432,7 +1467,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#ff7f7f"}}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f"}}
       }
     },
     plugins:[currentValuePlugin]
@@ -1450,7 +1485,7 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#7fbfff"}}
+        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{color:"#7fbfff"}}
       }
     },
     plugins:[currentValuePlugin]
@@ -1471,8 +1506,8 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y1:{display:true,title:{display:false},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#ff7f7f"}},
-        y2:{display:true,title:{display:false},ticks:{ callback: function(value,index,ticks){return Number(value).toFixed(1);},color:"#7fbfff"}}
+        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f"}},
+        y2:{display:true,title:{display:false},ticks:{color:"#7fbfff"}}
       }
     },
     plugins:[currentValuePlugin]
@@ -3072,7 +3107,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const rel = document.querySelector('.advanced-panel .adv-table tbody');
     if (rel) {
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td class="label-cell"><label for="firmwareVersion">Firmware version:</label></td><td class="control-cell"><span id="firmwareVersion" class="version-label">--</span><button id="getFirmwareButton" class="adv-btn control-btn" style="margin-left:8px;" disabled>Request</button></td>';
+      tr.innerHTML = '<td class="label-cell"><label for="firmwareVersion">Firmware version:</label> </td><td class="control-cell"><button id="getFirmwareButton" class="adv-btn control-btn" style="margin-left:8px;" disabled>Request</button></td>';
       rel.appendChild(tr);
     }
   }
@@ -3207,6 +3242,61 @@ document.addEventListener("DOMContentLoaded", function(){
     observer.observe(raw, { childList: true, subtree: true });
   }
   watchRawData();
+})();
+</script>
+
+
+<script>
+(function(){
+  function moveFirmwareSpan(){
+    try{
+      var label = document.querySelector('td.label-cell label[for=\"firmwareVersion\"]');
+      var labelCell = label ? label.parentElement : document.querySelector('td.label-cell');
+      if(!labelCell) return;
+      var spans = Array.from(document.querySelectorAll('#firmwareVersion'));
+      if(spans.length === 0){
+         var s = document.createElement('span');
+         s.id = 'firmwareVersion';
+         s.className = 'version-label';
+         s.style.marginLeft = '8px';
+         s.textContent = '--';
+         labelCell.appendChild(s);
+      } else {
+         var first = spans[0];
+         if(!labelCell.contains(first)){
+            labelCell.appendChild(first);
+         }
+         for(var i=1;i<spans.length;i++){ if(spans[i] && spans[i].parentNode) spans[i].parentNode.removeChild(spans[i]); }
+      }
+    }catch(e){
+      console.error('moveFirmwareSpan error', e);
+    }
+  }
+
+  function init(){
+    moveFirmwareSpan();
+    var adv = document.querySelector('.advanced-panel') || document.body;
+    try{
+      var observer = new MutationObserver(function(mutations){
+        var shouldRun = false;
+        for(var m of mutations){
+          if(m.addedNodes && m.addedNodes.length){ shouldRun = true; break; }
+        }
+        if(shouldRun) moveFirmwareSpan();
+      });
+      observer.observe(adv, { childList: true, subtree: true });
+    }catch(e){
+      // ignore
+    }
+    // Also periodically ensure single instance (failsafe)
+    setInterval(moveFirmwareSpan, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
 </script>
 
