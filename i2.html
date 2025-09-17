@@ -3300,5 +3300,33 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 
+
+<script>
+(function(){
+  // Open ota.html when Update button is enabled and clicked
+  function onUpdateClick(e){
+    const btn = document.getElementById('updateFirmwareButton');
+    if (!btn) return;
+    if (btn.disabled) {
+      try {
+        btn.animate([{opacity:1},{opacity:0.6},{opacity:1}], { duration: 160 });
+      } catch(e){}
+      return;
+    }
+    window.location.href = 'ota.html';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('updateFirmwareButton');
+      if (btn) btn.addEventListener('click', onUpdateClick);
+    });
+  } else {
+    const btn = document.getElementById('updateFirmwareButton');
+    if (btn) btn.addEventListener('click', onUpdateClick);
+  }
+})();
+</script>
+
 </body>
 </html>
