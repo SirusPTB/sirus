@@ -2889,9 +2889,42 @@ document.addEventListener("DOMContentLoaded", function(){
             }
             if (typeof addDataEntry === 'function') addDataEntry(`Firmware update available: device ${ver} < latest ${latest}`, 'received');
           } else if (cmp === 0) {
-            if (span) {
-              span.classList.add('up-to-date');
-              span.title = `Device: ${ver} — Latest: ${latest}`;
+            (function(){
+    // unified up-to-date handler — display version plus "(latest)"
+    var deviceVersion = (typeof ver !== 'undefined' ? ver : (typeof deviceVer !== 'undefined' ? deviceVer : null));
+    var latestVersion = (typeof latest !== 'undefined' ? latest : (typeof availableVer !== 'undefined' ? availableVer : (typeof meta !== 'undefined' && meta.version ? meta.version : null)));
+    var display = (deviceVersion || latestVersion || '') + ' (latest)';
+    if (span) {
+      span.classList.add('up-to-date');
+      span.title = 'Device: ' + (deviceVersion || (latestVersion || '')) + ' — Latest: ' + (latestVersion || '');
+      span.textContent = display;
+    }
+    try {
+      if (typeof updateBtn !== 'undefined' && updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Up to date';
+        updateBtn.classList && updateBtn.classList.remove('update-available');
+      } else {
+        var ub = document.getElementById && document.getElementById('updateFirmwareButton');
+        if (ub) { ub.disabled = true; ub.textContent = 'Up to date'; ub.classList && ub.classList.remove('update-available'); }
+      }
+    } catch(e){}
+    if (typeof addDataEntry === 'function') try{ addDataEntry('Firmware up-to-date: ' + (deviceVersion || latestVersion || ''), 'received'); }catch(e){}
+})();
+    }
+    // prefer an existing updateBtn variable, otherwise fall back to element id
+    try {
+      if (typeof updateBtn !== 'undefined' && updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Up to date';
+        updateBtn.classList && updateBtn.classList.remove('update-available');
+      } else {
+        var ub = document.getElementById && document.getElementById('updateFirmwareButton');
+        if (ub) { ub.disabled = true; ub.textContent = 'Up to date'; ub.classList && ub.classList.remove('update-available'); }
+      }
+    } catch(e){}
+    if (typeof addDataEntry === 'function') try{ addDataEntry('Firmware up-to-date: ' + display, 'received'); }catch(e){}
+})();} — Latest: ${latest}`;
             }
             if (typeof addDataEntry === 'function') addDataEntry(`Firmware up-to-date: ${ver}`, 'received');
           } else {
@@ -3073,7 +3106,42 @@ document.addEventListener("DOMContentLoaded", function(){
           const c = cmp(ver, String(meta.version));
           span.classList.remove('update-available','up-to-date','ahead','unknown');
           if (c < 0) { span.classList.add('update-available'); span.title = `Device: ${ver} — Latest: ${meta.version}\n${meta.notes||''}`; }
-          else if (c === 0) { span.classList.add('up-to-date'); span.title = `Device: ${ver} — Latest: ${meta.version}`; }
+          else if (c === 0) { (function(){
+    // unified up-to-date handler — display version plus "(latest)"
+    var deviceVersion = (typeof ver !== 'undefined' ? ver : (typeof deviceVer !== 'undefined' ? deviceVer : null));
+    var latestVersion = (typeof latest !== 'undefined' ? latest : (typeof availableVer !== 'undefined' ? availableVer : (typeof meta !== 'undefined' && meta.version ? meta.version : null)));
+    var display = (deviceVersion || latestVersion || '') + ' (latest)';
+    if (span) {
+      span.classList.add('up-to-date');
+      span.title = 'Device: ' + (deviceVersion || (latestVersion || '')) + ' — Latest: ' + (latestVersion || '');
+      span.textContent = display;
+    }
+    try {
+      if (typeof updateBtn !== 'undefined' && updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Up to date';
+        updateBtn.classList && updateBtn.classList.remove('update-available');
+      } else {
+        var ub = document.getElementById && document.getElementById('updateFirmwareButton');
+        if (ub) { ub.disabled = true; ub.textContent = 'Up to date'; ub.classList && ub.classList.remove('update-available'); }
+      }
+    } catch(e){}
+    if (typeof addDataEntry === 'function') try{ addDataEntry('Firmware up-to-date: ' + (deviceVersion || latestVersion || ''), 'received'); }catch(e){}
+})();
+    }
+    // prefer an existing updateBtn variable, otherwise fall back to element id
+    try {
+      if (typeof updateBtn !== 'undefined' && updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Up to date';
+        updateBtn.classList && updateBtn.classList.remove('update-available');
+      } else {
+        var ub = document.getElementById && document.getElementById('updateFirmwareButton');
+        if (ub) { ub.disabled = true; ub.textContent = 'Up to date'; ub.classList && ub.classList.remove('update-available'); }
+      }
+    } catch(e){}
+    if (typeof addDataEntry === 'function') try{ addDataEntry('Firmware up-to-date: ' + display, 'received'); }catch(e){}
+})();} — Latest: ${meta.version}`; }
           else { span.classList.add('ahead'); span.title = `Device: ${ver} — Latest: ${meta.version}`; }
         } else {
           if (span) { span.classList.add('unknown'); span.title = 'No firmware.json found'; }
