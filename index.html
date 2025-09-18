@@ -1240,7 +1240,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
+<div class="toggle-switch" id="alwaysOnToggle">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
@@ -1407,18 +1407,18 @@ confirmButton.onclick = () => {
       // Update temperature chart
       tempChart.data.labels=chartData.labels;
       tempChart.data.datasets[0].data=chartData.temp;
-      tempChart.update();
+      try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
       
       // Update pressure chart
       pressureChart.data.labels=chartData.labels;
       pressureChart.data.datasets[0].data=chartData.pressure;
-      pressureChart.update();
+      try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
       
       // Update combined chart
       combinedChart.data.labels=chartData.labels;
       combinedChart.data.datasets[0].data=chartData.temp;
       combinedChart.data.datasets[1].data=chartData.pressure;
-      combinedChart.update();
+      try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
   
   // Update gauges if in gauge view
   updateGauges();
@@ -1470,7 +1470,7 @@ function initCharts(){
 
 // Force one decimal place on temp y-axis
 if (tempChart && tempChart.options && tempChart.options.scales && tempChart.options.scales.y) {
-  tempChart.options.scales.y.ticks.callback = function(value) { return value.toFixed(1); };
+  tempChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
 }
 
 
@@ -1494,7 +1494,7 @@ if (tempChart && tempChart.options && tempChart.options.scales && tempChart.opti
 
 // Force one decimal place on pressure y-axis
 if (pressureChart && pressureChart.options && pressureChart.options.scales && pressureChart.options.scales.y) {
-  pressureChart.options.scales.y.ticks.callback = function(value) { return value.toFixed(1); };
+  pressureChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
 }
 
 
@@ -1523,10 +1523,10 @@ if (pressureChart && pressureChart.options && pressureChart.options.scales && pr
 // Force one decimal place on combined chart axes
 if (combinedChart && combinedChart.options && combinedChart.options.scales) {
   if (combinedChart.options.scales.y) {
-    combinedChart.options.scales.y.ticks.callback = function(value) { return value.toFixed(1); };
+    combinedChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
   }
   if (combinedChart.options.scales.y1) {
-    combinedChart.options.scales.y1.ticks.callback = function(value) { return value.toFixed(1); };
+    combinedChart.options.scales.y1.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
   }
 }
 
@@ -1538,13 +1538,13 @@ initCharts();
 try {
   if (typeof pressureChart !== 'undefined' && pressureChart && pressureChart.options && pressureChart.options.scales && pressureChart.options.scales.y) {
     pressureChart.options.scales.y.ticks = pressureChart.options.scales.y.ticks || {};
-    pressureChart.options.scales.y.ticks.callback = function(value) { return Number(value).toFixed(1); };
-    pressureChart.update();
+    pressureChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
+    try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
   }
   if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y2) {
     combinedChart.options.scales.y2.ticks = combinedChart.options.scales.y2.ticks || {};
-    combinedChart.options.scales.y2.ticks.callback = function(value) { return Number(value).toFixed(1); };
-    combinedChart.update();
+    combinedChart.options.scales.y2.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
+    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
   }
 } catch(e) { console.log('Pressure axis formatting error:', e); }
 
@@ -1553,13 +1553,13 @@ try {
 try {
   if (typeof tempChart !== 'undefined' && tempChart && tempChart.options && tempChart.options.scales && tempChart.options.scales.y) {
     tempChart.options.scales.y.ticks = tempChart.options.scales.y.ticks || {};
-    tempChart.options.scales.y.ticks.callback = function(value) { return Number(value).toFixed(1); };
-    tempChart.update();
+    tempChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
+    try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
   }
   if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y1) {
     combinedChart.options.scales.y1.ticks = combinedChart.options.scales.y1.ticks || {};
-    combinedChart.options.scales.y1.ticks.callback = function(value) { return Number(value).toFixed(1); };
-    combinedChart.update();
+    combinedChart.options.scales.y1.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
+    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
   }
 } catch(e) { console.log('Temp axis formatting error:', e); }
 
@@ -2103,16 +2103,16 @@ function resetCharts() {
 
     tempChart.data.labels = [];
     tempChart.data.datasets[0].data = [];
-    tempChart.update();
+    try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
 
     pressureChart.data.labels = [];
     pressureChart.data.datasets[0].data = [];
-    pressureChart.update();
+    try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
 
     combinedChart.data.labels = [];
     combinedChart.data.datasets[0].data = [];
     combinedChart.data.datasets[1].data = [];
-    combinedChart.update();
+    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
   }
 }
 
@@ -2521,8 +2521,8 @@ function handleData(event){
 function updateCharts() {
   const label = secondsCounter++;
   chartData.labels.push(label);
-  chartData.temp.push(currentTemp);
-  chartData.pressure.push(currentPressure);
+  chartData.temp.push(isFinite(Number(currentTemp)) ? Number(currentTemp) : 0);
+  chartData.pressure.push(isFinite(Number(currentPressure)) ? Number(currentPressure) : 0);
 
   if(chartData.labels.length > maxPointsValue) {
     chartData.labels.shift(); 
@@ -2547,7 +2547,7 @@ function updateCharts() {
 
   
 
-  tempChart.update();
+  try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
 
   // Update pressure chart with appropriate unit
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
@@ -2570,7 +2570,7 @@ function updateCharts() {
 
   
 
-  pressureChart.update();
+  try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
 
   // Update combined chart
   combinedChart.data.labels = chartData.labels;
@@ -2589,7 +2589,7 @@ function updateCharts() {
 
   
 
-  combinedChart.update();
+  try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
 }
 
 
