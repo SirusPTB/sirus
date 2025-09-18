@@ -2024,6 +2024,7 @@ function updateConnectionState(connected) {
     if (!connected && __fwUpdateBtn) __fwUpdateBtn.disabled = true;
   } catch(e) { console.warn('FW button toggle error', e); }
 
+  try { rebindFirmwareCheck(); } catch(e) { console.warn('rebindFirmwareCheck failed', e); }
 }
 
 // --- Add data entry to scrolling list ---
@@ -3404,6 +3405,30 @@ document.addEventListener("DOMContentLoaded", function(){
     if (btn) btn.addEventListener('click', onUpdateClick);
   }
 })();
+</script>
+
+
+<script>
+function rebindFirmwareCheck() {
+  const btn = document.getElementById('getFirmwareButton');
+  if (!btn) return;
+  // Replace button with clone to remove old handlers
+  const clone = btn.cloneNode(true);
+  btn.parentNode.replaceChild(clone, btn);
+  const freshBtn = document.getElementById('getFirmwareButton');
+  freshBtn.addEventListener('click', async () => {
+    try {
+      if (typeof sendData === 'function') {
+        sendData('V');
+        console.log('Firmware version request (V) sent');
+      } else {
+        console.warn('sendData function not found.');
+      }
+    } catch (err) {
+      console.error('Error sending V:', err);
+    }
+  });
+}
 </script>
 
 </body>
