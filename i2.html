@@ -2014,6 +2014,16 @@ function updateConnectionState(connected) {
     if (setCalBtn) setCalBtn.disabled = true;
   }
 
+
+  // Ensure firmware 'Check' button toggles reliably (fix for it staying disabled)
+  try {
+    const __fwCheckBtn = document.getElementById && document.getElementById('getFirmwareButton');
+    const __fwUpdateBtn = document.getElementById && document.getElementById('updateFirmwareButton');
+    if (__fwCheckBtn) __fwCheckBtn.disabled = !connected;
+    // When disconnected, definitely disable the Update button too to avoid accidental clicks.
+    if (!connected && __fwUpdateBtn) __fwUpdateBtn.disabled = true;
+  } catch(e) { console.warn('FW button toggle error', e); }
+
 }
 
 // --- Add data entry to scrolling list ---
