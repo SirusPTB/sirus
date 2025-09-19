@@ -5,48 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>SirusPTB </title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js">
-document.getElementById("zeroPressureButton").onclick = async () => {
-  await sendData('g');
-};
-
-
-// Zero pressure button handler: ensure connection then send 'g'
-(function(){
-  const zeroBtn = document.getElementById("zeroPressureButton");
-  if(!zeroBtn) return;
-  zeroBtn.addEventListener('click', async function(e){
-    const btn = e.currentTarget;
-    // Give immediate feedback
-    btn.disabled = true;
-    const origText = btn.textContent;
-    btn.textContent = "Zeroing...";
-    try {
-      // If not connected, attempt to connect (this will open the device picker)
-      if(!(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected)) {
-        try {
-          await connectToDevice();
-        } catch(connectErr) {
-          console.error("Connect failed or cancelled:", connectErr);
-          addDataEntry("Zero command cancelled: not connected", "error");
-          throw connectErr;
-        }
-      }
-      // Now attempt to send 'g'
-      await sendData('g');
-      addDataEntry("Zero command sent ('g')", "sent");
-    } catch(err) {
-      console.error("Zero command error:", err);
-      // If sendData already logged an error, this will be additional feedback
-      addDataEntry("Zero command failed: " + (err && err.message ? err.message : err), "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = origText || "Zero";
-    }
-  });
-})();
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body {
   margin: 0;
@@ -127,13 +86,9 @@ button {
   background-color: #8B3A3A;
 }
 
-/* Pressure toggle - dull blue for both positions */
-#pressureToggle {
-  background-color: #4682B4;
-}
-
-#pressureToggle.active {
-  background-color: #5F9EA0;
+/* Pressure toggle - lighter blue */
+#pressureToggle, #pressureToggle.active { 
+  background-color: #1E90FF !important; 
 }
 
 /* Always on toggle - green when active */
@@ -179,7 +134,7 @@ button {
 .modal {
   display: none;
   position: fixed;
-  z-index: 999;
+  z-index: 9999;
   left: 0; top: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.7);
   justify-content: center; align-items: center;
@@ -213,63 +168,6 @@ button {
   opacity: 0.4;
   cursor: not-allowed;
   background-color: #222;
-}
-#calibrationValue {
-  width: 80px !important; 
-  display: inline-block;
-  margin-bottom: 0 !important;
-  margin-right: 10px;
-  padding: 10px 8px;
-  height: auto;
-  box-sizing: border-box;
-}
-.calibration-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.calibration-row button {
-  height: auto;
-  padding: 10px 18px;
-  margin: 0;
-}
-
-/* Brightness slider styles */
-#brightnessSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 8px;
-  background: linear-gradient(to right, #333, #666, #999, #ccc);
-  border-radius: 4px;
-  outline: none;
-}
-
-#brightnessSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4CAF50;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-#brightnessSlider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4CAF50;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-#brightnessContainer.disabled {
-  opacity: 0.4;
-  pointer-events: none;
 }
 
 /* Raw data panel styles - Updated for scrolling list */
@@ -319,23 +217,6 @@ button {
   margin-right: 8px;
 }
 
-/* Clear data button */
-#clearDataButton {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 0.8em;
-  cursor: pointer;
-  padding: 2px 5px;
-}
-
-#clearDataButton:hover {
-  color: #fff;
-}
-
 /* Scrollbar styling for raw data display */
 #rawDataDisplay::-webkit-scrollbar {
   width: 8px;
@@ -355,445 +236,7 @@ button {
   background: #555;
 }
 
-/* Hide number input spinners for calibration and sleep boxes */
-#pressureCalibrationInput::-webkit-outer-spin-button,
-#pressureCalibrationInput::-webkit-inner-spin-button,
-#sleepTimeInput::-webkit-outer-spin-button,
-#sleepTimeInput::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-#pressureCalibrationInput,
-#sleepTimeInput {
-  -moz-appearance: textfield;
-}
-
-
-/* Modern Advanced Panel - mobile-first dark theme */
-.advanced-panel {
-  background: linear-gradient(180deg, #0f1113 0%, #17181a 100%);
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-  color: #e6eef6;
-  font-size: 14px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.adv-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.adv-row label {
-  flex: 0 0 150px;
-  min-width: 110px;
-  color: #9aa3ad;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.adv-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex: 1 1 auto;
-}
-
-.adv-controls input {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #0b0f10;
-  border: 1px solid #22282b;
-  color: #e6eef6;
-  font-size: 16px;
-  outline: none;
-  min-width: 88px;
-  box-sizing: border-box;
-}
-
-.adv-controls input::placeholder {
-  color: #6b7175;
-}
-
-.adv-btn {
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #2b3944 0%, #22313a 100%);
-  border: 1px solid rgba(255,255,255,0.03);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  transition: transform 0.08s ease, box-shadow 0.12s ease;
-}
-
-.adv-btn:active {
-  transform: translateY(1px) scale(0.997);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-}
-
-/* Make inputs appear like standard text fields (no spinner) */
-#pressureCalibrationInput::-webkit-outer-spin-button,
-#pressureCalibrationInput::-webkit-inner-spin-button,
-#sleepTimeInput::-webkit-outer-spin-button,
-#sleepTimeInput::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-#pressureCalibrationInput,
-#sleepTimeInput {
-  -moz-appearance: textfield;
-}
-
-/* Raw data container tweaks */
-.raw-data-container {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-  border-radius: 8px;
-  padding: 8px;
-  border: 1px solid #202426;
-  max-height: 220px;
-  overflow: auto;
-}
-
-/* Responsive: stack rows on narrow screens */
-@media (max-width: 420px) {
-  .adv-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-  }
-  .adv-row label {
-    flex: none;
-    min-width: 0;
-    text-align: left;
-  }
-  .adv-controls {
-    flex-direction: row;
-  }
-  .adv-controls input {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .adv-btn {
-    width: 100%;
-  }
-}
-
-
-/* Differentiate button colors */
-#setSleepTimeButton,
-#setPressureCalibrationButton {
-  background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
-  border: 1px solid rgba(0,0,0,0.4);
-}
-
-#setSleepTimeButton:active,
-#setPressureCalibrationButton:active {
-  background: linear-gradient(180deg, #1b5e20 0%, #124d15 100%);
-}
-
-#zeroPressureButton {
-  background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%);
-  border: 1px solid rgba(0,0,0,0.4);
-}
-
-#zeroPressureButton:active {
-  background: linear-gradient(180deg, #0d47a1 0%, #093170 100%);
-}
-
-
-/* Equalize buttons and inputs sizes (use a CSS variable for easy tuning) */
-:root { --adv-control-width: 96px; }
-
-.adv-btn {
-  height: 44px;
-  min-width: var(--adv-control-width);
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-/* Ensure zero button shares same size via class (it already has adv-btn) */
-#zeroPressureButton.adv-btn {}
-
-/* Make set buttons explicitly inherit adv-btn style (IDs already styled for color) */
-#setSleepTimeButton.adv-btn, #setPressureCalibrationButton.adv-btn {}
-
-/* Inputs: same width/height as buttons for visual balance */
-.adv-controls input {
-  height: 44px;
-  min-width: var(--adv-control-width);
-  max-width: 120px;
-  flex: 0 0 var(--adv-control-width);
-  box-sizing: border-box;
-  padding: 10px 12px;
-}
-
-/* On small screens, make them stack but remain the same width (full width for easier tapping) */
-@media (max-width: 420px) {
-  :root { --adv-control-width: 100%; }
-  .adv-row { gap: 6px; }
-  .adv-controls {
-    flex-direction: row;
-    gap: 8px;
-    align-items: center;
-  }
-  .adv-controls input {
-    flex: 1 1 auto;
-    min-width: 0;
-    width: 100%;
-  }
-  .adv-btn {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-
-/* Disabled button styling for adv-btn */
-.adv-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-  filter: grayscale(10%);
-}
-
-
-/* --- Brightness slider responsive overrides --- */
-#brightnessControls { flex: 1 1 auto; min-width: 0; }
-#brightnessControls input[type="range"]#brightnessSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 8px;
-  width: 100%;
-  flex: 1 1 auto;
-  min-width: 0;
-  margin: 0;
-  background: linear-gradient(to right, #333, #666, #999, #ccc);
-  border-radius: 4px;
-  outline: none;
-}
-#brightnessControls input[type="range"]#brightnessSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4CAF50;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-#brightnessControls input[type="range"]#brightnessSlider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #4CAF50;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-#brightnessValue {
-  flex: 0 0 56px;
-  text-align: right;
-  min-width: 40px;
-  margin-left: 8px;
-  color: #e0e0e0;
-  font-weight: bold;
-}
-@media (max-width: 420px) {
-  #brightnessValue { flex: 0 0 48px; }
-  #brightnessControls { gap: 8px; }
-}
-/* Ensure the general .adv-controls input rules don't force a fixed size on the brightness slider */
-.adv-controls input[type="range"] { flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; }
-
-
-/* --- Strong overrides to maximize brightness slider width --- */
-/* Reduce label width for brightness row so slider gets more room */
-.adv-row label[for="brightnessSlider"] {
-  flex: 0 0 110px;
-  min-width: 90px;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Make the brightness controls use full available space */
-#brightnessControls {
-  display: flex;
-  align-items: center;
-  gap: 8px !important;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-/* Force the range input to take up as much space as possible */
-#brightnessControls input[type="range"]#brightnessSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  flex: 1 1 0%;
-  width: auto !important;
-  min-width: 0 !important;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Slightly shrink the numeric value to free space for the slider */
-#brightnessValue {
-  flex: 0 0 36px !important;
-  width: 36px !important;
-  min-width: 32px !important;
-  max-width: 56px !important;
-  text-align: right;
-  margin-left: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Extra override to negate other .adv-controls sizing rules */
-.adv-controls input[type="range"] {
-  flex: 1 1 0% !important;
-  width: auto !important;
-  min-width: 0 !important;
-}
-
-/* Media tweaks for small screens */
-@media (max-width: 420px) {
-  .adv-row label[for="brightnessSlider"] {
-    flex: 0 0 90px;
-    min-width: 60px;
-  }
-  #brightnessValue {
-    flex: 0 0 30px !important;
-    width: 30px !important;
-  }
-  #brightnessControls { gap: 6px !important; }
-}
-
-
-/* --- Minimalistic Advanced Panel --- */
-.advanced-panel {
-  background: #181818;
-  border-radius: 8px;
-  padding: 12px;
-  color: #e0e0e0;
-  font-size: 14px;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #2a2a2a;
-}
-
-.adv-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.adv-row label {
-  flex: 0 0 auto;
-  min-width: 120px;
-  color: #ccc;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.adv-controls {
-  flex: 1;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.adv-controls input, .adv-controls button {
-  padding: 6px 10px;
-  border-radius: 6px;
-  background: #222;
-  border: 1px solid #333;
-  color: #e0e0e0;
-  font-size: 13px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.adv-btn {
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.adv-btn:hover {
-  background: #2e2e2e;
-}
-
-.adv-btn:disabled, .adv-controls input:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.raw-data-container {
-  background: #111;
-  border-radius: 6px;
-  border: 1px solid #222;
-  padding: 8px;
-  max-height: 200px;
-  overflow: auto;
-  font-family: monospace;
-  font-size: 12px;
-  color: #9f9;
-}
-
-/* Minimal brightness slider */
-#brightnessSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  background: #333;
-  border-radius: 3px;
-  flex: 1;
-}
-
-#brightnessSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #4caf50;
-  cursor: pointer;
-}
-
-#brightnessSlider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #4caf50;
-  cursor: pointer;
-}
-
-#brightnessValue {
-  min-width: 40px;
-  text-align: right;
-  font-size: 13px;
-}
-
-
-/* --- Left-justified minimal advanced panel overrides --- */
+/* Advanced Panel */
 .advanced-panel {
   text-align: left !important;
   padding: 12px 12px 12px 14px !important;
@@ -803,101 +246,27 @@ button {
   box-shadow: none !important;
 }
 
-/* Rows: label at fixed width on left, controls start immediately to the right */
-.adv-row {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 10px !important;
-  margin-bottom: 10px !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  justify-content: flex-start !important;
+.adv-table { 
+  width:100%; 
+  border-collapse: collapse; 
 }
 
-/* Left-aligned labels with a consistent fixed width */
-.adv-row label {
-  flex: 0 0 140px !important;
-  min-width: 100px !important;
-  max-width: 160px !important;
-  text-align: left !important;
-  color: #c8ced1 !important;
-  font-weight: 600 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.adv-table td { 
+  padding: 6px 0; 
+  vertical-align: middle; 
 }
 
-/* Controls take remaining width and align left */
-.adv-controls {
-  flex: 1 1 auto !important;
-  display: flex !important;
-  gap: 8px !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  min-width: 0 !important;
+.adv-table .label-cell { 
+  width: 180px; 
+  padding-right: 12px; 
+  text-align: left; 
+  color: #c8ced1; 
+  font-weight: 600; 
 }
 
-/* Inputs and buttons should not force the row to center */
-.adv-controls input, .adv-controls button {
-  width: auto !important;
-  min-width: 56px !important;
-  padding: 6px 8px !important;
-  background: #1b1b1b !important;
-  border: 1px solid #272727 !important;
-  color: #e6eef6 !important;
-  border-radius: 6px !important;
-  box-sizing: border-box !important;
+.adv-table .control-cell { 
+  padding-left: 0; 
 }
-
-/* Make the brightness slider expand to the available width of the controls area */
-.brightness-row input[type="range"]#brightnessSlider {
-  width: 100% !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  height: 8px !important;
-  box-sizing: border-box !important;
-  background: linear-gradient(to right, #2a2a2a, #444) !important;
-  border-radius: 4px !important;
-}
-
-/* Place the brightness value to the right but don't steal width from slider */
-.brightness-row > div, .brightness-row > .adv-controls { width: 100%; }
-.brightness-row #brightnessValue {
-  flex: 0 0 56px !important;
-  min-width: 40px !important;
-  text-align: right !important;
-  color: #d7dfe6 !important;
-  font-weight: 700 !important;
-  margin-left: 8px !important;
-}
-
-/* Raw data container left align and compact */
-.raw-data-container {
-  text-align: left !important;
-  padding: 8px !important;
-  border-radius: 6px !important;
-  background: #0f0f0f !important;
-  border: 1px solid #191919 !important;
-}
-
-/* Responsive adjustments: stack label above controls on narrow screens but left aligned */
-@media (max-width: 420px) {
-  .adv-row { flex-direction: column !important; align-items: stretch !important; gap: 6px !important; }
-  .adv-row label { flex: 0 0 auto !important; min-width: 0 !important; }
-  .adv-controls { justify-content: flex-start !important; }
-  .brightness-row #brightnessValue { text-align: right; margin-left: 0; }
-}
-
-
-/* --- Table-based advanced panel layout --- */
-.adv-table { width:100%; border-collapse: collapse; }
-.adv-table td { padding: 6px 0; vertical-align: middle; }
-.adv-table .label-cell { width: 180px; padding-right: 12px; text-align: left; color: #c8ced1; font-weight: 600; }
-.adv-table .control-cell { padding-left: 0; }
 
 .control-input, .control-btn {
   height: 40px;
@@ -911,130 +280,125 @@ button {
   box-sizing: border-box;
 }
 
-.control-btn { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.control-btn { 
+  cursor: pointer; 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .control-range {
-  -webkit-appearance: none; appearance: none;
+  -webkit-appearance: none; 
+  appearance: none;
   height: 8px;
   background: linear-gradient(to right, #2a2a2a, #444);
   border-radius: 4px;
   flex: 1;
   min-width: 0;
 }
-.control-range::-webkit-slider-thumb { -webkit-appearance: none; appearance:none; width:16px; height:16px; border-radius:50%; background:#4CAF50; border:2px solid #fff; cursor:pointer; }
-.control-range::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:#4CAF50; border:2px solid #fff; cursor:pointer; }
 
-.brightness-value { min-width: 56px; text-align: right; font-weight:700; color:#e0e0e0; display:inline-block; }
-
-/* Make input and button elements share same visual size */
-.adv-table .control-cell input.control-input { width: 160px; margin-right: 8px; }
-.adv-table .control-cell button.control-btn { width: 96px; }
-
-/* On very small screens, stack label above controls */
-@media (max-width: 420px) {
-  .adv-table .label-cell { width: auto; min-width: 0; padding-bottom: 6px; }
-  .adv-table tr { display: block; margin-bottom: 8px; }
-  .adv-table .control-cell { display: flex; gap: 8px; }
-  .adv-table .control-cell input.control-input { width: 100%; }
-  .adv-table .control-cell button.control-btn { width: 100%; }
-  .brightness-value { min-width: 40px; }
+.control-range::-webkit-slider-thumb { 
+  -webkit-appearance: none; 
+  appearance:none; 
+  width:16px; 
+  height:16px; 
+  border-radius:50%; 
+  background:#4CAF50; 
+  border:2px solid #fff; 
+  cursor:pointer; 
 }
 
+.control-range::-moz-range-thumb { 
+  width:16px; 
+  height:16px; 
+  border-radius:50%; 
+  background:#4CAF50; 
+  border:2px solid #fff; 
+  cursor:pointer; 
+}
 
-/* --- Adjusted input box width --- */
-.adv-table .control-cell input.control-input { width: 130px; margin-right: 8px; }
-.adv-table .control-cell button.control-btn { width: 96px; }
+.brightness-value { 
+  min-width: 56px; 
+  text-align: right; 
+  font-weight:700; 
+  color:#e0e0e0; 
+  display:inline-block; 
+}
 
+.adv-table .control-cell input.control-input { 
+  width: 130px; 
+  margin-right: 8px; 
+}
 
-/* --- Raw data container full width --- */
+.adv-table .control-cell button.control-btn { 
+  width: 96px; 
+}
+
 .raw-data-container {
   width: 100% !important;
   box-sizing: border-box;
-}
-.adv-table td[colspan="2"] { padding: 0 !important; }
-
-
-/* Ensure raw data moved out of table spans full width */
-.advanced-panel > .raw-data-container.fullwidth {
-  width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 8px !important;
   background: #0f0f0f !important;
   border: 1px solid #191919 !important;
   border-radius: 6px !important;
+  padding: 8px !important;
+  max-height: 200px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 12px;
+  color: #9f9;
 }
 
-
-/* --- Pressure toggle override: always blue --- */
-#pressureToggle, #pressureToggle.active { background-color: #104E8B !important; }
-#pressureToggle .toggle-slider {
-  color: #fff !important;
-}
-
-
-/* --- Pressure toggle: styled like temp toggle but blue --- */
-#pressureToggle {
-  background-color: #1E90FF !important; /* blue track */
-  border-radius: 15px !important;
-  width: 60px !important;
-  height: 30px !important;
-  position: relative !important;
-  display: inline-block !important;
+/* Force right align for numeric inputs */
+input#sleepTimeInput.control-input,
+input#pressureCalibrationInput.control-input,
+input#sleepTimeInput,
+input#pressureCalibrationInput {
+  text-align: right !important;
+  padding-right: 6px !important;
+  direction: ltr !important;
   box-sizing: border-box !important;
-  padding: 3px !important;
-  transition: background-color 0.2s ease !important;
 }
 
-#pressureToggle .toggle-slider {
-  position: absolute !important;
-  top: 3px !important;
-  left: 3px !important;
-  width: 24px !important;
-  height: 24px !important;
-  background: #ffffff !important; /* white thumb */
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: #000 !important; /* black text inside thumb */
-  font-weight: 700 !important;
-  font-size: 12px !important;
-  transition: transform 0.2s ease !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+input[type="number"]#sleepTimeInput,
+input[type="number"]#pressureCalibrationInput {
+  -moz-appearance: textfield !important;
+  text-align: right !important;
 }
 
-/* When active, move the thumb to the right (same movement as temp toggle) */
-#pressureToggle.active .toggle-slider {
-  transform: translateX(30px) !important;
-}
-
-/* Ensure pressure toggle's text inside thumb doesn't get hidden */
-#pressureToggle .toggle-slider * { color: inherit !important; }
-
-/* Keep pressure toggle color same when active */
-#pressureToggle.active { background-color: #1E90FF !important; }
-
-
-/* --- Pressure toggle lighter blue --- */
-#pressureToggle, #pressureToggle.active { background-color: #104E8B !important; }
-
-
-/* --- Smaller buttons for pause, combined gauges, and reset --- */
+/* Smaller buttons for pause, combined gauges, and reset */
 #pauseButton, #combinedGaugesButton, #resetButton {
   padding: 4px 10px !important;
   font-size: 13px !important;
   border-radius: 6px !important;
 }
 
+/* Anchor footer layout */
+html, body { 
+  height: 100% !important; 
+}
 
-/* --- Minimal footer with coffee bean icon --- */
-body { padding-bottom: 56px !important; } /* make room for sticky footer */
+body { 
+  display: flex !important; 
+  flex-direction: column !important; 
+  min-height: 100vh !important; 
+  margin: 0 !important; 
+  padding: 0 !important; 
+}
+
+#page-wrapper { 
+  flex: 1 1 auto !important; 
+  display: flex !important; 
+  flex-direction: column !important; 
+}
 
 .minimal-footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
+  position: static !important;
+  width: 100% !important;
   background: rgba(20,20,20,0.95);
   border-top: 1px solid #222;
   box-sizing: border-box;
@@ -1067,7 +431,11 @@ body { padding-bottom: 56px !important; } /* make room for sticky footer */
   text-decoration: none;
 }
 
-.footer-link svg { display:block; width:20px; height:20px; }
+.footer-link svg { 
+  display:block; 
+  width:20px; 
+  height:20px; 
+}
 
 .footer-link:hover, .footer-link:focus {
   background: rgba(255,255,255,0.03);
@@ -1076,7 +444,10 @@ body { padding-bottom: 56px !important; } /* make room for sticky footer */
   outline: none;
 }
 
-.footer-text { color: #9aa3ad; font-weight: 600; }
+.footer-text { 
+  color: #9aa3ad; 
+  font-weight: 600; 
+}
 
 .sr-only {
   position: absolute !important;
@@ -1090,83 +461,42 @@ body { padding-bottom: 56px !important; } /* make room for sticky footer */
   border: 0 !important;
 }
 
-
-/* Anchor footer: use flex layout so footer sits at bottom of page when content is short */
-html, body { height: 100% !important; }
-body { display: flex !important; flex-direction: column !important; min-height: 100vh !important; margin: 0 !important; padding: 0 !important; }
-#page-wrapper { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; }
-
-/* Ensure the footer behaves as part of page flow (not fixed) */
-.minimal-footer {
-  position: static !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 100% !important;
-  z-index: auto !important;
-  box-shadow: none !important;
-}
-
-/* Remove body bottom padding added previously */
-body { padding-bottom: 0 !important; }
-
-/* Small safety: ensure footer is visible above most content */
-.minimal-footer { z-index: 9999; }
-
-
 /* Smaller labels for toggles */
 .toggle-container n {
   font-size: 0.85em !important;
 }
 
-
-/* --- FORCE RIGHT ALIGN for specific numeric inputs --- */
-input#sleepTimeInput.control-input,
-input#pressureCalibrationInput.control-input,
-input#sleepTimeInput,
-input#pressureCalibrationInput {
-  text-align: right !important;
-  padding-right: 6px !important; /* give a little breathing room from the edge */
-  direction: ltr !important;
-  box-sizing: border-box !important;
-}
-/* Also ensure number inputs don't get weird alignment from vendor rules */
-input[type="number"]#sleepTimeInput,
-input[type="number"]#pressureCalibrationInput {
-  -moz-appearance: textfield !important;
-  text-align: right !important;
-}
-</style>
-
-<!-- HIDE RAW DATA ROW (kept in DOM for JS compatibility) -->
-<style>
-/* Fallback: ensure the row is visually hidden even if JS disabled */
-.raw-data-hidden { display: none !important; }
-</style>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  try {
-    // Find label elements that say "Raw Data" (case-insensitive, trimmed)
-    document.querySelectorAll("label").forEach(function(lbl) {
-      if (lbl && lbl.textContent && lbl.textContent.trim().toLowerCase().startsWith("raw data")) {
-        var tr = lbl.closest("tr");
-        if (tr) {
-          // Add a class that hides the row
-          tr.classList.add("raw-data-hidden");
-        } else {
-          // if not in a table row, hide the parent element
-          var parent = lbl.parentElement;
-          if (parent) parent.classList.add("raw-data-hidden");
-        }
-      }
-    });
-  } catch (e) {
-    console.error("Error hiding Raw Data row:", e);
+/* On very small screens, stack label above controls */
+@media (max-width: 420px) {
+  .adv-table .label-cell { 
+    width: auto; 
+    min-width: 0; 
+    padding-bottom: 6px; 
   }
-});
-</script>
-<!-- END HIDE RAW DATA ROW -->
-
+  
+  .adv-table tr { 
+    display: block; 
+    margin-bottom: 8px; 
+  }
+  
+  .adv-table .control-cell { 
+    display: flex; 
+    gap: 8px; 
+  }
+  
+  .adv-table .control-cell input.control-input { 
+    width: 100%; 
+  }
+  
+  .adv-table .control-cell button.control-btn { 
+    width: 100%; 
+  }
+  
+  .brightness-value { 
+    min-width: 40px; 
+  }
+}
+</style>
 </head>
 <body>
 <div id="page-wrapper">
@@ -1187,6 +517,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 </div>
+
 <!-- Updated raw data display with clear button -->
 <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
 <div style="width: 90%; margin: 0 auto;">
@@ -1198,6 +529,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
 </div>
 </div>
+
 <div id="combinedView" style="display:none; width:100%; align-items:center;">
 <div style="width: 90%; margin: 0 auto;">
 <div id="combinedCurrentValue" style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
@@ -1206,6 +538,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
 </div>
 </div>
+
 <div id="gaugeView" style="display:none; width:100%; align-items:center;">
 <div style="width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
 <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
@@ -1224,57 +557,56 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 </div>
+
 <div class="button-row">
 <button id="pauseResumeButton">Pause</button>
 <button id="toggleViewButton">Toggle View</button>
 <button id="toggleGaugeButton">Toggle Gauges</button>
 <button id="resetButton">Reset</button>
 </div>
+
 <div class="button-row">
 <button id="saveButton">Save</button>
 <button id="loadButton">Load</button>
 <button id="deleteButton">Delete</button>
 </div>
+
 <!-- Always On Toggle - Standalone row -->
 <div style="width: 80%; margin: 10px auto;">
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle">
+<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
 </div>
 </div>
 
-</div>
-</div>
-</div>
 <!-- Advance Section -->
 <div id="advanceSection" style="width: 80%; margin: 20px auto;">
 <button id="advanceToggle" style="width: 100%; padding: 10px; border-radius: 6px; background:#444; color:#fff; font-weight:bold; cursor:pointer; text-align:left;">
     Advance ▼
   </button>
 
-
 <div id="advanceContent" class="advanced-panel" style="display:none;">
   <table class="adv-table" role="presentation">
     <tbody>
       <tr>
         <td class="label-cell"><label>Zero pressure:</label></td>
-        <td class="control-cell"><button id="zeroPressureButton" class="adv-btn control-btn">Zero</button></td>
+        <td class="control-cell"><button id="zeroPressureButton" class="adv-btn control-btn" disabled>Zero</button></td>
       </tr>
       <tr>
         <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
         <td class="control-cell">
-          <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" / style="text-align: right !important; padding-right:6px !important;">
+          <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" style="text-align: right !important; padding-right:6px !important;">
           <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
       <tr>
         <td class="label-cell"><label for="pressureCalibrationInput">Pressure calibration:</label></td>
         <td class="control-cell">
-          <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" / style="text-align: right !important; padding-right:6px !important;">
+          <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" style="text-align: right !important; padding-right:6px !important;">
           <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
@@ -1289,7 +621,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <td class="label-cell"><label>Raw Data:</label></td>
         <td class="control-cell">
           <div class="toggle-container" style="display:inline-block;">
-            <div class="toggle-switch active hidden" id="rawDataToggle">
+            <div class="toggle-switch active" id="rawDataToggle">
               <div class="toggle-slider">ON</div>
             </div>
           </div>
@@ -1297,9 +629,12 @@ document.addEventListener("DOMContentLoaded", function() {
       </tr>
       </tbody>
   </table>
-  <div class="raw-data-container fullwidth hidden" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px;">
-<div class="data-entry">No data yet...
+  
+  <div class="raw-data-container" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px;">
+    <div class="data-entry">No data yet...</div>
   </div>
+</div>
+</div>
 
 </div>
 
@@ -1314,11 +649,12 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 </div>
+
 <script>
 // --- BLE Variables ---
 const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
 const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
-const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb"; // Common write characteristic
+const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb";
 let device, characteristic, writeCharacteristic;
 let tempChart, pressureChart, combinedChart;
 let paused = false;
@@ -1329,107 +665,131 @@ let secondsCounter = 0;
 let chartData = { labels: [], temp: [], pressure: [] };
 let modalAction = "";
 let maxPointsValue = 50;
-let currentTempUnit = "C"; // Track current temperature unit
-let currentPressureUnit = "Bar"; // Track current pressure unit
-let tempToggleActive = false; // Track temperature toggle switch state
-let pressureToggleActive = false; // Track pressure toggle switch state
-let alwaysOnToggleActive = false; // Track always-on toggle switch state
-let rawDataToggleActive = true; // Track raw data toggle switch state (default to visible)
-let isConnected = false; // Track connection state
-let brightnessDataReceived = false; // Track if we've received brightness data
-let alwaysOnDataReceived = false; // Track if we've received always-on data
- // Track if we've received calibration data
-let receivedDataCount = 0; // Count received data points to identify the sixth one
- // Store the current calibration value
-let dataEntries = []; // Store data entries for the scrolling list
+let currentTempUnit = "C";
+let currentPressureUnit = "Bar";
+let tempToggleActive = false;
+let pressureToggleActive = false;
+let alwaysOnToggleActive = false;
+let rawDataToggleActive = true;
+let isConnected = false;
+let brightnessDataReceived = false;
+let alwaysOnDataReceived = false;
+let receivedDataCount = 0;
+let dataEntries = [];
 let sleepDataReceived = false;
 let calibrationDataReceivedOnce = false;
-let skipNextData = false; // Flag to skip one dataset after toggles
+let skipNextData = false;
+let currentCalibrationValue = null;
+let calibrationDataReceived = false;
 
-// Ensure the advance panel is fully visible after expansion (tries to show the whole panel when possible)
-function ensureAdvancePanelVisible(element) {
-  if(!element) return;
-  const rect = element.getBoundingClientRect();
-  const vh = window.innerHeight || document.documentElement.clientHeight;
-  const margin = 12; // pixels of margin from top/bottom
-
-  // If already fully visible, do nothing
-  if (rect.top >= margin && rect.bottom <= vh - margin) return;
-
-  // If the element fits within the viewport, scroll so it has a small top margin
-  if (rect.height + (margin * 2) <= vh) {
-    const target = window.scrollY + rect.top - margin;
-    window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
-    return;
-  }
-
-  // If element is taller than viewport, scroll its top into view with a small margin
-  const target = window.scrollY + rect.top - margin;
-  window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
-}
-
-
-// --- SPA Navigation ---
-const graphPage = document.getElementById("graphPage");
-const settingsPage = document.getElementById("settingsPage");
-
-
-
-
-
-// --- Modal ---
+// --- Modal Functions ---
 const modal = document.getElementById("popupModal");
 const modalSelect = document.getElementById("modalSelect");
 const confirmButton = document.getElementById("confirmButton");
 const cancelButton = document.getElementById("cancelButton");
 
 function showModal(action){
+  console.log("showModal called with action:", action);
   modalAction = action;
-  modalSelect.innerHTML="";
-  const saved = Object.keys(localStorage).filter(k=>k.startsWith("graph_"));
-  if(saved.length===0){ alert("No saved graphs"); return; }
-  saved.forEach(k=>{
+  modalSelect.innerHTML = "";
+  
+  // Get saved graphs from localStorage
+  const saved = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("graph_")) {
+      saved.push(key);
+    }
+  }
+  
+  console.log("Found saved graphs:", saved);
+  
+  if(saved.length === 0) { 
+    alert("No saved graphs found"); 
+    return; 
+  }
+  
+  saved.forEach(k => {
     const opt = document.createElement("option");
-    opt.value = k; opt.text = k.replace("graph_","");
-    modalSelect.add(opt);
+    opt.value = k; 
+    opt.text = k.replace("graph_", "");
+    modalSelect.appendChild(opt);
   });
-  modal.style.display="flex";
+  
+  modal.style.display = "flex";
+  console.log("Modal should now be visible");
 }
 
 confirmButton.onclick = () => {
   const key = modalSelect.value;
-  if(!key){ modal.style.display="none"; return; }
-  if(modalAction==="load"){
-    const data = JSON.parse(localStorage.getItem(key));
-    if(data){
-      chartData = data; secondsCounter=data.labels.length;
-      
-      // Update temperature chart
-      tempChart.data.labels=chartData.labels;
-      tempChart.data.datasets[0].data=chartData.temp;
-      try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
-      
-      // Update pressure chart
-      pressureChart.data.labels=chartData.labels;
-      pressureChart.data.datasets[0].data=chartData.pressure;
-      try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
-      
-      // Update combined chart
-      combinedChart.data.labels=chartData.labels;
-      combinedChart.data.datasets[0].data=chartData.temp;
-      combinedChart.data.datasets[1].data=chartData.pressure;
-      try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
-  
-  // Update gauges if in gauge view
-  updateGauges();
-    }
-  } else if(modalAction==="delete"){
-    localStorage.removeItem(key);
+  console.log("Confirm clicked with key:", key);
+  if(!key){ 
+    modal.style.display = "none"; 
+    return; 
   }
-  modal.style.display="none";
+  
+  if(modalAction === "load"){
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      if(data){
+        chartData = data; 
+        secondsCounter = data.labels.length;
+        
+        // Update temperature chart
+        tempChart.data.labels = chartData.labels;
+        tempChart.data.datasets[0].data = chartData.temp;
+        tempChart.update();
+        
+        // Update pressure chart
+        pressureChart.data.labels = chartData.labels;
+        pressureChart.data.datasets[0].data = chartData.pressure;
+        pressureChart.update();
+        
+        // Update combined chart
+        combinedChart.data.labels = chartData.labels;
+        combinedChart.data.datasets[0].data = chartData.temp;
+        combinedChart.data.datasets[1].data = chartData.pressure;
+        combinedChart.update();
+    
+        // Update gauges if in gauge view
+        updateGauges();
+        
+        console.log("Graph loaded successfully");
+      } else {
+        console.error("No data found for key:", key);
+      }
+    } catch(e) {
+      console.error("Error loading graph:", e);
+      alert("Error loading graph: " + e.message);
+    }
+  } else if(modalAction === "delete"){
+    localStorage.removeItem(key);
+    console.log("Graph deleted:", key);
+  }
+  modal.style.display = "none";
 };
 
-cancelButton.onclick = () => { modal.style.display="none"; };
+cancelButton.onclick = () => { 
+  modal.style.display = "none"; 
+};
+
+// Ensure modal functionality is available immediately
+document.getElementById("loadButton").onclick = () => {
+  console.log("Load button clicked");
+  showModal("load");
+};
+
+document.getElementById("deleteButton").onclick = () => {
+  console.log("Delete button clicked");  
+  showModal("delete");
+};
+
+document.getElementById("saveButton").onclick = () => {
+  const name = prompt("Enter a name for saved graph:"); 
+  if(!name) return;
+  localStorage.setItem("graph_" + name, JSON.stringify(chartData));
+  console.log("Graph saved as:", "graph_" + name);
+};
 
 // --- Chart Setup ---
 function fixCanvasDPI(canvas) {
@@ -1444,7 +804,6 @@ function fixCanvasDPI(canvas) {
 const currentValuePlugin = {
   id:'currentValue',
   afterDraw(chart){
-    // Plugin disabled - labels are now shown above the graphs
     return;
   }
 };
@@ -1462,17 +821,11 @@ function initCharts(){
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f"}}
+        y:{display:true,title:{display:true,text:'Temperature (°C)'},ticks:{color:"#ff7f7f", callback: function(value) { return value.toFixed(1); }}}
       }
     },
     plugins:[currentValuePlugin]
   });
-
-// Force one decimal place on temp y-axis
-if (tempChart && tempChart.options && tempChart.options.scales && tempChart.options.scales.y) {
-  tempChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-}
-
 
   const ctxPressure = document.getElementById("pressureChart").getContext("2d");
   fixCanvasDPI(ctxPressure.canvas);
@@ -1486,17 +839,11 @@ if (tempChart && tempChart.options && tempChart.options.scales && tempChart.opti
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{color:"#7fbfff"}}
+        y:{display:true,title:{display:true,text:'Pressure (bar)'},ticks:{color:"#7fbfff", callback: function(value) { return value.toFixed(1); }}}
       }
     },
     plugins:[currentValuePlugin]
   });
-
-// Force one decimal place on pressure y-axis
-if (pressureChart && pressureChart.options && pressureChart.options.scales && pressureChart.options.scales.y) {
-  pressureChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-}
-
 
   const ctxCombined = document.getElementById("combinedChart").getContext("2d");
   fixCanvasDPI(ctxCombined.canvas);
@@ -1513,198 +860,33 @@ if (pressureChart && pressureChart.options && pressureChart.options.scales && pr
       plugins:{legend:{display:false}},
       scales:{
         x:{display:true,title:{display:true,text:'Time(sec)'},ticks:{color:'#e0e0e0'}},
-        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f"}},
-        y2:{display:true,title:{display:false},ticks:{color:"#7fbfff"}}
+        y1:{display:true,title:{display:false},ticks:{color:"#ff7f7f", callback: function(value) { return value.toFixed(1); }}},
+        y2:{display:true,title:{display:false},ticks:{color:"#7fbfff", callback: function(value) { return value.toFixed(1); }}}
       }
     },
     plugins:[currentValuePlugin]
   });
-
-// Force one decimal place on combined chart axes
-if (combinedChart && combinedChart.options && combinedChart.options.scales) {
-  if (combinedChart.options.scales.y) {
-    combinedChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-  }
-  if (combinedChart.options.scales.y1) {
-    combinedChart.options.scales.y1.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-  }
-}
-
 }
 
 initCharts();
 
-// --- Ensure pressure y-axis shows one decimal place ---
-try {
-  if (typeof pressureChart !== 'undefined' && pressureChart && pressureChart.options && pressureChart.options.scales && pressureChart.options.scales.y) {
-    pressureChart.options.scales.y.ticks = pressureChart.options.scales.y.ticks || {};
-    pressureChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-    try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
-  }
-  if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y2) {
-    combinedChart.options.scales.y2.ticks = combinedChart.options.scales.y2.ticks || {};
-    combinedChart.options.scales.y2.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
-  }
-} catch(e) { console.log('Pressure axis formatting error:', e); }
+// --- Helper Functions ---
+function ensureAdvancePanelVisible(element) {
+  if(!element) return;
+  const rect = element.getBoundingClientRect();
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  const margin = 12;
 
+  if (rect.top >= margin && rect.bottom <= vh - margin) return;
 
-// --- Ensure temperature y-axis shows no decimal places ---
-try {
-  if (typeof tempChart !== 'undefined' && tempChart && tempChart.options && tempChart.options.scales && tempChart.options.scales.y) {
-    tempChart.options.scales.y.ticks = tempChart.options.scales.y.ticks || {};
-    tempChart.options.scales.y.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-    try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
+  if (rect.height + (margin * 2) <= vh) {
+    const target = window.scrollY + rect.top - margin;
+    window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+    return;
   }
-  if (typeof combinedChart !== 'undefined' && combinedChart && combinedChart.options && combinedChart.options.scales && combinedChart.options.scales.y1) {
-    combinedChart.options.scales.y1.ticks = combinedChart.options.scales.y1.ticks || {};
-    combinedChart.options.scales.y1.ticks.callback = function(value) { try { return Number(value).toFixed(1); } catch(e) { return value; } };
-    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
-  }
-} catch(e) { console.log('Temp axis formatting error:', e); }
 
-
-// --- Gauge Drawing Functions ---
-function drawGauge(canvas, value, min, max, unit, color) {
-  const ctx = canvas.getContext('2d');
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = 100; // Back to 100 from 120
-  
-  // Clear canvas with page background color
-  ctx.fillStyle = '#121212';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Draw outer circle
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius + 15, 0, 2 * Math.PI);
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  
-  // Draw gauge background arc (270 degrees)
-  const startAngle = 0.75 * Math.PI; // Start at 135 degrees
-  const endAngle = 2.25 * Math.PI;   // End at 405 degrees (270 degree arc)
-  
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = 20;
-  ctx.stroke();
-  
-  // Only draw value arc if connected and value is not placeholder
-  if(isConnected && value !== null) {
-    // Calculate value angle
-    const valueRange = max - min;
-    const normalizedValue = Math.max(0, Math.min(1, (value - min) / valueRange));
-    const valueAngle = startAngle + normalizedValue * (endAngle - startAngle);
-    
-    // Draw value arc
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, valueAngle);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 20;
-    ctx.stroke();
-  }
-  
-  // Draw tick marks and labels
-  ctx.strokeStyle = '#666';
-  ctx.lineWidth = 2;
-  ctx.fillStyle = '#999';
-  ctx.font = '14px Arial'; // Back to 14px from 16px
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  for(let i = 0; i <= 10; i++) {
-    const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
-    const innerRadius = radius - 20;
-    const outerRadius = radius + 10;
-    const labelRadius = radius + 30; // Back to 30 from 35
-    
-    // Draw tick mark
-    ctx.beginPath();
-    ctx.moveTo(
-      centerX + Math.cos(tickAngle) * innerRadius,
-      centerY + Math.sin(tickAngle) * innerRadius
-    );
-    ctx.lineTo(
-      centerX + Math.cos(tickAngle) * outerRadius,
-      centerY + Math.sin(tickAngle) * outerRadius
-    );
-    ctx.stroke();
-    
-    // Draw tick value label
-    const tickValue = min + (i / 10) * (max - min);
-    const labelX = centerX + Math.cos(tickAngle) * labelRadius;
-    const labelY = centerY + Math.sin(tickAngle) * labelRadius;
-    ctx.fillText(Math.round(tickValue).toString(), labelX, labelY);
-  }
-  
-  // Draw center value
-  ctx.fillStyle = color;
-  ctx.font = 'bold 28px Arial'; // Back to 28px from 32px
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  // Show "--.-" if disconnected or null value, otherwise show the actual value
-  if(!isConnected || value === null) {
-    ctx.fillText("--.-", centerX, centerY - 15);
-  } else {
-    ctx.fillText(value.toFixed(1), centerX, centerY - 15);
-  }
-  
-  // Draw unit
-  ctx.fillStyle = '#ccc';
-  ctx.font = '18px Arial'; // Back to 18px from 20px
-  ctx.fillText(unit, centerX, centerY + 15);
-}
-
-function updateGauges() {
-  if(!gaugeView) return;
-  
-  // Determine units and values
-  const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
-  const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
-  
-  let displayTemp = isConnected ? currentTemp : null;
-  let displayPressure = isConnected ? currentPressure : null;
-  
-  // Convert units for gauges if needed
-  if (currentTempUnit === "F") {
-    displayTemp = displayTemp;
-  }
-  
-  if (currentPressureUnit === "PSI") {
-    displayPressure = displayPressure;
-  }
-  
-  // Set gauge ranges according to specifications
-  let tempMin, tempMax;
-  if(currentTempUnit === "F") {
-    tempMin = 0; 
-    tempMax = 302; // Fahrenheit: 0°F to 302°F
-  } else {
-    tempMin = 0; 
-    tempMax = 150; // Celsius: 0°C to 150°C
-  }
-  
-  let pressureMin, pressureMax;
-  if(currentPressureUnit === "PSI") {
-    pressureMin = 0; 
-    pressureMax = 262; // PSI: 0 to 262 PSI
-  } else {
-    pressureMin = 0; 
-    pressureMax = 18; // Bar: 0 to 18 bar
-  }
-  
-  // Draw gauges
-  const tempCanvas = document.getElementById('tempGauge');
-  const pressureCanvas = document.getElementById('pressureGauge');
-  
-  if(tempCanvas && pressureCanvas) {
-    drawGauge(tempCanvas, displayTemp, tempMin, tempMax, tempUnit, '#ff7f7f');
-    drawGauge(pressureCanvas, displayPressure, pressureMin, pressureMax, pressureUnit, '#7fbfff');
-  }
+  const target = window.scrollY + rect.top - margin;
+  window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
 }
 
 // --- Helper function to update temperature toggle switch ---
@@ -1723,7 +905,6 @@ function updateTempToggleSwitch(unit) {
     slider.textContent = "F";
     tempToggleActive = true;
   } else {
-    // Default to C
     toggle.classList.remove("active");
     slider.textContent = "C";
     tempToggleActive = false;
@@ -1747,7 +928,6 @@ function updatePressureToggleSwitch(unit) {
     slider.textContent = "PSI";
     pressureToggleActive = true;
   } else {
-    // Default to Bar
     toggle.classList.remove("active");
     slider.textContent = "Bar";
     pressureToggleActive = false;
@@ -1795,7 +975,6 @@ function updateBrightnessSlider(brightnessValue) {
   const slider = document.getElementById("brightnessSlider");
   const valueDisplay = document.getElementById("brightnessValue");
   
-  // Ensure brightness value is within valid range (10-250)
   const clampedValue = Math.max(10, Math.min(250, parseInt(brightnessValue)));
   
   slider.value = clampedValue;
@@ -1806,7 +985,7 @@ function updateBrightnessSlider(brightnessValue) {
 
 // --- Pressure conversion functions ---
 function barToPsi(bar) {
-  return bar; // 1 bar = 14.5038 PSI
+  return bar;
 }
 
 function psiToBar(psi) {
@@ -1822,23 +1001,19 @@ async function connectToDevice() {
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(serviceUuid);
     
-    // Get the read/notify characteristic
     characteristic = await service.getCharacteristic(characteristicUuid);
     console.log("Read characteristic properties:", characteristic.properties);
     
-    // Try to get a separate write characteristic
     try {
       writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
       console.log("Write characteristic found with properties:", writeCharacteristic.properties);
     } catch(e) {
       console.log("Separate write characteristic not found, trying to use read characteristic for writing");
       
-      // Check if the read characteristic supports writing
       if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
         writeCharacteristic = characteristic;
         console.log("Using read characteristic for writing");
       } else {
-        // List all available characteristics
         console.log("Listing all characteristics in service:");
         const characteristics = await service.getCharacteristics();
         for (const char of characteristics) {
@@ -1856,19 +1031,15 @@ async function connectToDevice() {
     characteristic.addEventListener("characteristicvaluechanged",handleData);
 
     btn.textContent="Disconnect"; btn.className="connected";
-    isConnected = true; // Set connection state to true
-    updateConnectionState(true); // Enable toggles
+    isConnected = true;
+    updateConnectionState(true);
     btn.onclick = disconnectFromDevice;
     
-    // Reset brightness and always-on data tracking on new connection
     brightnessDataReceived = false;
     alwaysOnDataReceived = false;
     calibrationDataReceived = false;
     receivedDataCount = 0;
-
-    // Reset sleep data tracking on new connection
     sleepDataReceived = false;
-
     currentCalibrationValue = null;
     
     if (writeCharacteristic) {
@@ -1906,40 +1077,14 @@ function handleDisconnection() {
   const btn = document.getElementById("connectButton");
   btn.textContent="Connect"; 
   btn.className="disconnected";
-  isConnected = false; // Set connection state to false
+  isConnected = false;
   updateConnectionState(false);
-
-
-// --- Advance Toggle ---
-(function(){
-  function setupAdvanceToggle(){
-    const btn = document.getElementById("advanceToggle");
-    const content = document.getElementById("advanceContent");
-    if(!btn || !content) return;
-    btn.addEventListener('click', function(){
-      if(content.style.display === "none" || content.style.display === ""){
-        content.style.display = "block";
-        btn.textContent = "Advance ▲";
-        // Allow layout to settle then ensure the whole panel is visible
-        setTimeout(function(){ ensureAdvancePanelVisible(content); }, 60);
-        content.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        content.style.display = "none";
-        btn.textContent = "Advance ▼";
-      }
-    });
-  }
-  // Try to setup after a short delay to ensure DOM elements are present
-  setTimeout(setupAdvanceToggle, 50);
-})();
- // Disable toggles
-  updateGauges(); // Update gauges to show "--.-"
+  updateGauges();
   characteristic = null;
   writeCharacteristic = null;
   device = null;
   btn.onclick = connectToDevice;
   
-  // Reset brightness and always-on tracking on disconnection
   brightnessDataReceived = false;
   alwaysOnDataReceived = false;
   calibrationDataReceived = false;
@@ -1965,7 +1110,6 @@ async function sendData(command) {
       const encoder = new TextEncoder();
       const data = encoder.encode(command);
       
-      // Try writeWithoutResponse first, then regular write
       if (writeCharacteristic.properties.writeWithoutResponse) {
         console.log("Using writeWithoutResponse");
         await writeCharacteristic.writeValueWithoutResponse(data);
@@ -1977,8 +1121,6 @@ async function sendData(command) {
       }
       
       console.log("Data sent successfully");
-      
-      // Add to data entries for scrolling display
       addDataEntry(command, "sent");
       
     } catch(error) {
@@ -2031,7 +1173,6 @@ function updateConnectionState(connected) {
     if (setSleepBtn) setSleepBtn.disabled = true;
     if (setCalBtn) setCalBtn.disabled = true;
   }
-
 }
 
 // --- Add data entry to scrolling list ---
@@ -2043,15 +1184,12 @@ function addDataEntry(data, type) {
     type
   };
   
-  // Add to beginning of array (newest first)
   dataEntries.unshift(entry);
   
-  // Limit to 100 entries to prevent performance issues
   if (dataEntries.length > 100) {
     dataEntries.pop();
   }
   
-  // Update the display
   updateDataDisplay();
 }
 
@@ -2059,10 +1197,8 @@ function addDataEntry(data, type) {
 function updateDataDisplay() {
   const rawDataDisplay = document.getElementById("rawDataDisplay");
   
-  // Clear existing content (Clear button removed)
   rawDataDisplay.innerHTML = "";
   
-  // Add entries
   dataEntries.forEach(entry => {
     const entryElement = document.createElement("div");
     entryElement.className = `data-entry ${entry.type}`;
@@ -2079,7 +1215,6 @@ function updateDataDisplay() {
     rawDataDisplay.appendChild(entryElement);
   });
   
-  // If no data, show placeholder
   if (dataEntries.length === 0) {
     const placeholder = document.createElement("div");
     placeholder.className = "data-entry";
@@ -2088,150 +1223,116 @@ function updateDataDisplay() {
   }
 }
 
-// --- Clear data entries removed (no Clear button)
-
-// --- Temperature Toggle Switch Handler ---
-
 // --- Reset charts function ---
 function resetCharts() {
   if (tempChart && pressureChart && combinedChart) {
-    chartData = { labels: [], temp: [], pressure: [] }
-
-
-;
+    chartData = { labels: [], temp: [], pressure: [] };
     secondsCounter = 0;
 
     tempChart.data.labels = [];
     tempChart.data.datasets[0].data = [];
-    try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
+    tempChart.update();
 
     pressureChart.data.labels = [];
     pressureChart.data.datasets[0].data = [];
-    try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
+    pressureChart.update();
 
     combinedChart.data.labels = [];
     combinedChart.data.datasets[0].data = [];
     combinedChart.data.datasets[1].data = [];
-    try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
+    combinedChart.update();
   }
 }
 
-// --- Auto-reset charts every 20 seconds ---
+// --- Auto-reset charts every 60 seconds ---
 setInterval(() => {
-  console.log("Auto-resetting charts after 20 seconds");
+  console.log("Auto-resetting charts after 60 seconds");
   resetCharts();
   updateCharts();
   updateGauges();
 }, 60000);
 
-
-
+// --- Temperature Toggle Switch Handler ---
 document.getElementById("tempToggle").onclick = async () => {
-  // Check if disabled (not connected)
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
   
   console.log("Temperature toggle switch clicked");
   
-  // Send the appropriate command based on new state
   const command = tempToggleActive ? "C" : "F";
-  
-  // Immediately update the toggle switch visual state
   const newUnit = tempToggleActive ? "C" : "F";
   updateTempToggleSwitch(newUnit);
   
-
-  // Reset and update charts with new units
   resetCharts();
   updateCharts();
   updateGauges();
 
-  // Set flag so the next dataset is ignored
   skipNextData = true;
-
   await sendData(command);
-
 };
 
 // --- Brightness Slider Handler ---
 let brightnessTimeout = null;
-let userInitiatedBrightnessChange = false; // Flag to track user-initiated changes
+let userInitiatedBrightnessChange = false;
 
 document.getElementById("brightnessSlider").oninput = function() {
   const value = this.value;
   document.getElementById("brightnessValue").textContent = value;
-  userInitiatedBrightnessChange = true; // Mark as user-initiated
+  userInitiatedBrightnessChange = true;
 };
 
 document.getElementById("brightnessSlider").onchange = function() {
   const value = this.value;
   
-  // Only send command if this was a user-initiated change and we're connected
   if (userInitiatedBrightnessChange && isConnected) {
-    // Clear existing timeout to prevent multiple rapid sends
     if (brightnessTimeout) {
       clearTimeout(brightnessTimeout);
     }
     
-    // Format the value to 3 digits (e.g., 125 -> "125", 10 -> "010")
     const formattedValue = value.padStart(3, '0');
-    const command = `L${formattedValue}`;  // L for brightness command
+    const command = `L${formattedValue}`;
     sendData(command);
   }
   
-  // Reset the flag after handling the change
   userInitiatedBrightnessChange = false;
 };
 
 // --- Pressure Toggle Switch Handler ---
-// --- Pressure Toggle Switch Handler ---
 document.getElementById("pressureToggle").onclick = async () => {
   const toggleEl = document.getElementById("pressureToggle");
-  // Check if disabled (not connected)
   if (toggleEl.classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
 
   console.log("Pressure toggle switch clicked");
 
-  // Determine the new state (toggle the boolean)
   const newActive = !pressureToggleActive;
-  // Map new state to unit: true => PSI, false => Bar
   const newUnit = newActive ? "PSI" : "Bar";
 
-  // Update UI/internal state
   updatePressureToggleSwitch(newUnit);
 
-  // Reset and update charts with new units
   resetCharts();
   updateCharts();
   updateGauges();
 
-  // Set flag so the next dataset is ignored
   skipNextData = true;
 
-
-
-  // Send 'P' for PSI, 'B' for Bar
   const command = newUnit === "PSI" ? "P" : "B";
   await sendData(command);
 };
 
 // --- Always-On Toggle Switch Handler ---
 document.getElementById("alwaysOnToggle").onclick = async () => {
-  // Check if disabled (not connected)
   if (document.getElementById("alwaysOnToggle").classList.contains("disabled")) {
-    return; // Do nothing if disabled
+    return;
   }
   
   console.log("Always-on toggle switch clicked");
   
-  // Toggle the state and send appropriate command
   const newState = !alwaysOnToggleActive;
   const command = newState ? "S1" : "S0";
   
-  // Immediately update the toggle switch visual state
   updateAlwaysOnToggleSwitch(newState);
   
   await sendData(command);
@@ -2242,12 +1343,12 @@ document.getElementById("rawDataToggle").onclick = () => {
   updateRawDataToggleSwitch(!rawDataToggleActive);
 };
 
+// --- Other Button Handlers ---
 document.getElementById("pauseResumeButton").onclick=()=>{
   const btn = document.getElementById("pauseResumeButton");
   paused=!paused;
   btn.textContent=paused?"Resume":"Pause";
   
-  // Add/remove the resume class for styling
   if(paused) {
     btn.classList.add("resume");
   } else {
@@ -2258,14 +1359,12 @@ document.getElementById("pauseResumeButton").onclick=()=>{
 document.getElementById("resetButton").onclick=()=>{
   chartData={labels:[],temp:[],pressure:[]}; secondsCounter=0;
   
-  // Reset charts
   [tempChart,pressureChart,combinedChart].forEach(chart=>{
     chart.data.labels=[];
     chart.data.datasets.forEach(ds=>ds.data=[]);
     chart.update();
   });
   
-  // Reset current value displays
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   
@@ -2273,7 +1372,6 @@ document.getElementById("resetButton").onclick=()=>{
   document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
   document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
   
-  // Reset gauges
   updateGauges();
 };
 
@@ -2289,7 +1387,6 @@ document.getElementById("toggleGaugeButton").onclick=()=>{
   gaugeView=!gaugeView;
   localStorage.setItem("gaugeMode", gaugeView?"true":"false");
   updateView();
-  // Update gauges when switching to gauge view
   if(gaugeView) {
     setTimeout(() => {
       updateGauges();
@@ -2298,11 +1395,9 @@ document.getElementById("toggleGaugeButton").onclick=()=>{
 };
 
 function updateView(){
-
-    // Hide or show Save/Load/Delete buttons depending on view
-    document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
-    document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
-    document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
+  document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
+  document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
+  document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
 
   const toggleViewButton = document.getElementById("toggleViewButton");
   
@@ -2310,13 +1405,13 @@ function updateView(){
     document.getElementById("splitView").style.display="none";
     document.getElementById("combinedView").style.display="none";
     document.getElementById("gaugeView").style.display="flex";
-    toggleViewButton.style.display="none"; // Hide the toggle view button
+    toggleViewButton.style.display="none";
     document.getElementById("toggleGaugeButton").textContent="Charts";
   } else {
     document.getElementById("splitView").style.display=splitView?"flex":"none";
     document.getElementById("combinedView").style.display=splitView?"none":"flex";
     document.getElementById("gaugeView").style.display="none";
-    toggleViewButton.style.display="inline-block"; // Show the toggle view button
+    toggleViewButton.style.display="inline-block";
     toggleViewButton.textContent=splitView?"Combine":"Split";
     document.getElementById("toggleGaugeButton").textContent="Gauges";
   }
@@ -2327,38 +1422,152 @@ if(localStorage.getItem("viewChoice")==="combined") splitView=false;
 if(localStorage.getItem("gaugeMode")==="true") gaugeView=true;
 updateView();
 
-// Initialize gauges with default values (showing "--.-" since not connected)
+// Initialize gauges with default values
 setTimeout(() => {
   updateGauges();
 }, 100);
 
-document.getElementById("saveButton").onclick=()=>{
-  const name=prompt("Enter a name for saved graph:"); if(!name) return;
-  localStorage.setItem("graph_"+name,JSON.stringify(chartData));
-};
-document.getElementById("loadButton").onclick=()=>{showModal("load");};
-document.getElementById("deleteButton").onclick=()=>{showModal("delete");};
+// --- Gauge Drawing Functions ---
+function drawGauge(canvas, value, min, max, unit, color) {
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = 100;
+  
+  ctx.fillStyle = '#121212';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius + 15, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  
+  const startAngle = 0.75 * Math.PI;
+  const endAngle = 2.25 * Math.PI;
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 20;
+  ctx.stroke();
+  
+  if(isConnected && value !== null) {
+    const valueRange = max - min;
+    const normalizedValue = Math.max(0, Math.min(1, (value - min) / valueRange));
+    const valueAngle = startAngle + normalizedValue * (endAngle - startAngle);
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, valueAngle);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 20;
+    ctx.stroke();
+  }
+  
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = '#999';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  for(let i = 0; i <= 10; i++) {
+    const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
+    const innerRadius = radius - 20;
+    const outerRadius = radius + 10;
+    const labelRadius = radius + 30;
+    
+    ctx.beginPath();
+    ctx.moveTo(
+      centerX + Math.cos(tickAngle) * innerRadius,
+      centerY + Math.sin(tickAngle) * innerRadius
+    );
+    ctx.lineTo(
+      centerX + Math.cos(tickAngle) * outerRadius,
+      centerY + Math.sin(tickAngle) * outerRadius
+    );
+    ctx.stroke();
+    
+    const tickValue = min + (i / 10) * (max - min);
+    const labelX = centerX + Math.cos(tickAngle) * labelRadius;
+    const labelY = centerY + Math.sin(tickAngle) * labelRadius;
+    ctx.fillText(Math.round(tickValue).toString(), labelX, labelY);
+  }
+  
+  ctx.fillStyle = color;
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  if(!isConnected || value === null) {
+    ctx.fillText("--.-", centerX, centerY - 15);
+  } else {
+    ctx.fillText(value.toFixed(1), centerX, centerY - 15);
+  }
+  
+  ctx.fillStyle = '#ccc';
+  ctx.font = '18px Arial';
+  ctx.fillText(unit, centerX, centerY + 15);
+}
+
+function updateGauges() {
+  if(!gaugeView) return;
+  
+  const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+  const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+  
+  let displayTemp = isConnected ? currentTemp : null;
+  let displayPressure = isConnected ? currentPressure : null;
+  
+  if (currentTempUnit === "F") {
+    displayTemp = displayTemp;
+  }
+  
+  if (currentPressureUnit === "PSI") {
+    displayPressure = displayPressure;
+  }
+  
+  let tempMin, tempMax;
+  if(currentTempUnit === "F") {
+    tempMin = 0; 
+    tempMax = 302;
+  } else {
+    tempMin = 0; 
+    tempMax = 150;
+  }
+  
+  let pressureMin, pressureMax;
+  if(currentPressureUnit === "PSI") {
+    pressureMin = 0; 
+    pressureMax = 262;
+  } else {
+    pressureMin = 0; 
+    pressureMax = 18;
+  }
+  
+  const tempCanvas = document.getElementById('tempGauge');
+  const pressureCanvas = document.getElementById('pressureGauge');
+  
+  if(tempCanvas && pressureCanvas) {
+    drawGauge(tempCanvas, displayTemp, tempMin, tempMax, tempUnit, '#ff7f7f');
+    drawGauge(pressureCanvas, displayPressure, pressureMin, pressureMax, pressureUnit, '#7fbfff');
+  }
+}
 
 // --- Data Handling ---
 function handleData(event){
   const rawData = new TextDecoder().decode(event.target.value).trim();
   
-  // Add to data entries for scrolling display
   addDataEntry(rawData, "received");
   
-  // Increment received data count
   receivedDataCount++;
 
-  // If flag is set, ignore this dataset once
   if (skipNextData) {
     console.log("Skipped dataset after toggle:", rawData);
     skipNextData = false;
     return;
   }
-
-
   
-  // Check for third and fourth values and update UI accordingly
   const dataParts = rawData.split(",");
   let isFahrenheit = false;
   let isPSI = false;
@@ -2389,15 +1598,12 @@ function handleData(event){
       updatePressureToggleSwitch("PSI");
       isPSI = true;
     } else {
-      // Don't change toggle state if we get unknown data
       isPSI = (currentPressureUnit === "PSI");
     }
   } else {
-    // Don't change toggle state if no data received - keep current state
     isPSI = (currentPressureUnit === "PSI");
   }
   
-  // Check for fifth data point (always-on toggle) - only update toggle if we haven't received always-on data yet
   if(dataParts.length >= 5 && !alwaysOnDataReceived) {
     const fifthValue = dataParts[4].trim();
     if(fifthValue === "1") {
@@ -2411,12 +1617,10 @@ function handleData(event){
     }
   }
   
-  // Check for sixth data point (brightness) - only update slider if we haven't received brightness data yet
   if(dataParts.length >= 6 && !brightnessDataReceived) {
     const sixthValue = dataParts[5].trim();
     const brightnessValue = parseInt(sixthValue);
     
-    // Validate brightness value is a number and within range (10-250)
     if(!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
       updateBrightnessSlider(brightnessValue);
       brightnessDataReceived = true;
@@ -2424,9 +1628,7 @@ function handleData(event){
     }
   }
   
-  // Also check if this is specifically the 6th data packet received (alternative approach)
   if(receivedDataCount === 6 && dataParts.length >= 1 && !brightnessDataReceived) {
-    // If the 6th packet is just a brightness value
     const brightnessValue = parseInt(dataParts[0].trim());
     if(!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
       updateBrightnessSlider(brightnessValue);
@@ -2435,46 +1637,36 @@ function handleData(event){
     }
   }
   
-  // Check for seventh data point (calibration value) - only update if we haven't received calibration data yet
   if(dataParts.length >= 7 && !calibrationDataReceived) {
     const seventhValue = dataParts[6].trim();
     const calibrationValue = parseFloat(seventhValue);
     
-    // Validate calibration value is a number
     if(!isNaN(calibrationValue)) {
       currentCalibrationValue = calibrationValue;
       calibrationDataReceived = true;
       console.log(`Calibration value received from device: ${calibrationValue}`);
       
-      // Update calibration input if settings page is currently open
-      if(settingsPage.style.display !== "none") {
-        document.getElementById("calibrationValue").value = calibrationValue;
+      const calInput = document.getElementById("pressureCalibrationInput");
+      if (calInput) {
+        calInput.value = calibrationValue.toFixed(2);
       }
     }
   }
   
-  // Also check if this is specifically the 7th data packet received (alternative approach for calibration response)
   if(receivedDataCount === 7 && dataParts.length >= 1 && !calibrationDataReceived) {
-    // If the 7th packet is just a calibration value
     const calibrationValue = parseFloat(dataParts[0].trim());
     if(!isNaN(calibrationValue)) {
       currentCalibrationValue = calibrationValue;
       calibrationDataReceived = true;
       console.log(`Calibration value received from 7th packet: ${calibrationValue}`);
       
-      // Update calibration input if settings page is currently open
-      if(settingsPage.style.display !== "none") {
-        document.getElementById("calibrationValue").value = calibrationValue;
+      const calInput = document.getElementById("pressureCalibrationInput");
+      if (calInput) {
+        calInput.value = calibrationValue.toFixed(2);
       }
     }
   }
   
-  
-
-  
-  // On first connect, use 10th data point as sleep time
-
-  // On first connect, use 7th data point as calibration value
   if(isConnected && !calibrationDataReceivedOnce && dataParts.length >= 7) {
     const seventhValue = dataParts[6].trim();
     const calVal = parseFloat(seventhValue);
@@ -2503,7 +1695,6 @@ function handleData(event){
 
   if(paused) return;
   
-  // Parse temperature and pressure values
   if(dataParts.length >= 2) {
     const tempStr = dataParts[0];
     const pressureStr = dataParts[1];
@@ -2511,7 +1702,6 @@ function handleData(event){
     currentTemp = parseFloat(tempStr);
     currentPressure = Math.max(0, parseFloat(pressureStr));
     
-    // Update charts and gauges
     updateCharts();
     updateGauges();
   }
@@ -2521,8 +1711,8 @@ function handleData(event){
 function updateCharts() {
   const label = secondsCounter++;
   chartData.labels.push(label);
-  chartData.temp.push(isFinite(Number(currentTemp)) ? Number(currentTemp) : 0);
-  chartData.pressure.push(isFinite(Number(currentPressure)) ? Number(currentPressure) : 0);
+  chartData.temp.push(currentTemp);
+  chartData.pressure.push(currentPressure);
 
   if(chartData.labels.length > maxPointsValue) {
     chartData.labels.shift(); 
@@ -2530,26 +1720,20 @@ function updateCharts() {
     chartData.pressure.shift();
   }
 
-  // Update temperature chart with appropriate unit
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
   tempChart.data.labels = chartData.labels; 
   tempChart.data.datasets[0].data = chartData.temp;
   tempChart.data.datasets[0].label = `Temp (${tempUnit})`;
   tempChart.options.scales.y.title.text = `Temperature (${tempUnit})`;
   
-  // Update temperature current value label
   let displayTemp = currentTemp;
   if (currentTempUnit === "F") {
     displayTemp = currentTemp;
   }
   document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
   
+  tempChart.update();
 
-  
-
-  try { tempChart.update(); } catch(e) { console.error('tempChart.update error', e); }
-
-  // Update pressure chart with appropriate unit
   const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
   let displayPressure = currentPressure;
   
@@ -2564,15 +1748,10 @@ function updateCharts() {
   pressureChart.data.datasets[0].label = `Pressure (${pressureUnit})`;
   pressureChart.options.scales.y.title.text = `Pressure (${pressureUnit})`;
   
-  // Update pressure current value label
   document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}`;
   
+  pressureChart.update();
 
-  
-
-  try { pressureChart.update(); } catch(e) { console.error('pressureChart.update error', e); }
-
-  // Update combined chart
   combinedChart.data.labels = chartData.labels;
   combinedChart.data.datasets[0].data = chartData.temp.map(t => {
     return currentTempUnit === "F" ? t : t;
@@ -2583,16 +1762,10 @@ function updateCharts() {
   combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
   combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
   
-  // Update combined current value label
   document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}</span>`;
   
-
-  
-
-  try { combinedChart.update(); } catch(e) { console.error('combinedChart.update error', e); }
+  combinedChart.update();
 }
-
-
 
 // --- Auto-check BLE every second ---
 setInterval(()=>{
@@ -2603,14 +1776,14 @@ setInterval(()=>{
       if(!isConnected) {
         isConnected = true;
         updateConnectionState(true);
-        updateGauges(); // Update gauges when connection is restored
+        updateGauges();
       }
     } else {
       btn.textContent="Connect"; btn.className="disconnected";
       if(isConnected) {
         isConnected = false;
         updateConnectionState(false);
-        updateGauges(); // Update gauges to show "--.-" when disconnected
+        updateGauges();
       }
     }
   }
@@ -2637,7 +1810,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 });
 
-
 // --- Sleep Time Button Handler ---
 document.getElementById("setSleepTimeButton").onclick = async () => {
   const input = document.getElementById("sleepTimeInput");
@@ -2646,24 +1818,19 @@ document.getElementById("setSleepTimeButton").onclick = async () => {
     alert("Please enter a number between 1 and 60.");
     return;
   }
-  // Format value to 2 digits (e.g., 5 -> "05")
   const formatted = val.toString().padStart(2, '0');
   const command = `n${formatted}`;
   await sendData(command);
 };
 
-
-
 // --- Pressure Calibration Button Handler ---
 document.getElementById("setPressureCalibrationButton").onclick = async () => {
   const input = document.getElementById("pressureCalibrationInput");
   let val = input.value.trim();
-  // Validate format: up to 4 characters, must be numeric with optional decimal
   if(!/^\d(\.\d{1,2})?$/.test(val)) {
     alert("Please enter a valid number like 1.29 (max 4 chars).");
     return;
   }
-  // Ensure length <= 4
   if(val.length > 4) {
     alert("Calibration value must be 4 characters or less.");
     return;
@@ -2672,57 +1839,34 @@ document.getElementById("setPressureCalibrationButton").onclick = async () => {
   await sendData(command);
 };
 
-
-</script>
-
-<!-- Added script: ensure zero button sends 'g' and attempts connection if needed -->
-<script>
-(function(){
-  async function handleZeroClick(e){
-    const btn = document.getElementById("zeroPressureButton");
-    if(btn) {
-      // Provide immediate feedback
-      btn.disabled = true;
-      const origText = btn.textContent;
-      btn.textContent = "Zeroing...";
+// --- Zero Button Handler ---
+document.getElementById("zeroPressureButton").onclick = async () => {
+  const btn = document.getElementById("zeroPressureButton");
+  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.textContent = "Zeroing...";
+  try {
+    if(!(device && device.gatt && device.gatt.connected)) {
       try {
-        // If not connected, attempt to connect (this will open the device picker)
-        if(!(typeof device !== 'undefined' && device && device.gatt && device.gatt.connected)) {
-          try {
-            await connectToDevice();
-          } catch(connectErr) {
-            console.error("Connect failed or cancelled:", connectErr);
-            if(typeof addDataEntry === 'function') addDataEntry("Zero command cancelled: not connected", "error");
-            throw connectErr;
-          }
-        }
-        // Now attempt to send 'g'
-        await sendData('g');
-        if(typeof addDataEntry === 'function') addDataEntry("Zero command sent ('g')", "sent");
-      } catch(err) {
-        console.error("Zero command error:", err);
-        if(typeof addDataEntry === 'function') addDataEntry("Zero command failed: " + (err && err.message ? err.message : err), "error");
-      } finally {
-        if(btn) {
-          btn.disabled = false;
-          btn.textContent = origText || "Zero";
-        }
+        await connectToDevice();
+      } catch(connectErr) {
+        console.error("Connect failed or cancelled:", connectErr);
+        addDataEntry("Zero command cancelled: not connected", "error");
+        throw connectErr;
       }
     }
+    await sendData('g');
+    addDataEntry("Zero command sent ('g')", "sent");
+  } catch(err) {
+    console.error("Zero command error:", err);
+    addDataEntry("Zero command failed: " + (err && err.message ? err.message : err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText || "Zero";
   }
+};
 
-  // Attach once DOM is ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function(){
-      const z = document.getElementById("zeroPressureButton");
-      if(z) z.addEventListener("click", handleZeroClick);
-    });
-  } else {
-    const z = document.getElementById("zeroPressureButton");
-    if(z) z.addEventListener("click", handleZeroClick);
-  }
-})();
-
+// Initialize disabled state for advanced buttons
 document.addEventListener("DOMContentLoaded", function(){
   try {
     const zeroBtn = document.getElementById("zeroPressureButton");
@@ -2731,16 +1875,15 @@ document.addEventListener("DOMContentLoaded", function(){
     if (zeroBtn) zeroBtn.disabled = true;
     if (setSleepBtn) setSleepBtn.disabled = true;
     if (setCalBtn) setCalBtn.disabled = true;
-  } catch(e) { console.log("init button disable error", e); }
+  } catch(e) { 
+    console.log("init button disable error", e); 
+  }
 });
 </script>
 
-
-
+</div>
 
 <!-- Minimal footer with coffee-bean icon link to game.html -->
-
-</div>
 <footer id="pageFooter" class="minimal-footer" role="contentinfo" aria-label="Site footer">
   <div class="footer-inner">
     <a href="game.html" class="footer-link" aria-label="Play Game" title="Play Game">
@@ -2754,9 +1897,6 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="footer-text">SirusPTB</div>
   </div>
 </footer>
-
-
-
 
 </body>
 </html>
