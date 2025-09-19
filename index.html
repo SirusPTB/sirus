@@ -540,6 +540,28 @@ button[id^="set"]:disabled, .control-btn[id^="set"]:disabled {
   cursor: not-allowed;
 }
 
+
+/* --- Removed up/down arrows for sleep time input --- */
+input#sleepTimeInput::-webkit-outer-spin-button,
+input#sleepTimeInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input#sleepTimeInput {
+  -moz-appearance: textfield;
+}
+
+
+/* --- Removed up/down arrows for pressure calibration input --- */
+input#pressureCalibrationInput::-webkit-outer-spin-button,
+input#pressureCalibrationInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input#pressureCalibrationInput {
+  -moz-appearance: textfield;
+}
+
 </style>
 </head>
 <body>
