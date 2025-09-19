@@ -54,6 +54,28 @@ button {
 #saveButton { background-color: #444; }
 #pauseResumeButton.resume { background-color: #CC6600; }
 
+/* Zero button — make it orange (stronger override) */
+#zeroPressureButton {
+  background-color: #ff8c00 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15) inset !important;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+#zeroPressureButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+#zeroPressureButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #ffb87a !important;
+  color: #fff !important;
+  background-image: none !important;
+}
+
+
 /* Toggle Switch Styles */
 .toggle-container {
   display: inline-flex;
@@ -496,6 +518,28 @@ body {
     min-width: 40px; 
   }
 }
+
+
+
+/* Set buttons — make them green (applies to IDs starting with "set") */
+button[id^="set"], button[id^="Set"], .control-btn[id^="set"], .control-btn[id^="Set"] {
+  background-color: #28a745 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset !important;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+button[id^="set"]:hover:not(:disabled), .control-btn[id^="set"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+button[id^="set"]:disabled, .control-btn[id^="set"]:disabled {
+  background-color: #7fd49b !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 </style>
 </head>
 <body>
@@ -576,7 +620,7 @@ body {
 <div style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
 <div class="toggle-container">
 <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
-<div class="toggle-switch" id="alwaysOnToggle" style="background-color: #666;">
+<div class="toggle-switch" id="alwaysOnToggle">
 <div class="toggle-slider">OFF</div>
 </div>
 </div>
@@ -617,22 +661,15 @@ body {
           <span id="brightnessValue" class="brightness-value">125</span>
         </td>
       </tr>
-      <tr>
-        <td class="label-cell"><label>Raw Data:</label></td>
-        <td class="control-cell">
-          <div class="toggle-container" style="display:inline-block;">
-            <div class="toggle-switch active" id="rawDataToggle">
-              <div class="toggle-slider">ON</div>
-            </div>
-          </div>
-        </td>
-      </tr>
-      </tbody>
+
   </table>
   
-  <div class="raw-data-container" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px;">
+  <!-- Raw data container hidden -->
+  <!--
+  <div class="raw-data-container" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px; display:none;">
     <div class="data-entry">No data yet...</div>
   </div>
+  -->
 </div>
 </div>
 
@@ -954,19 +991,21 @@ function updateAlwaysOnToggleSwitch(isOn) {
 // --- Helper function to update raw data toggle switch ---
 function updateRawDataToggleSwitch(isVisible) {
   const toggle = document.getElementById("rawDataToggle");
-  const slider = toggle.querySelector(".toggle-slider");
+  const slider = toggle ? toggle.querySelector(".toggle-slider") : null;
   const rawDataDisplay = document.getElementById("rawDataDisplay");
+  
+  if (!toggle || !slider) return; // Exit if elements don't exist
   
   rawDataToggleActive = isVisible;
   
   if (isVisible) {
     toggle.classList.add("active");
     slider.textContent = "ON";
-    rawDataDisplay.classList.remove("hidden");
+    if (rawDataDisplay) rawDataDisplay.classList.remove("hidden");
   } else {
     toggle.classList.remove("active");
     slider.textContent = "OFF";
-    rawDataDisplay.classList.add("hidden");
+    if (rawDataDisplay) rawDataDisplay.classList.add("hidden");
   }
 }
 
@@ -1177,6 +1216,9 @@ function updateConnectionState(connected) {
 
 // --- Add data entry to scrolling list ---
 function addDataEntry(data, type) {
+  const rawDataDisplay = document.getElementById("rawDataDisplay");
+  if (!rawDataDisplay) return; // Exit if element doesn't exist
+  
   const timestamp = new Date().toLocaleTimeString();
   const entry = {
     timestamp,
@@ -1196,6 +1238,7 @@ function addDataEntry(data, type) {
 // --- Update the data display ---
 function updateDataDisplay() {
   const rawDataDisplay = document.getElementById("rawDataDisplay");
+  if (!rawDataDisplay) return; // Exit if element doesn't exist
   
   rawDataDisplay.innerHTML = "";
   
@@ -1339,9 +1382,14 @@ document.getElementById("alwaysOnToggle").onclick = async () => {
 };
 
 // --- Raw Data Toggle Switch Handler ---
-document.getElementById("rawDataToggle").onclick = () => {
-  updateRawDataToggleSwitch(!rawDataToggleActive);
-};
+document.addEventListener("DOMContentLoaded", function(){
+  const rawDataToggle = document.getElementById("rawDataToggle");
+  if (rawDataToggle) {
+    rawDataToggle.onclick = () => {
+      updateRawDataToggleSwitch(!rawDataToggleActive);
+    };
+  }
+});
 
 // --- Other Button Handlers ---
 document.getElementById("pauseResumeButton").onclick=()=>{
