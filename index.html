@@ -574,6 +574,10 @@ input#chartResetInput {
 }
 
 </style>
+
+<style>
+body.gauges-visible #resetButton { display: none !important; }
+</style>
 </head>
 <body>
 <div id="page-wrapper">
@@ -1515,7 +1519,8 @@ document.getElementById("toggleGaugeButton").onclick=()=>{
 };
 
 function updateView(){
-  document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
+    document.body.classList.toggle('gauges-visible', gaugeView);
+document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
   document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
   document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
 
