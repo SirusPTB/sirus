@@ -562,6 +562,17 @@ input#pressureCalibrationInput {
   -moz-appearance: textfield;
 }
 
+
+/* --- Removed up/down arrows for chart reset input --- */
+input#chartResetInput::-webkit-outer-spin-button,
+input#chartResetInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input#chartResetInput {
+  -moz-appearance: textfield;
+}
+
 </style>
 </head>
 <body>
@@ -676,6 +687,14 @@ input#pressureCalibrationInput {
           <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
         </td>
       </tr>
+      <tr>
+        <td class="label-cell"><label for="chartResetInput">Chart reset (data points):</label></td>
+        <td class="control-cell">
+          <input type="number" id="chartResetInput" class="control-input" min="5" max="240" value="50" style="text-align: right !important; padding-right:6px !important;">
+          <button id="setChartResetButton" class="adv-btn control-btn">Set</button>
+        </td>
+      </tr>
+
       <tr>
         <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
         <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
@@ -1309,14 +1328,45 @@ function resetCharts() {
   }
 }
 
-// --- Auto-reset charts every 60 seconds ---
-setInterval(() => {
-  console.log("Auto-resetting charts after 60 seconds");
-  resetCharts();
-  updateCharts();
-  updateGauges();
-}, 60000);
 
+
+// --- Chart reset by data points (configurable) ---
+// ensure maxPointsValue has a default (do not redeclare if it already exists)
+if (typeof maxPointsValue === 'undefined') { maxPointsValue = 50; }
+
+// Load saved preference (if any)
+try {
+  const saved = parseInt(localStorage.getItem('chartResetPoints'), 10);
+  if (!isNaN(saved) && saved >= 5) {
+    maxPointsValue = Math.min(saved, 240);
+  }
+} catch(e) {
+  console.log('Error reading chartResetPoints from localStorage', e);
+}
+
+// Initialize input value and wire up Set button
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('chartResetInput');
+  if (input) input.value = String(maxPointsValue);
+
+  const btn = document.getElementById('setChartResetButton');
+  if (btn && input) {
+    btn.addEventListener('click', function() {
+      const val = parseInt(input.value, 10);
+      if (isNaN(val) || val < 5 || val > 240) {
+        alert('Please enter a number between 5 and 240 data points.');
+        input.value = String(maxPointsValue);
+        return;
+      }
+      maxPointsValue = val;
+      try { localStorage.setItem('chartResetPoints', String(maxPointsValue)); } catch(e) { console.log('Could not save chartResetPoints', e); }
+      
+      // small visual feedback
+      btn.textContent = 'Saved';
+      setTimeout(() => { btn.textContent = 'Set'; }, 900);
+    });
+  }
+});
 // --- Temperature Toggle Switch Handler ---
 document.getElementById("tempToggle").onclick = async () => {
   if (document.getElementById("tempToggle").classList.contains("disabled")) {
@@ -1784,10 +1834,16 @@ function updateCharts() {
   chartData.temp.push(currentTemp);
   chartData.pressure.push(currentPressure);
 
-  if(chartData.labels.length > maxPointsValue) {
-    chartData.labels.shift(); 
-    chartData.temp.shift(); 
-    chartData.pressure.shift();
+  if (chartData.labels.length >= (maxPointsValue + 2)) {
+    // Reset charts after reaching the configured number of data points
+    console.log(`Resetting charts after ${maxPointsValue} data points`);
+    // Clear existing data and start fresh with the most recent point as the first entry
+    const lastTemp = chartData.temp[chartData.temp.length - 1];
+    const lastPressure = chartData.pressure[chartData.pressure.length - 1];
+    chartData.labels = [label];
+    chartData.temp = [lastTemp];
+    chartData.pressure = [lastPressure];
+    secondsCounter = 0;
   }
 
   const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
