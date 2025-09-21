@@ -44,13 +44,13 @@ button {
   font-size: 1em;
   cursor: pointer;
   color: white;
-  background-color: #333;
+  background-color: #444;
 }
 #loadButton { background-color: #444; }
 #connectButton.connecting { background-color: orange; }
 #connectButton.connected { background-color: green; }
 #connectButton.disconnected { background-color: red; }
-#resetButton, #toggleViewButton { background-color: #333; }
+#resetButton, #toggleViewButton { background-color: #444; }
 #saveButton { background-color: #444; }
 #pauseResumeButton.resume { background-color: #CC6600; }
 
@@ -87,7 +87,7 @@ button {
   position: relative;
   width: 60px;
   height: 30px;
-  background-color: #555;
+  background-color: #444;
   border-radius: 15px;
   cursor: pointer;
   transition: background-color 0.3s;
@@ -641,9 +641,9 @@ body.gauges-visible #resetButton { display: none !important; }
 
 <div class="button-row">
 <button id="pauseResumeButton">Pause</button>
+<button id="resetButton">Reset</button>
 <button id="toggleViewButton">Toggle View</button>
 <button id="toggleGaugeButton">Toggle Gauges</button>
-<button id="resetButton">Reset</button>
 </div>
 
 <div class="button-row">
