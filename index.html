@@ -587,6 +587,15 @@ body.gauges-visible #resetButton { display: none !important; }
 #batteryLevel.medium { background: #ffb86b !important; }
 #batteryLevel.high { background: #7fff7f !important; }
 #batteryPercent { color: #fff; opacity: 0.8; font-weight: 300; font-size: 0.65em; }
+
+/* --- Charging bolt overlay (added) --- */
+#batteryIcon { position: relative; overflow: visible; }
+#batteryLevel { z-index: 1; }
+#batteryIcon .battery-bolt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 22px; z-index: 2; opacity: 0; transition: opacity 200ms ease, transform 200ms ease; pointer-events: none; }
+#battery.battery-charging #batteryIcon .battery-bolt { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+#batteryIcon .battery-bolt path { fill: #fff; stroke: rgba(0,0,0,0.45); stroke-width: 0.5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
+#battery.battery-charging #batteryPercent { font-weight: 700; } /* small visual emphasis when charging */
+
 </style>
 
 </head>
@@ -599,7 +608,7 @@ body.gauges-visible #resetButton { display: none !important; }
     <div id="batteryIcon" aria-hidden="true" style="position:relative;width:34px;height:18px;border:2px solid #fff;border-radius:3px;box-sizing:border-box;padding:0 6px 0 2px;">
       <div id="batteryLevel" style="position:absolute;left:3px;top:3px;bottom:3px;width:60%;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;"></div>
       <div style="position:absolute;right:-6px;top:5px;width:4px;height:8px;background:#fff;border-radius:1px;"></div>
-    </div>
+    <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18"><path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path></svg></div>
     <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.65em;">--%</div>
   </div>
 </header>
@@ -1092,17 +1101,24 @@ function updateBrightnessSlider(brightnessValue) {
 
 
 // --- Battery update helper ---
-function updateBattery(percent) {
-  const pct = Math.max(0, Math.min(100, parseInt(percent||0)));
+function updateBattery(percent, charging) {
+  const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
   const pctEl = document.getElementById("batteryPercent");
   const levelEl = document.getElementById("batteryLevel");
   if (pctEl) pctEl.textContent = pct + "%";
   if (levelEl) {
     levelEl.style.width = pct + "%";
-    levelEl.classList.remove("low","medium","high");
+    levelEl.classList.remove("low", "medium", "high");
     if (pct <= 15) levelEl.classList.add("low");
     else if (pct <= 50) levelEl.classList.add("medium");
     else levelEl.classList.add("high");
+  }
+
+  // Charging icon toggle
+  const batteryEl = document.getElementById("battery");
+  if (batteryEl) {
+    if (charging) batteryEl.classList.add("battery-charging");
+    else batteryEl.classList.remove("battery-charging");
   }
 }
 
@@ -1858,15 +1874,16 @@ function handleData(event){
   }
 
   
-  // --- Battery (8th data point) ---
-  if(dataParts.length >= 8) {
-    const eighthVal = dataParts[7].trim();
-    const batteryPercent = parseInt(eighthVal);
-    if(!isNaN(batteryPercent)) {
-      updateBattery(batteryPercent);
-      batteryDataReceived = true;
-      console.log(`Battery percentage received: ${batteryPercent}%`);
-    }
+  // --- Battery (8th data point) + charging (9th) ---
+if (dataParts.length >= 8) {
+  const batteryPercent = parseInt(dataParts[7].trim());
+  const chargingFlag = dataParts.length >= 9 ? dataParts[8].trim() === "1" : true;
+  if (!isNaN(batteryPercent)) {
+    updateBattery(batteryPercent, chargingFlag);
+    batteryDataReceived = true;
+    console.log(`Battery: ${batteryPercent}% ${chargingFlag ? "(charging)" : ""}`);
+  }
+
   }
 
   if(paused) return;
@@ -2079,6 +2096,9 @@ document.addEventListener("DOMContentLoaded", function(){
     <div class="footer-text">SirusPTB</div>
   </div>
 </footer>
+
+
+
 
 </body>
 </html>
