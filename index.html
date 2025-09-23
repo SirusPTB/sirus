@@ -1107,7 +1107,14 @@ function updateBattery(percent, charging) {
   const levelEl = document.getElementById("batteryLevel");
   if (pctEl) pctEl.textContent = pct + "%";
   if (levelEl) {
-    levelEl.style.width = pct + "%";
+    // ensure we always leave a small gap at full charge by using scale transform
+    const maxScale = 0.95;
+    const scale = Math.min(pct / 100, maxScale);
+    // make the fill element span the available inner area, then scale it
+    levelEl.style.width = 'calc(100% - 6px)'; // account for left/right 3px offsets
+    levelEl.style.transformOrigin = 'left';
+    levelEl.style.transform = 'scaleX(' + scale + ')';
+    levelEl.style.willChange = 'transform';
     levelEl.classList.remove("low", "medium", "high");
     if (pct <= 15) levelEl.classList.add("low");
     else if (pct <= 50) levelEl.classList.add("medium");
