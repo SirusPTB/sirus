@@ -2109,5 +2109,53 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function getBtnText(btn) {
+    if (!btn) return '';
+    return (btn.tagName === 'INPUT') ? btn.value : btn.textContent;
+  }
+  function setBtnText(btn, text) {
+    if (!btn) return;
+    if (btn.tagName === 'INPUT') btn.value = text;
+    else btn.textContent = text;
+  }
+
+  function addSavedFeedback(btn) {
+    if (!btn) return;
+    if (btn._savedFeedbackAttached) return;
+    btn._savedFeedbackAttached = true;
+
+    btn.addEventListener('click', function () {
+      const prev = getBtnText(btn) || 'Set';
+      setBtnText(btn, 'Saved');
+      setTimeout(() => setBtnText(btn, prev), 900);
+    });
+  }
+
+  const sleepButtonIds = [
+    'setSleepButton', 'setSleep', 'setSleepBtn', 'sleepSetButton', 'sleepSet'
+  ];
+  const calButtonIds = [
+    'setCalibrationButton', 'setCal', 'setCalButton', 'setCalBtn', 'setCalibration', 'pressureCalSet', 'setPressureCalibration'
+  ];
+
+  sleepButtonIds.concat(calButtonIds).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) addSavedFeedback(el);
+  });
+
+  ['sleepTimeInput','pressureCalibrationInput'].forEach(inputId => {
+    const inputEl = document.getElementById(inputId);
+    if (!inputEl) return;
+    const parent = inputEl.parentElement || inputEl.closest('td') || inputEl.closest('tr');
+    if (!parent) return;
+    const candidate = parent.querySelector('button, input[type="button"], input[type="submit"]');
+    if (candidate) addSavedFeedback(candidate);
+  });
+});
+</script>
+
 </body>
 </html>
