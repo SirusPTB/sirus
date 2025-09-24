@@ -2069,8 +2069,11 @@ document.getElementById("zeroPressureButton").onclick = async () => {
     console.error("Zero command error:", err);
     addDataEntry("Zero command failed: " + (err && err.message ? err.message : err), "error");
   } finally {
-    btn.disabled = false;
-    btn.textContent = origText || "Zero";
+        // Keep "Zeroing..." visible for 3 seconds before reverting
+      setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = origText || "Zero";
+    }, 900);
   }
 };
 
