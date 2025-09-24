@@ -586,16 +586,7 @@ body.gauges-visible #resetButton { display: none !important; }
 #batteryLevel.low { background: #ff6b6b !important; }
 #batteryLevel.medium { background: #ffb86b !important; }
 #batteryLevel.high { background: #7fff7f !important; }
-#batteryPercent {
-  color: #fff;
-  opacity: 0.9;
-  font-weight: 100 !important;
-  font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
-  font-size: 0.65em;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.2px;
-}
-
+#batteryPercent { color: #fff; opacity: 0.8; font-weight: 300; font-size: 0.65em; }
 
 /* --- Charging bolt overlay (added) --- */
 #batteryIcon { position: relative; overflow: visible; }
@@ -603,7 +594,7 @@ body.gauges-visible #resetButton { display: none !important; }
 #batteryIcon .battery-bolt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 22px; z-index: 2; opacity: 0; transition: opacity 200ms ease, transform 200ms ease; pointer-events: none; }
 #battery.battery-charging #batteryIcon .battery-bolt { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
 #batteryIcon .battery-bolt path { fill: #fff; stroke: rgba(0,0,0,0.45); stroke-width: 0.5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
-#battery.battery-charging #batteryPercent { font-weight: 100 !important; } /* small visual emphasis when charging */
+#battery.battery-charging #batteryPercent { font-weight: 700; } /* small visual emphasis when charging */
 
 </style>
 
@@ -618,7 +609,7 @@ body.gauges-visible #resetButton { display: none !important; }
       <div id="batteryLevel" style="position:absolute;left:3px;top:3px;bottom:3px;width:60%;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;"></div>
       <div style="position:absolute;right:-6px;top:5px;width:4px;height:8px;background:#fff;border-radius:1px;"></div>
     <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18"><path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path></svg></div>
-    <div id="batteryPercent" style="font-weight:100 !important; min-width:34px;text-align:right;font-size:0.65em;">--%</div>
+    <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.65em;">--%</div>
   </div>
 </header>
 
@@ -760,17 +751,20 @@ body.gauges-visible #resetButton { display: none !important; }
 
 </div>
 
+
 <!-- Modal -->
 <div class="modal" id="popupModal">
-<div class="modal-content">
-<h3>Select Saved Graph</h3>
-<select id="modalSelect"></select>
-<div>
-<button id="confirmButton">Confirm</button>
-<button id="cancelButton">Cancel</button>
+  <div class="modal-content">
+    <h3 id="modalTitle">Select Saved Graph</h3>
+    <select id="modalSelect" style="display:block;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;"></select>
+    <input type="text" id="modalInput" placeholder="Enter name to save" style="display:none;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;" />
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+      <button id="confirmButton">Confirm</button>
+      <button id="cancelButton">Cancel</button>
+    </div>
+  </div>
 </div>
-</div>
-</div>
+
 
 <script>
 // --- BLE Variables ---
@@ -805,6 +799,7 @@ let skipNextData = false;
 let currentCalibrationValue = null;
 let calibrationDataReceived = false;
 
+
 // --- Modal Functions ---
 const modal = document.getElementById("popupModal");
 const modalSelect = document.getElementById("modalSelect");
@@ -814,8 +809,12 @@ const cancelButton = document.getElementById("cancelButton");
 function showModal(action){
   console.log("showModal called with action:", action);
   modalAction = action;
-  modalSelect.innerHTML = "";
-  
+
+  const modalTitleEl = document.getElementById("modalTitle");
+  const modalInputEl = document.getElementById("modalInput");
+  const modalSelectEl = document.getElementById("modalSelect");
+  modalSelectEl.innerHTML = "";
+
   // Get saved graphs from localStorage
   const saved = [];
   for (let i = 0; i < localStorage.length; i++) {
@@ -824,62 +823,76 @@ function showModal(action){
       saved.push(key);
     }
   }
-  
-  console.log("Found saved graphs:", saved);
-  
-  if(saved.length === 0) { 
-    alert("No saved graphs found"); 
-    return; 
+  saved.sort();
+
+  if (action === "save") {
+    modalTitleEl.textContent = "Save Current Graph";
+    modalInputEl.style.display = "block";
+    modalSelectEl.style.display = "none";
+    modalInputEl.value = "";
+    modal.style.display = "flex";
+    // focus input for convenience
+    setTimeout(() => { modalInputEl.focus(); }, 50);
+    return;
   }
-  
+
+  // load / delete
+  modalInputEl.style.display = "none";
+  modalSelectEl.style.display = "block";
+
+  if(saved.length === 0) {
+    alert("No saved graphs found");
+    return;
+  }
+
   saved.forEach(k => {
     const opt = document.createElement("option");
-    opt.value = k; 
+    opt.value = k;
     opt.text = k.replace("graph_", "");
-    modalSelect.appendChild(opt);
+    modalSelectEl.appendChild(opt);
   });
-  
+
+  modalTitleEl.textContent = action === "load" ? "Select Saved Graph" : "Delete Saved Graph";
   modal.style.display = "flex";
-  console.log("Modal should now be visible");
 }
 
 confirmButton.onclick = () => {
-  const key = modalSelect.value;
-  console.log("Confirm clicked with key:", key);
-  if(!key){ 
-    modal.style.display = "none"; 
-    return; 
+  if (modalAction === "save") {
+    const name = document.getElementById("modalInput").value.trim();
+    if (!name) { alert("Please enter a name"); return; }
+    const key = "graph_" + name;
+    try {
+      localStorage.setItem(key, JSON.stringify(chartData));
+      console.log("Graph saved as:", key);
+    } catch(e) {
+      console.error("Error saving graph:", e);
+      alert("Error saving: " + (e && e.message ? e.message : e));
+    }
+    modal.style.display = "none";
+    return;
   }
-  
+
+  const key = document.getElementById("modalSelect").value;
+  if(!key){ modal.style.display = "none"; return; }
+
   if(modalAction === "load"){
     try {
       const data = JSON.parse(localStorage.getItem(key));
       if(data){
-        chartData = data; 
+        chartData = data;
         secondsCounter = data.labels.length;
-        
-        // Update temperature chart
         tempChart.data.labels = chartData.labels;
         tempChart.data.datasets[0].data = chartData.temp;
         tempChart.update();
-        
-        // Update pressure chart
         pressureChart.data.labels = chartData.labels;
         pressureChart.data.datasets[0].data = chartData.pressure;
         pressureChart.update();
-        
-        // Update combined chart
         combinedChart.data.labels = chartData.labels;
         combinedChart.data.datasets[0].data = chartData.temp;
         combinedChart.data.datasets[1].data = chartData.pressure;
         combinedChart.update();
-    
-        // Update gauges if in gauge view
         updateGauges();
-        
         console.log("Graph loaded successfully");
-      } else {
-        console.error("No data found for key:", key);
       }
     } catch(e) {
       console.error("Error loading graph:", e);
@@ -889,31 +902,18 @@ confirmButton.onclick = () => {
     localStorage.removeItem(key);
     console.log("Graph deleted:", key);
   }
+
   modal.style.display = "none";
 };
 
-cancelButton.onclick = () => { 
-  modal.style.display = "none"; 
+cancelButton.onclick = () => {
+  modal.style.display = "none";
 };
 
-// Ensure modal functionality is available immediately
-document.getElementById("loadButton").onclick = () => {
-  console.log("Load button clicked");
-  showModal("load");
-};
-
-document.getElementById("deleteButton").onclick = () => {
-  console.log("Delete button clicked");  
-  showModal("delete");
-};
-
-document.getElementById("saveButton").onclick = () => {
-  const name = prompt("Enter a name for saved graph:"); 
-  if(!name) return;
-  localStorage.setItem("graph_" + name, JSON.stringify(chartData));
-  console.log("Graph saved as:", "graph_" + name);
-};
-
+// Wireup for the toolbar buttons (ensure these exist elsewhere in the file)
+document.getElementById("loadButton").onclick = () => { showModal("load"); };
+document.getElementById("deleteButton").onclick = () => { showModal("delete"); };
+document.getElementById("saveButton").onclick = () => { showModal("save"); };
 // --- Chart Setup ---
 function fixCanvasDPI(canvas) {
   const dpr = window.devicePixelRatio || 1;
