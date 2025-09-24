@@ -586,7 +586,16 @@ body.gauges-visible #resetButton { display: none !important; }
 #batteryLevel.low { background: #ff6b6b !important; }
 #batteryLevel.medium { background: #ffb86b !important; }
 #batteryLevel.high { background: #7fff7f !important; }
-#batteryPercent { color: #fff; opacity: 0.8; font-weight: 300; font-size: 0.65em; }
+#batteryPercent {
+  color: #fff;
+  opacity: 0.9;
+  font-weight: 100 !important;
+  font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif !important;
+  font-size: 0.65em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+
 
 /* --- Charging bolt overlay (added) --- */
 #batteryIcon { position: relative; overflow: visible; }
@@ -594,7 +603,7 @@ body.gauges-visible #resetButton { display: none !important; }
 #batteryIcon .battery-bolt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 22px; z-index: 2; opacity: 0; transition: opacity 200ms ease, transform 200ms ease; pointer-events: none; }
 #battery.battery-charging #batteryIcon .battery-bolt { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
 #batteryIcon .battery-bolt path { fill: #fff; stroke: rgba(0,0,0,0.45); stroke-width: 0.5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6)); }
-#battery.battery-charging #batteryPercent { font-weight: 700; } /* small visual emphasis when charging */
+#battery.battery-charging #batteryPercent { font-weight: 100 !important; } /* small visual emphasis when charging */
 
 </style>
 
@@ -609,7 +618,7 @@ body.gauges-visible #resetButton { display: none !important; }
       <div id="batteryLevel" style="position:absolute;left:3px;top:3px;bottom:3px;width:60%;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;"></div>
       <div style="position:absolute;right:-6px;top:5px;width:4px;height:8px;background:#fff;border-radius:1px;"></div>
     <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18"><path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path></svg></div>
-    <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.65em;">--%</div>
+    <div id="batteryPercent" style="font-weight:100 !important; min-width:34px;text-align:right;font-size:0.65em;">--%</div>
   </div>
 </header>
 
@@ -1107,14 +1116,7 @@ function updateBattery(percent, charging) {
   const levelEl = document.getElementById("batteryLevel");
   if (pctEl) pctEl.textContent = pct + "%";
   if (levelEl) {
-    // ensure we always leave a small gap at full charge by using scale transform
-    const maxScale = 0.95;
-    const scale = Math.min(pct / 100, maxScale);
-    // make the fill element span the available inner area, then scale it
-    levelEl.style.width = 'calc(100% - 6px)'; // account for left/right 3px offsets
-    levelEl.style.transformOrigin = 'left';
-    levelEl.style.transform = 'scaleX(' + scale + ')';
-    levelEl.style.willChange = 'transform';
+    levelEl.style.width = pct + "%";
     levelEl.classList.remove("low", "medium", "high");
     if (pct <= 15) levelEl.classList.add("low");
     else if (pct <= 50) levelEl.classList.add("medium");
