@@ -1656,7 +1656,7 @@ function drawGauge(canvas, value, min, max, unit, color) {
   ctx.strokeStyle = '#666';
   ctx.lineWidth = 2;
   ctx.fillStyle = '#999';
-  ctx.font = '14px Arial';
+  ctx.font = '12px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   
@@ -1664,7 +1664,7 @@ function drawGauge(canvas, value, min, max, unit, color) {
     const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
     const innerRadius = radius - 20;
     const outerRadius = radius + 10;
-    const labelRadius = radius + 30;
+    const labelRadius = radius + 28;
     
     ctx.beginPath();
     ctx.moveTo(
