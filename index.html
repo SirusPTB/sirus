@@ -1118,8 +1118,8 @@ function updateBattery(percent, charging) {
   if (levelEl) {
     levelEl.style.width = pct + "%";
     levelEl.classList.remove("low", "medium", "high");
-    if (pct <= 15) levelEl.classList.add("low");
-    else if (pct <= 50) levelEl.classList.add("medium");
+    if (pct <= 10) levelEl.classList.add("low");
+    else if (pct <= 39) levelEl.classList.add("medium");
     else levelEl.classList.add("high");
   }
 
