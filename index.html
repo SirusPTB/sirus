@@ -598,6 +598,93 @@ body.gauges-visible #resetButton { display: none !important; }
 
 </style>
 
+
+<!-- Help icon + modal styles injected by ChatGPT -->
+<style>
+/* Floating help button (top-left) */
+#helpButton {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 10050;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #444;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:700;
+  font-size:20px;
+  cursor:pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+#helpButton:hover { transform: translateY(-2px); }
+
+/* Help modal styles */
+#helpModal {
+  display: none;
+  position: fixed;
+  z-index: 10060;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  align-items: center;
+  justify-content: center;
+}
+#helpModal .help-content {
+  background: #1e1e1e;
+  padding: 18px;
+  border-radius: 10px;
+  width: 92%;
+  max-width: 480px;
+  color: #fff;
+  text-align: left;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+#helpModal .help-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+#helpModal .help-actions {
+  display:flex;
+  gap:8px;
+  margin-top:6px;
+  justify-content:flex-start;
+}
+#helpModal .help-section {
+  display:none;
+  margin-top:12px;
+  max-height:60vh;
+  overflow:auto;
+  padding:10px;
+  background:#121212;
+  border-radius:6px;
+  color:#dfe8f0;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+#helpModal .help-section.show { display:block; }
+#helpModal button, #helpModal .help-actions button {
+  padding:8px 12px;
+  border-radius:6px;
+  border:none;
+  background:#444;
+  color:#fff;
+  cursor:pointer;
+}
+#helpModal button.primary { background:#28a745; }
+#helpModal .close-btn { background:transparent; color:#ddd; font-size:18px; padding:6px 8px; }
+
+/* Small responsive tweak */
+@media (max-width:420px) {
+  #helpButton { width:40px; height:40px; font-size:18px; top:8px; left:8px; }
+}
+</style>
+
 </head>
 <body>
 <div id="page-wrapper">
@@ -612,6 +699,110 @@ body.gauges-visible #resetButton { display: none !important; }
     <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.55em;">--%</div>
   </div>
 </header>
+
+<!-- Floating Help Button + Modal (added by ChatGPT) -->
+<div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
+
+<div id="helpModal" aria-hidden="true">
+  <div class="help-content" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-header">
+      <h3 id="helpTitle" style="margin:0;font-size:1.05em;">Help</h3>
+      <button id="helpClose" class="close-btn" aria-label="Close help">✕</button>
+    </div>
+
+    <div>
+      <p style="margin:0 0 8px 0;">Choose which help you want to view:</p>
+      <div class="help-actions" style="margin-bottom:8px;">
+        <button id="deviceHelpBtn">Device Help</button>
+        <button id="appHelpBtn">App Help</button>
+      </div>
+    </div>
+
+    <div id="deviceHelp" class="help-section" aria-hidden="true">
+      <h4 style="margin-top:0;">Device Help</h4>
+      <p style="margin:0 0 8px 0;">  <h5>Button Functions</h5>
+  <ul>
+    <li>Press "T" button to turn on.</li>
+    <li>Press "T" button to toggle C or F.</li>
+    <li>Long press "T" button to enter set pressure calibration.</li>
+    <li>Quickly double press "T" button to set keep screen on/off.</li>
+    <li>Press "P" button to toggle bar or PSI.</li>
+    <li>Long press "P" button to (zero) set current atmospheric pressure.</li>
+    <li>Quickly double press "P" button to enter set screen brightness.</li>
+  </ul>
+
+  <h5>Status Indicators</h5>
+  <ul>
+    <li>If Bluetooth icon is blue the device is connected to App.</li>
+    <li>If red z is on screen the device will not sleep.</li>
+    <li>If battery icon is flashing then the battery is charging.</li>
+  </ul></p>
+      <p style="margin:0 0 8px 0;"><strong>Tip:</strong> To include a screenshot, add an <code>&lt;img&gt;</code> tag here pointing to your image file.</p>
+    </div>
+
+    <div id="appHelp" class="help-section" aria-hidden="true">
+      <h4 style="margin-top:0;">App Help</h4>
+
+<h5>Connecting to Your Device</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>Connect:</strong> Click the "Connect" button to pair with your SirusPTB device via Bluetooth. Your browser will show available devices - select the one starting with "SirusPTB".</li>
+  <li><strong>Connection Status:</strong> The button shows the current state - gray (disconnected), orange (connecting), green (connected), or red (error).</li>
+  <li><strong>Disconnect:</strong> Click "Disconnect" when connected to end the Bluetooth session.</li>
+</ul>
+
+<h5>Unit Toggles</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>°C/°F Toggle:</strong> Switch between Celsius and Fahrenheit temperature units. Charts will reset when changing units.</li>
+  <li><strong>Bar/PSI Toggle:</strong> Switch between bar and PSI pressure units. Charts will reset when changing units.</li>
+  <li><strong>Keep Screen On Toggle:</strong> Control whether the device screen stays on continuously (ON) or sleeps after inactivity (OFF).</li>
+</ul>
+
+<h5>Chart Controls</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>Pause/Resume:</strong> Temporarily stop updating the charts while still receiving data. Click "Resume" to continue updating.</li>
+  <li><strong>Reset:</strong> Clear all chart data and start fresh. This does not affect saved graphs.</li>
+  <li><strong>Toggle View:</strong> Switch between split view (separate temperature and pressure charts) and combined view (both on one chart).</li>
+  <li><strong>Toggle Gauges:</strong> Switch between chart view and gauge view. Gauges show current readings in a dial format.</li>
+</ul>
+
+<h5>Saving & Loading Data</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>Save:</strong> Store the current chart data to your browser's local storage with a custom name.</li>
+  <li><strong>Load:</strong> Restore previously saved chart data. Select from your saved graphs list.</li>
+  <li><strong>Delete:</strong> Remove saved graphs from local storage.</li>
+  <li><em>Note:</em> Saved data is stored locally in your browser and won't be available on other devices or browsers.</li>
+</ul>
+
+<h5>Advanced Settings</h5>
+<p style="margin:6px 0;">Click "Advance ▼" to access additional controls:</p>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>Zero Pressure:</strong> Set the current atmospheric pressure as the zero reference point (requires connection).</li>
+  <li><strong>Device Sleep Time:</strong> Set how many minutes of inactivity before the device goes to sleep (1-60 minutes).</li>
+  <li><strong>Pressure Calibration:</strong> Fine-tune pressure readings with a calibration offset value (-5 to +5).</li>
+  <li><strong>Chart Reset Points:</strong> Configure how many data points to display before charts automatically reset (5-240 points).</li>
+  <li><strong>Device Brightness:</strong> Adjust the display brightness on your device (10-250). Changes are sent automatically when you adjust the slider.</li>
+</ul>
+
+<h5>Understanding the Display</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li><strong>Current Values:</strong> Real-time temperature and pressure readings appear above each chart in colored boxes.</li>
+  <li><strong>Battery Indicator:</strong> Top-right corner shows battery percentage and charging status (lightning bolt when charging).</li>
+  <li><strong>Chart Timeline:</strong> The X-axis shows elapsed time in seconds since the last reset.</li>
+  <li><strong>Gauge View:</strong> Shows temperature (red) and pressure (blue) as analog-style dials with clear min/max ranges.</li>
+</ul>
+
+<h5>Tips & Troubleshooting</h5>
+<ul style="margin:6px 0 0 18px;">
+  <li>If connection fails, ensure your device's Bluetooth is on and the device is powered up.</li>
+  <li>Web Bluetooth requires Chrome or Edge browsers. Safari and Firefox don't support this feature.</li>
+  <li>Charts automatically reset after reaching your configured data point limit to prevent memory issues.</li>
+  <li>Your view preferences (split/combined/gauges) are saved automatically.</li>
+  <li>If you change units on the device itself, the app will detect and update automatically.</li>
+</ul>
+    </div>
+  </div>
+</div>
+
 
 <!-- Graphs Page -->
 <div id="graphPage">
@@ -2158,6 +2349,61 @@ document.addEventListener('DOMContentLoaded', function () {
     if (candidate) addSavedFeedback(candidate);
   });
 });
+</script>
+
+
+<!-- Help button script injected by ChatGPT -->
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  const helpBtn = $("helpButton");
+  const modal = $("helpModal");
+  const closeBtn = $("helpClose");
+  const deviceBtn = $("deviceHelpBtn");
+  const appBtn = $("appHelpBtn");
+  const deviceSec = $("deviceHelp");
+  const appSec = $("appHelp");
+
+  if(!helpBtn || !modal) return;
+
+  function openModal(){
+    modal.style.display = "flex";
+    modal.setAttribute("aria-hidden","false");
+    deviceSec.classList.remove("show");
+    appSec.classList.remove("show");
+    // focus first actionable element
+    setTimeout(()=> deviceBtn && deviceBtn.focus(), 50);
+  }
+  function closeModal(){
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden","true");
+    helpBtn && helpBtn.focus();
+  }
+
+  helpBtn.addEventListener("click", openModal);
+  helpBtn.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); }
+  });
+
+  closeBtn && closeBtn.addEventListener("click", closeModal);
+  modal.addEventListener("click", function(e){ if(e.target === modal) closeModal(); });
+
+  deviceBtn && deviceBtn.addEventListener("click", function(){
+    deviceSec.classList.add("show");
+    appSec.classList.remove("show");
+    deviceSec.scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+  appBtn && appBtn.addEventListener("click", function(){
+    appSec.classList.add("show");
+    deviceSec.classList.remove("show");
+    appSec.scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+
+  // allow Escape key to close modal
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && modal.style.display === "flex") { closeModal(); }
+  });
+})();
 </script>
 
 </body>
