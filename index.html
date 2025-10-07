@@ -531,6 +531,17 @@ button[id^="set"], button[id^="Set"], .control-btn[id^="set"], .control-btn[id^=
   box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset !important;
   transition: background-color 120ms ease, transform 120ms ease;
 }
+
+/* Input hint (greyed text shown next to Set/Zero buttons) */
+.input-hint {
+  color: #56595c;
+  opacity: 0.8;
+  margin-left: 8px;
+  font-size: 0.92em;
+  vertical-align: middle;
+  display: inline-block;
+}
+
 button[id^="set"]:hover:not(:disabled), .control-btn[id^="set"]:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(0.95);
@@ -904,6 +915,7 @@ body.gauges-visible #resetButton { display: none !important; }
         <td class="control-cell">
           <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5" style="text-align: right !important; padding-right:6px !important;">
           <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
+          <span class="input-hint" aria-hidden="true">(1 → 60 min)</span>
         </td>
       </tr>
       <tr>
@@ -911,6 +923,7 @@ body.gauges-visible #resetButton { display: none !important; }
         <td class="control-cell">
           <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5" placeholder="0.00" style="text-align: right !important; padding-right:6px !important;">
           <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
+          <span class="input-hint" aria-hidden="true">(-5 → +5)</span>
         </td>
       </tr>
       <tr>
@@ -918,6 +931,7 @@ body.gauges-visible #resetButton { display: none !important; }
         <td class="control-cell">
           <input type="number" id="chartResetInput" class="control-input" min="5" max="240" value="50" style="text-align: right !important; padding-right:6px !important;">
           <button id="setChartResetButton" class="adv-btn control-btn">Set</button>
+          <span class="input-hint" aria-hidden="true">(5 → 240 pts)</span>
         </td>
       </tr>
 
