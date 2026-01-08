@@ -500,8 +500,7 @@
 </head>
 <body>
 
-    <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
-<button id="installButton" style="display:none; position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="showInstallPrompt()">
+<button id="installButton" style="position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="triggerInstall()">
   📲 Install App
 </button>
 
@@ -688,38 +687,6 @@
 
     
     <script>
-
-
-let deferredPrompt; // Stores the install event if it fires
-
-// Capture the event if it does fire (for mobile/reliability)
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  console.log('Install prompt ready'); // Check DevTools Console
-});
-
-// Main install function for the button
-function triggerInstall() {
-  if (deferredPrompt) {
-    // Native prompt if available
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choice) => {
-      if (choice.outcome === 'accepted') {
-        console.log('App installed');
-      }
-      deferredPrompt = null;
-    });
-  } else {
-    // Fallback: Show instructions if no prompt (common on desktop)
-    alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
-  }
-}
-
-// Optional: Hide button if already installed (detect via standalone mode)
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-  document.getElementById('installButton').style.display = 'none';
-}
 
 
 
