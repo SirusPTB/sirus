@@ -6,12 +6,12 @@ const urlsToCache = [
   './',                  // Cache the current directory (helps with the root page)
   './index.html',
   './manifest.json',
-  // './DSEG7Classic-Bold.woff2',   // Uncomment once fonts are confirmed working
-  // './DSEG7Classic-Bold.woff',
-  // './DSEG7Classic-Bold.ttf'
+  './DSEG7Classic-Bold.woff2',   // Uncomment once fonts are confirmed working
+  './DSEG7Classic-Bold.woff',
+  './DSEG7Classic-Bold.ttf',
   // Add icons if you have an 'icons' folder:
-  // './icons/icon-192x192.png',
-  // './icons/icon-512x512.png'
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
