@@ -1,12 +1,17 @@
 // sw.js
 const CACHE_NAME = 'lvr1-cache-v1';
+
+// Use relative paths (./) so it works in subfolders like /sirus/public/
 const urlsToCache = [
-  '/',
-  'index.html',
-//   'DSEG7Classic-Bold.woff2',
-//   'DSEG7Classic-Bold.woff',
-//   'DSEG7Classic-Bold.ttf'
-//   // Add any other assets like CSS/JS if separated, or additional fonts/images
+  './',                  // Cache the current directory (helps with the root page)
+  './index.html',
+  './manifest.json',
+  // './DSEG7Classic-Bold.woff2',   // Uncomment once fonts are confirmed working
+  // './DSEG7Classic-Bold.woff',
+  // './DSEG7Classic-Bold.ttf'
+  // Add icons if you have an 'icons' folder:
+  // './icons/icon-192x192.png',
+  // './icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -16,6 +21,9 @@ self.addEventListener('install', (event) => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .catch((err) => {
+        console.error('Failed to cache:', err);
+      })
   );
 });
 
@@ -23,11 +31,14 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
         return fetch(event.request);
+      })
+      .catch(() => {
+        // Optional: fallback page if offline and not in cache
+        // return caches.match('./index.html');
       })
   );
 });
@@ -38,7 +49,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
+          if (!cacheWhitelist.includes(cacheName)) {
             return caches.delete(cacheName);
           }
         })
