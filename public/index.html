@@ -979,10 +979,10 @@ function handleBLEData(event) {
     catch (e) { console.error('Parse error:', e); return; }
 
     // Sync brightness slider with live BLE data
-const slider = document.getElementById('brightnessSlider');
-if (slider && slider.value != state.brightness) {
-    slider.value = Math.round(state.brightness);
-}
+    const slider = document.getElementById('brightnessSlider');
+    if (slider && slider.value != state.brightness) {
+        slider.value = Math.round(state.brightness);
+    }
 
     // PID packet
     if (data.pid) {
@@ -1012,6 +1012,8 @@ if (slider && slider.value != state.brightness) {
         useFahrenheit:  data.useFahrenheit  ?? state.useFahrenheit,
         pressureIsBar:  data.pressureIsBar  ?? state.pressureIsBar,
     });
+
+    updateUnitButtons();
 
     // Shot timer sync
     if ('shotRunning' in data && 'shotSeconds' in data) {
@@ -1133,6 +1135,9 @@ if (slider && slider.value != state.brightness) {
                 (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
             document.getElementById('groupSetpointDisplay').textContent =
                 (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+
+            updateUnitButtons();
+
         }
 
         function updateBrightness(value) {
@@ -1963,6 +1968,19 @@ setInterval(() => {
               });
           });
         }
+
+        function updateUnitButtons() {
+    const tempBtn = document.getElementById('tempUnitBtn');
+    const pressureBtn = document.getElementById('pressureUnitBtn');
+
+    if (tempBtn) {
+        tempBtn.textContent = state.useFahrenheit ? '°F' : '°C';
+    }
+
+    if (pressureBtn) {
+        pressureBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
+    }
+}
 
 
     </script>
