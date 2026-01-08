@@ -688,7 +688,47 @@
     
     <script>
 
+let deferredPrompt; // Stores the install event if it fires
 
+// Capture the beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Ensure button is visible (in case standalone detection missed something)
+  document.getElementById('installButton').style.display = 'block';
+  console.log('Install prompt captured');
+});
+
+// Main install function (called by the button)
+function triggerInstall() {
+  if (deferredPrompt) {
+    // Use native browser install prompt
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        document.getElementById('installButton').style.display = 'none';
+      } else {
+        console.log('User dismissed the install prompt');
+        // Keep button visible for another try
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    // Fallback instructions for browsers without native prompt (iOS, some desktops)
+    alert('To install this app:\n\n' +
+          '• On iPhone/iPad (Safari): Tap the Share button → "Add to Home Screen"\n' +
+          '• On Android (if no prompt appeared): Tap the menu → "Install app" or "Add to Home screen"\n' +
+          '• On desktop Chrome/Edge: Click the browser menu (⋮) → "Install LVR-1" or "Save and share → Install page as app"');
+  }
+}
+
+// Hide button if app is already installed (standalone/PWA mode)
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+  document.getElementById('installButton').style.display = 'none';
+} else {
+  document.getElementById('installButton').style.display = 'block';
+}
 
 let manualDisconnect = false;
 let reconnectAttempts = 0;
