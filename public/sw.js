@@ -1,13 +1,13 @@
 // sw.js
 const CACHE_NAME = 'lvr1-cache-v1';
-// const urlsToCache = [
-//   '/',
-//   'index.html',
+const urlsToCache = [
+  '/',
+  'index.html',
 //   'DSEG7Classic-Bold.woff2',
 //   'DSEG7Classic-Bold.woff',
 //   'DSEG7Classic-Bold.ttf'
 //   // Add any other assets like CSS/JS if separated, or additional fonts/images
-// ];
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
