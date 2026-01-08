@@ -500,9 +500,12 @@
 <body>
 
     <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
-<button id="installButton" style="display:none; position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="showInstallPrompt()">
-  📲 Install App
+<button id="installButton"
+        style="display:none"
+        onclick="triggerInstall()">
+        Install App
 </button>
+
 
     <div class="container">
         <div class="page active" id="mainPage">
@@ -1951,21 +1954,32 @@ setInterval(() => {
         updateBLEUI();
         drawMiniGraph();
         
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', function() {
-            navigator.serviceWorker.register('sw.js')
-              .then(function(registration) {
-                console.log('Service Worker registered with scope:', registration.scope);
-              })
-              .catch(function(error) {
-                console.log('Service Worker registration failed:', error);
-              });
-          });
-        }
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  if (!window.matchMedia('(display-mode: standalone)').matches) {
+    document.getElementById('installButton').style.display = 'block';
+  }
+});
+
+function triggerInstall() {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.finally(() => {
+    deferredPrompt = null;
+    document.getElementById('installButton').style.display = 'none';
+  });
+}
 
     </script>
+
 
 </body>
 </html>
