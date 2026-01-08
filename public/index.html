@@ -1956,7 +1956,17 @@ setInterval(() => {
           });
         }
 
-        
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('PWA install prompt ready! Button should show.');
+  document.getElementById('installButton').style.display = 'block'; // Force show
+});
+
+// Optional: Check if it's already installable
+window.addEventListener('load', () => {
+  console.log('Page loaded - checking PWA status...');
+});
+
     </script>
 </body>
 </html>
