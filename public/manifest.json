@@ -1,6 +1,12 @@
 {
+  "name": "LVR-1",
   "short_name": "LVR-1",
-  "name": "LVR-1 Control App",
+  "description": "LVR-1 Controller",
+  "start_url": "/sirus/public/index.html",
+  "scope": "/sirus/public/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
@@ -12,9 +18,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
