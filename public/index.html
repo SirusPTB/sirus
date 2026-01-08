@@ -709,10 +709,6 @@ function showInstallPrompt() {
 }
 
 
-<!-- Add the button somewhere visible (e.g., top-right or bottom) -->
-<button id="installButton" style="display:none; position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="showInstallPrompt()">
-  📲 Install App
-</button>
 
 let manualDisconnect = false;
 let reconnectAttempts = 0;
@@ -1957,16 +1953,10 @@ setInterval(() => {
         }
 
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('PWA install prompt ready! Button should show.');
-  document.getElementById('installButton').style.display = 'block'; // Force show
-});
-
-// Optional: Check if it's already installable
-window.addEventListener('load', () => {
-  console.log('Page loaded - checking PWA status...');
-});
-
     </script>
+    <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
+<button id="installButton" style="display:none; position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="showInstallPrompt()">
+  📲 Install App
+</button>
 </body>
 </html>
