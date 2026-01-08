@@ -1054,7 +1054,7 @@ function handleBLEData(event) {
             }
         }
 
-        function showPage(pageName) {
+function showPage(pageName) {
     if (pageName !== 'main' && !state.bleConnected) {
         alert('Please connect to the device via BLE to access this page.');
         return;
@@ -1083,6 +1083,15 @@ function handleBLEData(event) {
 
     if (pageName === 'graph') {
         drawFullGraph();
+    }
+
+    if (pageName === 'settings') {
+        updateUnitButtons();
+        // Sync brightness slider to current state when opening settings
+        const slider = document.getElementById('brightnessSlider');
+        if (slider) {
+            slider.value = state.brightness;
+        }
     }
 }
 
