@@ -19,25 +19,6 @@
             box-sizing: border-box;
         }
 
-        #installButton {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    background: #2563eb;
-    color: #fff;
-    padding: 12px 22px;
-    border-radius: 40px;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-#installButton:hover {
-    background: #1d4ed8;
-}
-
 .brightness-control {
     display: none;
 }
@@ -517,8 +498,6 @@
     </style>
 </head>
 <body>
-<button id="installButton" onclick="triggerInstall()">📲 Install App</button>
-
     <div class="container">
         <div class="page active" id="mainPage">
             <div class="header">
@@ -702,40 +681,6 @@
 
     
     <script>
-
-
-let deferredPrompt; // Stores the install event if it fires
-
-// Capture the event if it does fire (for mobile/reliability)
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  console.log('Install prompt ready'); // Check DevTools Console
-});
-
-// Main install function for the button
-function triggerInstall() {
-  if (deferredPrompt) {
-    // Native prompt if available
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choice) => {
-      if (choice.outcome === 'accepted') {
-        console.log('App installed');
-      }
-      deferredPrompt = null;
-    });
-  } else {
-    // Fallback: Show instructions if no prompt (common on desktop)
-    alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
-  }
-}
-
-// Optional: Hide button if already installed (detect via standalone mode)
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-  document.getElementById('installButton').style.display = 'none';
-}
-
-
 
 let manualDisconnect = false;
 let reconnectAttempts = 0;
@@ -1966,72 +1911,24 @@ setInterval(() => {
         updateBLEUI();
         drawMiniGraph();
         
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js')
+              .then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+              })
+              .catch(function(error) {
+                console.log('Service Worker registration failed:', error);
+              });
+          });
+        }
 
-/* ==========================
-   SERVICE WORKER REGISTER
-========================== */
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-        .then(() => console.log('Service Worker registered'))
-        .catch(err => console.error('SW registration failed:', err));
-}
-
-/* ==========================
-   INSTALL PROMPT LOGIC
-========================== */
-let deferredPrompt = null;
-const installBtn = document.getElementById('installButton');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-
-    if (
-        !window.matchMedia('(display-mode: standalone)').matches &&
-        !window.navigator.standalone
-    ) {
-        installBtn.style.display = 'block';
-    }
-
-    console.log('Install prompt captured');
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('App installed');
-    installBtn.style.display = 'none';
-    deferredPrompt = null;
-});
-
-function triggerInstall() {
-    if (!deferredPrompt) {
-        alert(
-            'To install:\n\n' +
-            '• Desktop Chrome: Menu (⋮) → Install app\n' +
-            '• Android: Menu → Add to Home Screen\n' +
-            '• iOS Safari: Share → Add to Home Screen'
-        );
-        return;
-    }
-
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.finally(() => {
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-    });
-}
-
-/* ==========================
-   HIDE BUTTON IF STANDALONE
-========================== */
-if (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone
-) {
-    installBtn.style.display = 'none';
-}
 
     </script>
-
-
+    <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
+<button id="installButton" style="display:none; position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;" onclick="showInstallPrompt()">
+  📲 Install App
+</button>
 </body>
 </html>
