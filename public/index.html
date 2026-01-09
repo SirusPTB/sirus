@@ -587,10 +587,11 @@
 
 <body>
 
+    <!-- Update the install button HTML (no changes needed here, but ensure it's present) -->
     <button id="installButton"
         style="position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;"
         onclick="triggerInstall()">
-        📲 Install App
+        Install App
     </button>
 
     <div class="container">
@@ -776,47 +777,60 @@
 
     <script>
 
-        let deferredPrompt; // Stores the install event if it fires
+        let deferredPrompt = null; // Stores the install event
 
-        // Capture the beforeinstallprompt event
+        // Capture the beforeinstallprompt event (Android/Chrome/Edge etc.)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Ensure button is visible (in case standalone detection missed something)
+            // Always ensure button is visible in browser mode
             document.getElementById('installButton').style.display = 'block';
-            console.log('Install prompt captured');
+            console.log('Install prompt captured - button shown');
         });
 
-        // Main install function (called by the button)
+        // Hide button after successful install
+        window.addEventListener('appinstalled', () => {
+            console.log('App installed successfully');
+            document.getElementById('installButton').style.display = 'none';
+            deferredPrompt = null;
+        });
+
+        // Main install function
         function triggerInstall() {
             if (deferredPrompt) {
-                // Use native browser install prompt
+                // Native prompt available (Android/Chrome etc.)
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choice) => {
                     if (choice.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                        document.getElementById('installButton').style.display = 'none';
+                        console.log('User accepted install');
                     } else {
-                        console.log('User dismissed the install prompt');
-                        // Keep button visible for another try
+                        console.log('User dismissed install');
+                        // Keep button visible for retry
                     }
                     deferredPrompt = null;
                 });
             } else {
-                // Fallback instructions for browsers without native prompt (iOS, some desktops)
+                // Fallback for iOS or browsers without native prompt
                 alert('To install this app:\n\n' +
                     '• On iPhone/iPad (Safari): Tap the Share button → "Add to Home Screen"\n' +
-                    '• On Android (if no prompt appeared): Tap the menu → "Install app" or "Add to Home screen"\n' +
-                    '• On desktop Chrome/Edge: Click the browser menu (⋮) → "Install LVR-1" or "Save and share → Install page as app"');
+                    '• On Android/Chrome: Tap the menu → "Install app" or "Add to Home Screen"\n' +
+                    '• On desktop: Use browser menu → "Install LVR-1"');
             }
         }
 
-        // Hide button if app is already installed (standalone/PWA mode)
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-            document.getElementById('installButton').style.display = 'none';
-        } else {
-            document.getElementById('installButton').style.display = 'block';
-        }
+        // On page load: Hide button ONLY if running as installed PWA (standalone mode)
+        window.addEventListener('load', () => {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                (window.navigator.standalone === true);
+
+            if (isStandalone) {
+                document.getElementById('installButton').style.display = 'none';
+                console.log('Running in PWA standalone mode - install button hidden');
+            } else {
+                document.getElementById('installButton').style.display = 'block';
+                console.log('Running in browser - install button shown');
+            }
+        });
 
         let manualDisconnect = false;
         let reconnectAttempts = 0;
