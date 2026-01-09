@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMA LVR-1</title>
+    <!-- <title>EMA LVR-1</title> -->
     <!-- Add link to manifest for PWA -->
     <link rel="manifest" href="manifest.json">
     <!-- Add meta tags for iOS support (optional but recommended) -->
@@ -2099,6 +2099,30 @@
                     .catch(function (error) {
                         console.log('Service Worker registration failed:', error);
                     });
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+
+            // Detect updates and prompt reload
+            let newWorker;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
+
+            navigator.serviceWorker.ready.then(reg => {
+                reg.addEventListener('updatefound', () => {
+                    newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Show a toast/button: "Update available – tap to reload"
+                            if (confirm('New version available! Reload now?')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
             });
         }
 
