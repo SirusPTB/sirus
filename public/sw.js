@@ -1,41 +1,42 @@
-// sw.js - Improved and Robust Service Worker for LVR-1 PWA
-// Fixed: Handles missing assets gracefully (skips failed fetches during precache)
-// Features remain the same: fast updates, clean caches, offline support, update prompt ready
+// sw.js - Fixed paths for GitHub Pages subfolder hosting
+// All precache paths are now RELATIVE (no leading '/') to match the service worker scope /sirus/public/
+// This ensures fetches resolve correctly to /sirus/public/index.html, /sirus/public/manifest.json, etc.
 
-const CACHE_VERSION = '2026-01-09-v2'; // Bumped version to force fresh install
+const CACHE_VERSION = '2026-01-09-v3'; // Bumped again to force fresh cache
 const CACHE_NAME = `lvr1-cache-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
-  '/',                        // Root (serves index.html on GitHub Pages)
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192x192.png',  // Confirmed from your HTML
-  // Fonts used in your CSS (assuming they are in root)
-  '/DSEG7Classic-Bold.woff2',
-  '/DSEG7Classic-Bold.woff',
-  '/DSEG7Classic-Bold.ttf',
-  // Add more confirmed files here if needed (e.g., '/favicon.ico' if exists)
+  'index.html',                    // Main page
+  'manifest.json',
+  'icons/icon-192x192.png',
+  'DSEG7Classic-Bold.woff2',
+  'DSEG7Classic-Bold.woff',
+  'DSEG7Classic-Bold.ttf',
+  // Optional: add these if they exist in your /public/ folder
+  // 'favicon.ico',
+  // 'apple-touch-icon.png',
 ];
 
-// Helper: precache assets one-by-one to skip any 404/missing files
+// Helper: precache one-by-one (skips missing files gracefully)
 async function precacheAssets() {
   const cache = await caches.open(CACHE_NAME);
-  for (const url of PRECACHE_ASSETS) {
+  for (const relativePath of PRECACHE_ASSETS) {
+    const url = new URL(relativePath, self.location).href; // Ensures correct full URL
     try {
-      const response = await fetch(url, { cache: 'reload' }); // Force fresh fetch
+      const response = await fetch(url, { cache: 'reload' });
       if (response && response.ok) {
-        await cache.put(url, response);
-        console.log('Precaching succeeded:', url);
+        await cache.put(relativePath, response);
+        console.log('Precaching succeeded:', relativePath);
       } else {
-        console.warn('Skipping precache (not found or bad response):', url);
+        console.warn('Skipping precache (not found/bad response):', relativePath);
       }
     } catch (err) {
-      console.warn('Skipping precache (fetch failed):', url, err);
+      console.warn('Skipping precache (fetch error):', relativePath, err);
     }
   }
 }
 
-// Install: precache core assets (tolerant to missing files)
+// Install
 self.addEventListener('install', event => {
   event.waitUntil(
     precacheAssets()
@@ -43,7 +44,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: clean old caches + immediate control
+// Activate: clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -57,7 +58,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: same smart strategies
+// Fetch: cache-first for assets, network-first for navigation with offline fallback
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -69,30 +70,27 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/index.html') || caches.match('/'))
+        .catch(() => caches.match('index.html'))
     );
     return;
   }
 
   event.respondWith(
     caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) return cachedResponse;
-
-        return fetch(event.request)
-          .then(networkResponse => {
-            if (networkResponse && networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
-            }
-            return networkResponse;
-          })
-          .catch(() => caches.match('/index.html')); // Offline fallback
-      })
+      .then(cached => cached || fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('index.html')) // Extra offline safety
+      )
   );
 });
 
-// Message: allow page to trigger update
+// Message for update prompt
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
