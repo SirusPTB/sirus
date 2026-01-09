@@ -1145,32 +1145,52 @@ function showPage(pageName) {
                 drawFullGraph();
             }
         }
+function updateDisplay() {
+    const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-        function updateDisplay() {
-            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+    // Main page temperature cards (safe guard)
+    let el = document.getElementById('brewTempCard');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
 
-            document.getElementById('brewTempCard').textContent  = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
-            document.getElementById('steamTempCard').textContent = (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1) + tempUnit;
-            document.getElementById('groupTempCard').textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
+    el = document.getElementById('steamTempCard');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1) + tempUnit;
 
-            document.getElementById('brewStatus').className  = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
-            document.getElementById('steamStatus').className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
-            document.getElementById('groupStatus').className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
+    el = document.getElementById('groupTempCard');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
 
-            const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
-            document.getElementById('pressureDisplay').textContent = pressureValue.toFixed(1);
-            document.getElementById('pressureUnit').textContent = state.pressureIsBar ? 'bar' : 'psi';
+    // Status card readiness (main page only)
+    el = document.getElementById('brewStatus');
+    if (el) el.className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
 
-            document.getElementById('brewSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
-            document.getElementById('steamSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
-            document.getElementById('groupSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+    el = document.getElementById('steamStatus');
+    if (el) el.className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
 
-            updateUnitButtons();
+    el = document.getElementById('groupStatus');
+    if (el) el.className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
 
-        }
+    // Pressure reading (main page only)
+    el = document.getElementById('pressureDisplay');
+    if (el) {
+        const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
+        el.textContent = pressureValue.toFixed(1);
+    }
+
+    el = document.getElementById('pressureUnit');
+    if (el) el.textContent = state.pressureIsBar ? 'bar' : 'psi';
+
+    // Setpoint displays (settings page only)
+    el = document.getElementById('brewSetpointDisplay');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
+
+    el = document.getElementById('steamSetpointDisplay');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
+
+    el = document.getElementById('groupSetpointDisplay');
+    if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+
+    // Unit toggle buttons (settings page only - already has null checks inside)
+    updateUnitButtons();
+}
 
         function updateBrightness(value) {
             state.brightness = parseInt(value);
