@@ -1,38 +1,49 @@
-// sw.js - Improved Service Worker for LVR-1 PWA
-// Features:
-// - Precaches essential assets for fast loading and basic offline support
-// - Clean old caches on activation
-// - Immediate takeover of new version (skipWaiting + clients.claim)
-// - Cache-first for assets, network-first with offline fallback for navigation
-// - Supports update prompt from the page (send 'skipWaiting' message)
-// - Easy to update: just bump CACHE_VERSION when deploying changes
+// sw.js - Improved and Robust Service Worker for LVR-1 PWA
+// Fixed: Handles missing assets gracefully (skips failed fetches during precache)
+// Features remain the same: fast updates, clean caches, offline support, update prompt ready
 
-const CACHE_VERSION = '2026-01-09-v1'; // Change this whenever you deploy new code
+const CACHE_VERSION = '2026-01-09-v2'; // Bumped version to force fresh install
 const CACHE_NAME = `lvr1-cache-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
-  '/',                     // Root (important for GitHub Pages)
+  '/',                        // Root (serves index.html on GitHub Pages)
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png', // Add if you have a 512px icon
-  '/apple-touch-icon.png',   // If you have one
+  '/icons/icon-192x192.png',  // Confirmed from your HTML
+  // Fonts used in your CSS (assuming they are in root)
   '/DSEG7Classic-Bold.woff2',
   '/DSEG7Classic-Bold.woff',
   '/DSEG7Classic-Bold.ttf',
-  // Add any other static assets here (e.g., additional icons, sounds, etc.)
+  // Add more confirmed files here if needed (e.g., '/favicon.ico' if exists)
 ];
 
-// Install: precache core assets
+// Helper: precache assets one-by-one to skip any 404/missing files
+async function precacheAssets() {
+  const cache = await caches.open(CACHE_NAME);
+  for (const url of PRECACHE_ASSETS) {
+    try {
+      const response = await fetch(url, { cache: 'reload' }); // Force fresh fetch
+      if (response && response.ok) {
+        await cache.put(url, response);
+        console.log('Precaching succeeded:', url);
+      } else {
+        console.warn('Skipping precache (not found or bad response):', url);
+      }
+    } catch (err) {
+      console.warn('Skipping precache (fetch failed):', url, err);
+    }
+  }
+}
+
+// Install: precache core assets (tolerant to missing files)
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting()) // Activate new SW immediately
+    precacheAssets()
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate: delete old caches and take control of clients
+// Activate: clean old caches + immediate control
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -42,50 +53,46 @@ self.addEventListener('activate', event => {
           .map(name => caches.delete(name))
       );
     })
-    .then(() => self.clients.claim()) // New SW controls pages instantly
+    .then(() => self.clients.claim())
   );
 });
 
-// Fetch: smart caching strategy
+// Fetch: same smart strategies
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Only cache same-origin GET requests
   if (event.request.method !== 'GET' || url.origin !== location.origin) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // Navigation requests (HTML pages) → network first, fallback to index.html
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match('/index.html') || caches.match('/'))
     );
     return;
   }
 
-  // Everything else (JS, CSS, fonts, icons) → cache first, fallback to network
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+        if (cachedResponse) return cachedResponse;
+
         return fetch(event.request)
           .then(networkResponse => {
-            // Cache successful network responses for next time
             if (networkResponse && networkResponse.status === 200) {
               const responseClone = networkResponse.clone();
               caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
             }
             return networkResponse;
-          });
+          })
+          .catch(() => caches.match('/index.html')); // Offline fallback
       })
   );
 });
 
-// Optional: Allow the page to trigger immediate update
+// Message: allow page to trigger update
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
