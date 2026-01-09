@@ -179,13 +179,30 @@
         gap: 3rem;                  /* Space between the two separate panels */
     }
 
-        @media (max-width: 768px) {
-        .central-panel {
-            flex-direction: column;
-            gap: 2rem;              /* Slightly larger gap when stacked */
-            text-align: center;
-        }
+@media (max-width: 640px) {
+    .central-panel {
+        gap: 1.5rem;                /* Smaller gap on phones */
     }
+
+    .left-readings,
+    .shot-timer-section {
+        padding: 1.2rem;            /* Less padding to save horizontal space */
+        border-radius: 12px;        /* Slightly smaller corners for compact feel */
+    }
+
+    /* Slightly larger relative sizing on narrow screens for better readability */
+    .reading-value {
+        font-size: clamp(2.5rem, 12vw, 3.3rem);
+    }
+
+    .reading-unit {
+        font-size: clamp(1.8rem, 9vw, 2.5rem);
+    }
+
+    .shot-time {
+        font-size: clamp(3.5rem, 15vw, 4.5rem);
+    }
+}
         .left-readings {
             display: flex;
             flex-direction: column;
@@ -629,7 +646,6 @@
 
         <div class="page" id="graphPage">
             <div class="header">
-                <h2>Temperature History</h2>
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
@@ -657,8 +673,7 @@
                 </div>
                 <div class="graph-stats">
                     <div class="stat-item">
-                        <span>Samples:</span>
-                        <span class="stat-value" id="sampleCount">0</span>
+                        <span class="stat-value" id="sampleCount"></span>
                     </div>
                 </div>
                 <div class="graph-tooltip"></div>
