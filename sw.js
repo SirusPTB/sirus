@@ -7,8 +7,8 @@ const URLS_TO_CACHE = [
   'game.html',
   'latest_version.txt',
   'https://cdn.jsdelivr.net/npm/chart.js',  // Enables charts offline
-  'icons/icon-192.png',
-  'icons/icon-512.png',
+  'icons/icon-192x192.png',
+  'icons/icon-512x512.png',
   'favicon.ico'
   // Add 'setup.html' if you have it
 ];
