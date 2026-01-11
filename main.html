@@ -55,10 +55,6 @@
       background-color: #444;
     }
 
-    #loadButton {
-      background-color: #444;
-    }
-
     #connectButton.connecting {
       background-color: orange;
     }
@@ -969,6 +965,11 @@
       </div>
     </header>
 
+    <button id="installButton" style="display:none; background-color:#ffb84d; color:#000;">Install App
+    </button>#loadButton {
+    background-color: #444;
+    }
+
     <!-- Floating Help Button + Modal (added by ChatGPT) -->
     <div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
 
@@ -1281,6 +1282,49 @@
 
 
   <script>
+    let deferredPrompt;
+    const installButton = document.getElementById('installButton');
+
+    if (installButton) {
+      // Listen for the install prompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('PWA install prompt ready');
+        e.preventDefault();        // Prevent browser default prompt
+        deferredPrompt = e;        // Store the event for later
+        installButton.style.display = 'block';  // Show custom button
+      });
+
+      // Handle button click
+      installButton.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        installButton.style.display = 'none';  // Hide button
+        deferredPrompt.prompt();               // Show native install dialog
+
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          console.log('User installed the app');
+          // Optional: Show a quick toast/message
+          alert('App installed! You can now use it offline.');
+        } else {
+          console.log('User dismissed install');
+          installButton.style.display = 'block';  // Re-show if dismissed
+        }
+        deferredPrompt = null;  // Clear
+      });
+
+      // Optional: Hide button if already installed (standalone mode)
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        installButton.style.display = 'none';
+      });
+
+      // Hide button if already running as installed app
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        installButton.style.display = 'none';
+      }
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
