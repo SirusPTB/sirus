@@ -1169,9 +1169,6 @@
       <button id="saveButton">Save</button>
       <button id="loadButton">Load</button>
       <button id="deleteButton">Delete</button>
-      <button id="installButton" style="display:none; background-color:#ffb84d; color:#000;">
-        📲 Install App
-      </button>
     </div>
 
     <!-- Always On Toggle - Standalone row -->
@@ -2976,67 +2973,6 @@
           .catch(err => console.log('Service Worker registration failed', err));
       });
     }
-  </script>
-
-  <script>
-    let deferredPrompt;
-    const installButton = document.getElementById('installButton');
-
-    if (installButton) {
-      // Listen for the install prompt event
-      window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('PWA install prompt ready');
-        e.preventDefault();
-        deferredPrompt = e;
-        installButton.style.display = 'block';
-      });
-
-      // Handle button click
-      installButton.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-
-        installButton.style.display = 'none';
-        deferredPrompt.prompt();
-
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('User installed the app');
-          alert('App installed! You can now use it offline.');
-        } else {
-          console.log('User dismissed install');
-          installButton.style.display = 'block';
-        }
-        deferredPrompt = null;
-      });
-
-      // Hide button if already installed
-      window.addEventListener('appinstalled', () => {
-        console.log('PWA was installed');
-        installButton.style.display = 'none';
-      });
-
-      // Hide if running in standalone mode
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        installButton.style.display = 'none';
-      }
-    }
-
-    let deferredPrompt;
-    const installBtn = document.getElementById("installButton");
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-
-      installBtn.style.display = "inline-block";
-
-      installBtn.onclick = async () => {
-        installBtn.style.display = "none";
-        await deferredPrompt.prompt();
-        deferredPrompt = null;
-      };
-    });
-
   </script>
 
 </body>
