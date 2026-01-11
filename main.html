@@ -1096,10 +1096,7 @@
     <!-- Graphs Page -->
     <div id="graphPage">
       <div class="button-row">
-        <button id="installButton" style="display:none; background-color:#ffb84d; color:#000;">
-  📲 Install App
-</button>
-        <button class="disconnected" id="connectButton">Connect-</button>
+        <button class="disconnected" id="connectButton">Connect</button>
         <div class="toggle-container">
           <n>°C/°F:</n>
           <div class="toggle-switch" id="tempToggle">
@@ -1172,6 +1169,9 @@
       <button id="saveButton">Save</button>
       <button id="loadButton">Load</button>
       <button id="deleteButton">Delete</button>
+      <button id="installButton" style="display:none; background-color:#ffb84d; color:#000;">
+        📲 Install App
+      </button>
     </div>
 
     <!-- Always On Toggle - Standalone row -->
@@ -3020,6 +3020,23 @@
         installButton.style.display = 'none';
       }
     }
+
+    let deferredPrompt;
+    const installBtn = document.getElementById("installButton");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+
+      installBtn.style.display = "inline-block";
+
+      installBtn.onclick = async () => {
+        installBtn.style.display = "none";
+        await deferredPrompt.prompt();
+        deferredPrompt = null;
+      };
+    });
+
   </script>
 
 </body>
