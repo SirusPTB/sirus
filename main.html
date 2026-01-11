@@ -1,0 +1,2972 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>SirusPTB </title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      text-align: center;
+    }
+
+    header {
+      padding: 10px;
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+
+    .canvas-container {
+      width: 90%;
+      margin: 10px auto;
+      height: 300px;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      background: #1e1e1e;
+      border-radius: 8px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0 30px;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      color: white;
+      background-color: #444;
+    }
+
+    #loadButton {
+      background-color: #444;
+    }
+
+    #connectButton.connecting {
+      background-color: orange;
+    }
+
+    #connectButton.connected {
+      background-color: green;
+    }
+
+    #connectButton.disconnected {
+      background-color: red;
+    }
+
+    #resetButton,
+    #toggleViewButton {
+      background-color: #444;
+    }
+
+    #saveButton {
+      background-color: #444;
+    }
+
+    #pauseResumeButton.resume {
+      background-color: #CC6600;
+    }
+
+    /* Zero button — make it orange (stronger override) */
+    #zeroPressureButton {
+      background-color: #ff8c00 !important;
+      background-image: none !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.15) !important;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15) inset !important;
+      transition: background-color 120ms ease, transform 120ms ease;
+    }
+
+    #zeroPressureButton:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(0.95);
+    }
+
+    #zeroPressureButton:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #ffb87a !important;
+      color: #fff !important;
+      background-image: none !important;
+    }
+
+
+    /* Toggle Switch Styles */
+    .toggle-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background-color: #444;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    /* Disabled state for toggles */
+    .toggle-switch.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Temperature toggle - dull red for both positions */
+    #tempToggle {
+      background-color: #8B3A3A;
+    }
+
+    #tempToggle.active {
+      background-color: #8B3A3A;
+    }
+
+    /* Pressure toggle - lighter blue */
+    #pressureToggle,
+    #pressureToggle.active {
+      background-color: #2d5884 !important;
+    }
+
+    /* Always on toggle - green when active */
+    #alwaysOnToggle {
+      background-color: #666;
+    }
+
+    #alwaysOnToggle.active {
+      background-color: #4CAF50;
+    }
+
+    /* Raw data toggle - purple when active */
+    #rawDataToggle {
+      background-color: #666;
+    }
+
+    #rawDataToggle.active {
+      background-color: #8A2BE2;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(30px);
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal select {
+      width: 80%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 6px;
+      background: #333;
+      color: #fff;
+      border: none;
+    }
+
+    .modal button {
+      margin: 5px;
+    }
+
+    /* Settings page */
+    #settingsPage {
+      display: none;
+      text-align: left;
+      padding: 20px;
+    }
+
+    #settingsPage h2 {
+      text-align: center;
+    }
+
+    #settingsPage label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    #settingsPage input,
+    #settingsPage select {
+      width: 100%;
+      padding: 5px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      background: #333;
+      color: #fff;
+      border: none;
+    }
+
+    #settingsPage button {
+      background-color: #444;
+      margin-top: 20px;
+    }
+
+    #settingsPage input:disabled,
+    #settingsPage button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background-color: #222;
+    }
+
+    /* Raw data panel styles - Updated for scrolling list */
+    #rawDataDisplay {
+      background: #1e1e1e;
+      color: #00ff00;
+      padding: 10px;
+      margin: 10px auto;
+      width: 90%;
+      border-radius: 8px;
+      font-family: monospace;
+      text-align: left;
+      height: 120px;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column-reverse;
+      /* Newest at the bottom */
+    }
+
+    #rawDataDisplay.hidden {
+      display: none;
+    }
+
+    .data-entry {
+      margin: 2px 0;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.9em;
+      line-height: 1.3;
+    }
+
+    .data-entry.sent {
+      color: #ffaa00;
+      /* Orange for sent data */
+    }
+
+    .data-entry.received {
+      color: #00ff00;
+      /* Green for received data */
+    }
+
+    .data-entry.error {
+      color: #ff0000;
+      /* Red for errors */
+    }
+
+    .data-timestamp {
+      color: #888;
+      font-size: 0.8em;
+      margin-right: 8px;
+    }
+
+    /* Scrollbar styling for raw data display */
+    #rawDataDisplay::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #rawDataDisplay::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 4px;
+    }
+
+    #rawDataDisplay::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+    }
+
+    #rawDataDisplay::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Advanced Panel */
+    .advanced-panel {
+      text-align: left !important;
+      padding: 12px 12px 12px 14px !important;
+      border-radius: 6px !important;
+      background: #141414 !important;
+      border: 1px solid #222 !important;
+      box-shadow: none !important;
+    }
+
+    .adv-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .adv-table td {
+      padding: 6px 0;
+      vertical-align: middle;
+    }
+
+    .adv-table .label-cell {
+      width: 180px;
+      padding-right: 12px;
+      text-align: left;
+      color: #c8ced1;
+      font-weight: 600;
+    }
+
+    .adv-table .control-cell {
+      padding-left: 0;
+    }
+
+    .control-input,
+    .control-btn {
+      height: 40px;
+      min-width: 120px;
+      padding: 0 12px;
+      border-radius: 6px;
+      background: #1b1b1b;
+      border: 1px solid #272727;
+      color: #e6eef6;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .control-btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .control-range {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: linear-gradient(to right, #2a2a2a, #444);
+      border-radius: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .control-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4CAF50;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+
+    .control-range::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4CAF50;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+
+    .brightness-value {
+      min-width: 56px;
+      text-align: right;
+      font-weight: 700;
+      color: #e0e0e0;
+      display: inline-block;
+    }
+
+    .adv-table .control-cell input.control-input {
+      width: 130px;
+      margin-right: 8px;
+    }
+
+    /* Make the three "Set" buttons (and Zero) narrower — place this AFTER the existing adv-table rules */
+    #advanceContent button.adv-btn.control-btn,
+    #advanceContent button[id^="set"],
+    #advanceContent #zeroPressureButton {
+      width: 90px !important;
+      /* desired fixed width */
+      min-width: 50px !important;
+      /* override the 120px min-width */
+      padding: 4px 6px !important;
+      /* tighten horizontal padding */
+      font-size: 13px !important;
+      /* slightly smaller label */
+      line-height: 1 !important;
+      box-sizing: border-box !important;
+    }
+
+    .raw-data-container {
+      width: 100% !important;
+      box-sizing: border-box;
+      background: #0f0f0f !important;
+      border: 1px solid #191919 !important;
+      border-radius: 6px !important;
+      padding: 8px !important;
+      max-height: 200px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 12px;
+      color: #9f9;
+    }
+
+    /* Force right align for numeric inputs */
+    input#sleepTimeInput.control-input,
+    input#pressureCalibrationInput.control-input,
+    input#sleepTimeInput,
+    input#pressureCalibrationInput {
+      text-align: right !important;
+      padding-right: 6px !important;
+      direction: ltr !important;
+      box-sizing: border-box !important;
+    }
+
+    input[type="number"]#sleepTimeInput,
+    input[type="number"]#pressureCalibrationInput {
+      -moz-appearance: textfield !important;
+      text-align: right !important;
+    }
+
+    /* Smaller buttons for pause, combined gauges, and reset */
+    #pauseButton,
+    #combinedGaugesButton,
+    #resetButton {
+      padding: 4px 10px !important;
+      font-size: 13px !important;
+      border-radius: 6px !important;
+    }
+
+    /* Anchor footer layout */
+    html,
+    body {
+      height: 100% !important;
+    }
+
+    body {
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #page-wrapper {
+      flex: 1 1 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .minimal-footer {
+      position: static !important;
+      width: 100% !important;
+      background: rgba(20, 20, 20, 0.95);
+      border-top: 1px solid #222;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #bfc7cc;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+      text-decoration: none;
+    }
+
+    .footer-link svg {
+      display: block;
+      width: 20px;
+      height: 20px;
+    }
+
+    .footer-link:hover,
+    .footer-link:focus {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.06);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .footer-text {
+      color: #9aa3ad;
+      font-weight: 600;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    /* Smaller labels for toggles */
+    .toggle-container n {
+      font-size: 0.85em !important;
+    }
+
+    /* On very small screens, stack label above controls */
+    @media (max-width: 420px) {
+      .adv-table .label-cell {
+        width: auto;
+        min-width: 0;
+        padding-bottom: 6px;
+      }
+
+      .adv-table tr {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .adv-table .control-cell {
+        display: flex;
+        gap: 8px;
+      }
+
+      .adv-table .control-cell input.control-input {
+        width: 70%;
+      }
+
+      .adv-table .control-cell button.control-btn {
+        width: 70%;
+      }
+
+      .brightness-value {
+        min-width: 40px;
+      }
+    }
+
+
+
+    /* Set buttons — make them green (applies to IDs starting with "set") */
+    button[id^="set"],
+    button[id^="Set"],
+    .control-btn[id^="set"],
+    .control-btn[id^="Set"] {
+      background-color: #28a745 !important;
+      background-image: none !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(0, 0, 0, 0.12) !important;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12) inset !important;
+      transition: background-color 120ms ease, transform 120ms ease;
+    }
+
+    /* Input hint (greyed text shown next to Set/Zero buttons) */
+    .input-hint {
+      color: #56595c;
+      opacity: 0.8;
+      margin-left: 8px;
+      font-size: 0.92em;
+      vertical-align: middle;
+      display: inline-block;
+    }
+
+    button[id^="set"]:hover:not(:disabled),
+    .control-btn[id^="set"]:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(0.95);
+    }
+
+    button[id^="set"]:disabled,
+    .control-btn[id^="set"]:disabled {
+      background-color: #7fd49b !important;
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+
+    /* --- Removed up/down arrows for sleep time input --- */
+    input#sleepTimeInput::-webkit-outer-spin-button,
+    input#sleepTimeInput::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input#sleepTimeInput {
+      -moz-appearance: textfield;
+    }
+
+
+    /* --- Removed up/down arrows for pressure calibration input --- */
+    input#pressureCalibrationInput::-webkit-outer-spin-button,
+    input#pressureCalibrationInput::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input#pressureCalibrationInput {
+      -moz-appearance: textfield;
+    }
+
+
+    /* --- Removed up/down arrows for chart reset input --- */
+    input#chartResetInput::-webkit-outer-spin-button,
+    input#chartResetInput::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input#chartResetInput {
+      -moz-appearance: textfield;
+    }
+
+
+    /* Make chart area 90% of page width */
+    #splitView>div,
+    #combinedView>div,
+    #gaugeView>div {
+      width: 100% !important;
+    }
+
+    .canvas-container {
+      width: 90% !important;
+      margin: 10px auto !important;
+    }
+
+    /* Narrower inputs for advanced panel */
+    #sleepTimeInput,
+    #pressureCalibrationInput,
+    #chartResetInput {
+      width: 80px !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      padding-right: 6px !important;
+    }
+
+    /* Align the Zero button inline with its label */
+    /* #advanceContent .adv-table tr:first-child .label-cell {
+  width: auto !important;
+  padding-right: 10px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+#advanceContent .adv-table tr:first-child .control-cell {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+} */
+
+    /* --- Keep "Zero pressure" label + button inline on small screens --- */
+    @media (max-width: 420px) {
+      .adv-table tr:first-child {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+      }
+
+      .adv-table tr:first-child .label-cell,
+      .adv-table tr:first-child .control-cell {
+        display: inline-flex !important;
+        align-items: center !important;
+        width: auto !important;
+        padding: 0 !important;
+      }
+
+      .adv-table tr:first-child .label-cell label {
+        white-space: nowrap !important;
+        margin-right: 8px !important;
+      }
+
+      #zeroPressureButton {
+        width: auto !important;
+        min-width: 36px !important;
+        padding: 6px 8px !important;
+        font-size: 13px !important;
+      }
+    }
+  </style>
+
+  <style>
+    body.gauges-visible #resetButton {
+      display: none !important;
+    }
+  </style>
+  <style>
+    /* Battery icon styles */
+    #battery {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+    }
+
+    #batteryIcon {
+      border-color: rgba(255, 255, 255, 0.9);
+    }
+
+    #batteryLevel.low {
+      background: #ff6b6b !important;
+    }
+
+    #batteryLevel.medium {
+      background: #ffb86b !important;
+    }
+
+    #batteryLevel.high {
+      background: #7fff7f !important;
+    }
+
+    #batteryPercent {
+      color: #fff;
+      opacity: 0.8;
+      font-weight: 300;
+      font-size: 0.65em;
+    }
+
+    /* --- Charging bolt overlay (added) --- */
+    #batteryIcon {
+      position: relative;
+      overflow: visible;
+    }
+
+    #batteryLevel {
+      z-index: 1;
+    }
+
+    #batteryIcon .battery-bolt {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 22px;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: none;
+    }
+
+    #battery.battery-charging #batteryIcon .battery-bolt {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    #batteryIcon .battery-bolt path {
+      fill: #fff;
+      stroke: rgba(0, 0, 0, 0.45);
+      stroke-width: 0.5;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+    }
+
+    #battery.battery-charging #batteryPercent {
+      font-weight: 700;
+    }
+
+    /* small visual emphasis when charging */
+  </style>
+
+
+  <!-- Help icon + modal styles injected by ChatGPT -->
+  <style>
+    /* Floating help button (top-left) */
+    #helpButton {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 10050;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    #helpButton:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Help modal styles */
+    #helpModal {
+      display: none;
+      position: fixed;
+      z-index: 10060;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #helpModal .help-content {
+      background: #1e1e1e;
+      padding: 18px;
+      border-radius: 10px;
+      width: 92%;
+      max-width: 480px;
+      color: #fff;
+      text-align: left;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    #helpModal .help-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    #helpModal .help-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      justify-content: flex-start;
+    }
+
+    #helpModal .help-section {
+      display: none;
+      margin-top: 12px;
+      max-height: 60vh;
+      overflow: auto;
+      padding: 10px;
+      background: #121212;
+      border-radius: 6px;
+      color: #dfe8f0;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    #helpModal .help-section.show {
+      display: block;
+    }
+
+    #helpModal button,
+    #helpModal .help-actions button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #444;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #helpModal button.primary {
+      background: #28a745;
+    }
+
+    #helpModal .close-btn {
+      background: transparent;
+      color: #ddd;
+      font-size: 18px;
+      padding: 6px 8px;
+    }
+
+    /* Small responsive tweak */
+    @media (max-width:420px) {
+      #helpButton {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        top: 8px;
+        left: 8px;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="page-wrapper">
+
+    <header style="position:relative;padding:10px 12px;">
+      <div style="font-weight:bold;display:inline-block;">SirusPTB</div>
+      <div id="battery" style="display:inline-flex;align-items:center;gap:8px;position:absolute;right:12px;top:8px;">
+        <div id="batteryIcon" aria-hidden="true"
+          style="position:relative;width:34px;height:18px;border:2px solid #fff;border-radius:3px;box-sizing:border-box;padding:0 6px 0 2px;">
+          <div id="batteryLevel"
+            style="position:absolute;left:3px;top:3px;bottom:3px;right:8px;width:60%;max-width:24px;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;">
+          </div>
+          <div style="position:absolute;right:-6px;top:5px;width:4px;height:8px;background:#fff;border-radius:1px;">
+          </div>
+          <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18">
+            <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
+          </svg>
+        </div>
+        <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.55em;">--%</div>
+      </div>
+    </header>
+
+    <!-- Floating Help Button + Modal (added by ChatGPT) -->
+    <div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
+
+    <div id="helpModal" aria-hidden="true">
+      <div class="help-content" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <div class="help-header">
+          <h3 id="helpTitle" style="margin:0;font-size:1.05em;">Help</h3>
+          <button id="helpClose" class="close-btn" aria-label="Close help">✕</button>
+        </div>
+
+        <div>
+          <p style="margin:0 0 8px 0;">Choose which help you want to view:</p>
+          <div class="help-actions" style="margin-bottom:8px;">
+            <button id="deviceHelpBtn">Device Help</button>
+            <button id="appHelpBtn">App Help</button>
+          </div>
+        </div>
+
+        <div id="deviceHelp" class="help-section" aria-hidden="true">
+          <h4 style="margin-top:0;">Device Help</h4>
+          <img src="sirusscreen1.png" alt="SirusPTB device showing button locations"
+            style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;">
+          <p style="margin:0 0 8px 0;">
+          <h5>Button Functions</h5>
+          <ul>
+            <li>Press "T" button to turn on.</li>
+            <li>Press "T" button to toggle C or F.</li>
+            <li>Long press "T" button to enter set pressure calibration.</li>
+            <li>Quickly double press "T" button to set keep screen on/off.</li>
+            <li>Press "P" button to toggle bar or PSI.</li>
+            <li>Long press "P" button to (zero) set current atmospheric pressure.</li>
+            <li>Quickly double press "P" button to enter set screen brightness.</li>
+          </ul>
+
+          <h5>Status Indicators</h5>
+          <ul>
+            <li>If Bluetooth icon is blue the device is connected to App.</li>
+            <li>If red z is on screen the device will not sleep.</li>
+            <li>If battery icon is flashing then the battery is charging.</li>
+          </ul>
+          </p>
+        </div>
+
+        <div id="appHelp" class="help-section" aria-hidden="true">
+          <h4 style="margin-top:0;">App Help</h4>
+
+          <h5>Connecting to Your Device</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>Connect:</strong> Click the "Connect" button to pair with your SirusPTB device via Bluetooth.
+              Your browser will show available devices - select the one starting with "SirusPTB".</li>
+            <li><strong>Connection Status:</strong> The button shows the current state - gray (disconnected), orange
+              (connecting), green (connected), or red (error).</li>
+            <li><strong>Disconnect:</strong> Click "Disconnect" when connected to end the Bluetooth session.</li>
+          </ul>
+
+          <h5>Unit Toggles</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>°C/°F Toggle:</strong> Switch between Celsius and Fahrenheit temperature units. Charts will
+              reset when changing units.</li>
+            <li><strong>Bar/PSI Toggle:</strong> Switch between bar and PSI pressure units. Charts will reset when
+              changing units.</li>
+            <li><strong>Keep Screen On Toggle:</strong> Control whether the device screen stays on continuously (ON) or
+              sleeps after inactivity (OFF).</li>
+          </ul>
+
+          <h5>Chart Controls</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>Pause/Resume:</strong> Temporarily stop updating the charts while still receiving data. Click
+              "Resume" to continue updating.</li>
+            <li><strong>Reset:</strong> Clear all chart data and start fresh. This does not affect saved graphs.</li>
+            <li><strong>Toggle View:</strong> Switch between split view (separate temperature and pressure charts) and
+              combined view (both on one chart).</li>
+            <li><strong>Toggle Gauges:</strong> Switch between chart view and gauge view. Gauges show current readings
+              in a dial format.</li>
+          </ul>
+
+          <h5>Saving & Loading Data</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>Save:</strong> Store the current chart data to your browser's local storage with a custom name.
+            </li>
+            <li><strong>Load:</strong> Restore previously saved chart data. Select from your saved graphs list.</li>
+            <li><strong>Delete:</strong> Remove saved graphs from local storage.</li>
+            <li><em>Note:</em> Saved data is stored locally in your browser and won't be available on other devices or
+              browsers.</li>
+          </ul>
+
+          <h5>Advanced Settings</h5>
+          <p style="margin:6px 0;">Click "Advance ▼" to access additional controls:</p>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>Zero Pressure:</strong> Set the current atmospheric pressure as the zero reference point
+              (requires connection).</li>
+            <li><strong>Device Sleep Time:</strong> Set how many minutes of inactivity before the device goes to sleep
+              (1-60 minutes).</li>
+            <li><strong>Pressure Calibration:</strong> Fine-tune pressure readings with a calibration offset value (-5
+              to +5).</li>
+            <li><strong>Chart Reset Points:</strong> Configure how many data points to display before charts
+              automatically reset (5-240 points).</li>
+            <li><strong>Device Brightness:</strong> Adjust the display brightness on your device (10-250). Changes are
+              sent automatically when you adjust the slider.</li>
+          </ul>
+
+          <h5>Understanding the Display</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li><strong>Current Values:</strong> Real-time temperature and pressure readings appear above each chart in
+              colored boxes.</li>
+            <li><strong>Battery Indicator:</strong> Top-right corner shows battery percentage and charging status
+              (lightning bolt when charging).</li>
+            <li><strong>Chart Timeline:</strong> The X-axis shows elapsed time in seconds since the last reset.</li>
+            <li><strong>Gauge View:</strong> Shows temperature (red) and pressure (blue) as analog-style dials with
+              clear min/max ranges.</li>
+          </ul>
+
+          <h5>Tips & Troubleshooting</h5>
+          <ul style="margin:6px 0 0 18px;">
+            <li>If connection fails, ensure your device's Bluetooth is on and the device is powered up.</li>
+            <li>Web Bluetooth requires Chrome or Edge browsers. Safari and Firefox don't support this feature.</li>
+            <li>Charts automatically reset after reaching your configured data point limit to prevent memory issues.
+            </li>
+            <li>Your view preferences (split/combined/gauges) are saved automatically.</li>
+            <li>If you change units on the device itself, the app will detect and update automatically.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Graphs Page -->
+    <div id="graphPage">
+      <div class="button-row">
+        <button class="disconnected" id="connectButton">Connect</button>
+        <div class="toggle-container">
+          <n>°C/°F:</n>
+          <div class="toggle-switch" id="tempToggle">
+            <div class="toggle-slider">C</div>
+          </div>
+        </div>
+        <div class="toggle-container">
+          <n>Bar/PSI:</n>
+          <div class="toggle-switch" id="pressureToggle">
+            <div class="toggle-slider">Bar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Updated raw data display with clear button -->
+    <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
+      <div style="width: 90%; margin: 0 auto;">
+        <div id="tempCurrentValue"
+          style="background: #121212; color: #ff7f7f; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+          Temperature: -- °C</div>
+        <div class="canvas-container"><canvas id="tempChart"></canvas></div>
+      </div>
+      <div style="width: 90%; margin: 0 auto;">
+        <div id="pressureCurrentValue"
+          style="background: #121212; color: #7fbfff; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+          Pressure: -- bar</div>
+        <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
+      </div>
+    </div>
+
+    <div id="combinedView" style="display:none; width:100%; align-items:center;">
+      <div style="width: 90%; margin: 0 auto;">
+        <div id="combinedCurrentValue"
+          style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+          <n style="color: #ff7f7f;">Temperature: -- °C</n> | <n style="color: #7fbfff;">Pressure: -- bar</n>
+        </div>
+        <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
+      </div>
+    </div>
+
+    <div id="gaugeView" style="display:none; width:100%; align-items:center;">
+      <div style="width: 90%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+          <!-- Temperature Gauge -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="position: relative; width: 280px; height: 280px;">
+              <canvas height="280" id="tempGauge" style="border-radius: 50%; background: #121212;" width="280"></canvas>
+            </div>
+          </div>
+          <!-- Pressure Gauge -->
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="position: relative; width: 280px; height: 280px;">
+              <canvas height="280" id="pressureGauge" style="border-radius: 50%; background: #121212;"
+                width="280"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="pauseResumeButton">Pause</button>
+      <button id="resetButton">Reset</button>
+      <button id="toggleViewButton">Toggle View</button>
+      <button id="toggleGaugeButton">Toggle Gauges</button>
+    </div>
+
+    <div class="button-row">
+      <button id="saveButton">Save</button>
+      <button id="loadButton">Load</button>
+      <button id="deleteButton">Delete</button>
+    </div>
+
+    <!-- Always On Toggle - Standalone row -->
+    <div style="width: 80%; margin: 10px auto;">
+      <div
+        style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+        <div class="toggle-container">
+          <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
+          <div class="toggle-switch" id="alwaysOnToggle">
+            <div class="toggle-slider">OFF</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advance Section -->
+    <div id="advanceSection" style="width: 90%; margin: 20px auto;">
+      <button id="advanceToggle"
+        style="width: 100%; padding: 10px; border-radius: 6px; background:#444; color:#fff; font-weight:bold; cursor:pointer; text-align:left;">
+        Advance ▼
+      </button>
+
+      <div id="advanceContent" class="advanced-panel" style="display:none;">
+        <table class="adv-table" role="presentation">
+          <tbody>
+
+            <tr>
+              <td class="label-cell"><label>Zero pressure:</label></td>
+              <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
+                <button id="zeroPressureButton" class="adv-btn control-btn" disabled
+                  style="width:auto;min-width:36px;padding:6px 8px;">Zero</button>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
+              <td class="control-cell">
+                <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5"
+                  style="text-align: right !important; padding-right:6px !important;">
+                <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
+                <span class="input-hint" aria-hidden="true">(1 → 60 min)</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="label-cell"><label for="pressureCalibrationInput">Pressure calibration:</label></td>
+              <td class="control-cell">
+                <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5"
+                  placeholder="0.00" style="text-align: right !important; padding-right:6px !important;">
+                <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
+                <span class="input-hint" aria-hidden="true">(-5 → +5)</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="label-cell"><label for="chartResetInput">Chart reset (data points):</label></td>
+              <td class="control-cell">
+                <input type="number" id="chartResetInput" class="control-input" min="5" max="240" value="50"
+                  style="text-align: right !important; padding-right:6px !important;">
+                <button id="setChartResetButton" class="adv-btn control-btn">Set</button>
+                <span class="input-hint" aria-hidden="true">(5 → 240 pts)</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
+              <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
+                <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
+                <span id="brightnessValue" class="brightness-value">125</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="label-cell"><label>Firmware version:</label></td>
+              <td class="control-cell">
+                <span id="firmwareVersionDisplay" style="color: #9aa3ad; font-weight: 600;">--</span>
+                <button id="checkFirmwareButton" class="adv-btn control-btn" style="margin-left: 10px;">Check
+                  Latest</button>
+              </td>
+            </tr>
+
+        </table>
+
+        <!-- Raw data container hidden -->
+        <!--
+  <div class="raw-data-container" id="rawDataDisplay" style="height:160px; overflow:auto; margin-top:8px; display:none;">
+    <div class="data-entry">No data yet...</div>
+  </div>
+  -->
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- Modal -->
+  <div class="modal" id="popupModal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Select Saved Graph</h3>
+      <select id="modalSelect"
+        style="display:block;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;"></select>
+      <input type="text" id="modalInput" placeholder="Enter name to save"
+        style="display:none;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;" />
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+        <button id="confirmButton">Confirm</button>
+        <button id="cancelButton">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered', reg))
+          .catch(err => console.log('Service Worker registration failed', err));
+      });
+    }
+
+    // --- BLE Variables ---
+    const serviceUuid = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
+    const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb";
+    let device, characteristic, writeCharacteristic;
+    let tempChart, pressureChart, combinedChart;
+    let paused = false;
+    let currentTemp = 0, currentPressure = 0;
+    let splitView = true;
+    let gaugeView = false;
+    let secondsCounter = 0;
+    let chartData = { labels: [], temp: [], pressure: [] };
+    let modalAction = "";
+    let maxPointsValue = 50;
+    let currentTempUnit = "C";
+    let currentPressureUnit = "Bar";
+    let tempToggleActive = false;
+    let pressureToggleActive = false;
+    let alwaysOnToggleActive = false;
+    let rawDataToggleActive = true;
+    let isConnected = false;
+    let brightnessDataReceived = false;
+    let batteryDataReceived = false;
+    let alwaysOnDataReceived = false;
+    let receivedDataCount = 0;
+    let dataEntries = [];
+    let sleepDataReceived = false;
+    let calibrationDataReceivedOnce = false;
+    let skipNextData = false;
+    let currentCalibrationValue = null;
+    let calibrationDataReceived = false;
+    let firmwareVersion = null;
+    let firmwareDataReceived = false;
+
+
+    // --- Modal Functions ---
+    const modal = document.getElementById("popupModal");
+    const modalSelect = document.getElementById("modalSelect");
+    const confirmButton = document.getElementById("confirmButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    function showModal(action) {
+      console.log("showModal called with action:", action);
+      modalAction = action;
+
+      const modalTitleEl = document.getElementById("modalTitle");
+      const modalInputEl = document.getElementById("modalInput");
+      const modalSelectEl = document.getElementById("modalSelect");
+      modalSelectEl.innerHTML = "";
+
+      // Get saved graphs from localStorage
+      const saved = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("graph_")) {
+          saved.push(key);
+        }
+      }
+      saved.sort();
+
+      if (action === "save") {
+        modalTitleEl.textContent = "Save Current Graph";
+        modalInputEl.style.display = "block";
+        modalSelectEl.style.display = "none";
+        modalInputEl.value = "";
+        modal.style.display = "flex";
+        // focus input for convenience
+        setTimeout(() => { modalInputEl.focus(); }, 50);
+        return;
+      }
+
+      // load / delete
+      modalInputEl.style.display = "none";
+      modalSelectEl.style.display = "block";
+
+      if (saved.length === 0) {
+        alert("No saved graphs found");
+        return;
+      }
+
+      saved.forEach(k => {
+        const opt = document.createElement("option");
+        opt.value = k;
+        opt.text = k.replace("graph_", "");
+        modalSelectEl.appendChild(opt);
+      });
+
+      modalTitleEl.textContent = action === "load" ? "Select Saved Graph" : "Delete Saved Graph";
+      modal.style.display = "flex";
+    }
+
+    confirmButton.onclick = () => {
+      if (modalAction === "save") {
+        const name = document.getElementById("modalInput").value.trim();
+        if (!name) { alert("Please enter a name"); return; }
+        const key = "graph_" + name;
+        try {
+          localStorage.setItem(key, JSON.stringify(chartData));
+          console.log("Graph saved as:", key);
+        } catch (e) {
+          console.error("Error saving graph:", e);
+          alert("Error saving: " + (e && e.message ? e.message : e));
+        }
+        modal.style.display = "none";
+        return;
+      }
+
+      const key = document.getElementById("modalSelect").value;
+      if (!key) { modal.style.display = "none"; return; }
+
+      if (modalAction === "load") {
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data) {
+            chartData = data;
+            secondsCounter = data.labels.length;
+            tempChart.data.labels = chartData.labels;
+            tempChart.data.datasets[0].data = chartData.temp;
+            tempChart.update();
+            pressureChart.data.labels = chartData.labels;
+            pressureChart.data.datasets[0].data = chartData.pressure;
+            pressureChart.update();
+            combinedChart.data.labels = chartData.labels;
+            combinedChart.data.datasets[0].data = chartData.temp;
+            combinedChart.data.datasets[1].data = chartData.pressure;
+            combinedChart.update();
+            updateGauges();
+            console.log("Graph loaded successfully");
+          }
+        } catch (e) {
+          console.error("Error loading graph:", e);
+          alert("Error loading graph: " + e.message);
+        }
+      } else if (modalAction === "delete") {
+        localStorage.removeItem(key);
+        console.log("Graph deleted:", key);
+      }
+
+      modal.style.display = "none";
+    };
+
+    cancelButton.onclick = () => {
+      modal.style.display = "none";
+    };
+
+    // Wireup for the toolbar buttons (ensure these exist elsewhere in the file)
+    document.getElementById("loadButton").onclick = () => { showModal("load"); };
+    document.getElementById("deleteButton").onclick = () => { showModal("delete"); };
+    document.getElementById("saveButton").onclick = () => { showModal("save"); };
+    // --- Chart Setup ---
+    function fixCanvasDPI(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    const currentValuePlugin = {
+      id: 'currentValue',
+      afterDraw(chart) {
+        return;
+      }
+    };
+
+    function initCharts() {
+      const ctxTemp = document.getElementById("tempChart").getContext("2d");
+      fixCanvasDPI(ctxTemp.canvas);
+      tempChart = new Chart(ctxTemp, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "Temp", borderColor: "#ff7f7f", data: [], fill: false }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { display: true, title: { display: true, text: 'Time(sec)' }, ticks: { color: '#e0e0e0' } },
+            y: {
+              min: 40,
+              max: 120,
+              display: true,
+              title: { display: true, text: 'Temperature (°C)' },
+              ticks: {
+                color: "#ff7f7f",
+                callback: value => value.toFixed(0)
+              }
+            }
+          }
+        },
+        plugins: [currentValuePlugin]
+      });
+
+      const ctxPressure = document.getElementById("pressureChart").getContext("2d");
+      fixCanvasDPI(ctxPressure.canvas);
+      pressureChart = new Chart(ctxPressure, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "Pressure",
+            borderColor: "#7fbfff",
+            data: [],
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              display: true,
+              title: { display: true, text: 'Time(sec)' },
+              ticks: { color: '#e0e0e0' }
+            },
+            y: {
+              min: 0,
+              max: 16,
+              display: true,
+              title: { display: true, text: 'Pressure (bar)' },
+              ticks: {
+                color: "#7fbfff",
+                callback: value => value.toFixed(1)
+              }
+            }
+          }
+        }
+      });
+
+
+      const ctxCombined = document.getElementById("combinedChart").getContext("2d");
+      fixCanvasDPI(ctxCombined.canvas);
+      combinedChart = new Chart(ctxCombined, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Temp",
+              borderColor: "#ff7f7f",
+              data: [],
+              fill: false,
+              yAxisID: "y1"
+            },
+            {
+              label: "Pressure",
+              borderColor: "#7fbfff",
+              data: [],
+              fill: false,
+              yAxisID: "y2"
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              display: true,
+              title: { display: true, text: 'Time(sec)' },
+              ticks: { color: '#e0e0e0' }
+            },
+            y1: {
+              min: 40,
+              max: 120,
+              position: 'left',
+              ticks: {
+                color: "#ff7f7f",
+                callback: value => value.toFixed(0)
+              }
+            },
+            y2: {
+              min: 0,
+              max: 16,
+              position: 'right',
+              ticks: {
+                color: "#7fbfff",
+                callback: value => value.toFixed(1)
+              },
+              grid: { drawOnChartArea: false }
+            }
+          }
+        }
+      });
+
+    }
+
+    initCharts();
+    updateChartRanges();
+
+    // --- Helper Functions ---
+    function ensureAdvancePanelVisible(element) {
+      if (!element) return;
+      const rect = element.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const margin = 12;
+
+      if (rect.top >= margin && rect.bottom <= vh - margin) return;
+
+      if (rect.height + (margin * 2) <= vh) {
+        const target = window.scrollY + rect.top - margin;
+        window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+        return;
+      }
+
+      const target = window.scrollY + rect.top - margin;
+      window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+    }
+
+    // --- Helper function to update temperature toggle switch ---
+    function updateTempToggleSwitch(unit) {
+      const toggle = document.getElementById("tempToggle");
+      const slider = toggle.querySelector(".toggle-slider");
+
+      currentTempUnit = unit;
+
+      if (unit === "C") {
+        toggle.classList.remove("active");
+        slider.textContent = "C";
+        tempToggleActive = false;
+      } else if (unit === "F") {
+        toggle.classList.add("active");
+        slider.textContent = "F";
+        tempToggleActive = true;
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "C";
+        tempToggleActive = false;
+        currentTempUnit = "C";
+      }
+      //updateChartRanges();
+    }
+
+    // --- Helper function to update pressure toggle switch ---
+    function updatePressureToggleSwitch(unit) {
+      const toggle = document.getElementById("pressureToggle");
+      const slider = toggle.querySelector(".toggle-slider");
+
+      currentPressureUnit = unit;
+
+      if (unit === "Bar") {
+        toggle.classList.remove("active");
+        slider.textContent = "Bar";
+        pressureToggleActive = false;
+      } else if (unit === "PSI") {
+        toggle.classList.add("active");
+        slider.textContent = "PSI";
+        pressureToggleActive = true;
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "Bar";
+        pressureToggleActive = false;
+        currentPressureUnit = "Bar";
+      }
+    }
+
+    // --- Helper function to update always-on toggle switch ---
+    function updateAlwaysOnToggleSwitch(isOn) {
+      const toggle = document.getElementById("alwaysOnToggle");
+      const slider = toggle.querySelector(".toggle-slider");
+
+      alwaysOnToggleActive = isOn;
+
+      if (isOn) {
+        toggle.classList.add("active");
+        slider.textContent = "ON";
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "OFF";
+      }
+    }
+
+    // --- Helper function to update raw data toggle switch ---
+    function updateRawDataToggleSwitch(isVisible) {
+      const toggle = document.getElementById("rawDataToggle");
+      const slider = toggle ? toggle.querySelector(".toggle-slider") : null;
+      const rawDataDisplay = document.getElementById("rawDataDisplay");
+
+      if (!toggle || !slider) return; // Exit if elements don't exist
+
+      rawDataToggleActive = isVisible;
+
+      if (isVisible) {
+        toggle.classList.add("active");
+        slider.textContent = "ON";
+        if (rawDataDisplay) rawDataDisplay.classList.remove("hidden");
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "OFF";
+        if (rawDataDisplay) rawDataDisplay.classList.add("hidden");
+      }
+    }
+
+    // --- Helper function to update brightness slider ---
+    function updateBrightnessSlider(brightnessValue) {
+      const slider = document.getElementById("brightnessSlider");
+      const valueDisplay = document.getElementById("brightnessValue");
+
+      const clampedValue = Math.max(10, Math.min(250, parseInt(brightnessValue)));
+
+      slider.value = clampedValue;
+      valueDisplay.textContent = clampedValue;
+
+      console.log(`Brightness updated from device: ${clampedValue}`);
+    }
+
+
+    // --- Battery update helper ---
+    function updateBattery(percent, charging) {
+      const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
+      const pctEl = document.getElementById("batteryPercent");
+      const levelEl = document.getElementById("batteryLevel");
+      if (pctEl) pctEl.textContent = pct + "%";
+      if (levelEl) {
+        levelEl.style.width = pct + "%";
+        levelEl.classList.remove("low", "medium", "high");
+        if (pct <= 10) levelEl.classList.add("low");
+        else if (pct <= 39) levelEl.classList.add("medium");
+        else levelEl.classList.add("high");
+      }
+
+      // Charging icon toggle
+      const batteryEl = document.getElementById("battery");
+      if (batteryEl) {
+        if (charging) batteryEl.classList.add("battery-charging");
+        else batteryEl.classList.remove("battery-charging");
+      }
+    }
+
+    // --- Pressure conversion functions ---
+    function barToPsi(bar) {
+      return bar;
+    }
+
+    function psiToBar(psi) {
+      return psi;
+    }
+
+    // --- Connection Functions ---
+    async function connectToDevice() {
+      const btn = document.getElementById("connectButton");
+      try {
+        btn.textContent = "Connecting..."; btn.className = "connecting";
+        device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "SirusPTB" }], optionalServices: [serviceUuid] });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(serviceUuid);
+
+        characteristic = await service.getCharacteristic(characteristicUuid);
+        console.log("Read characteristic properties:", characteristic.properties);
+
+        try {
+          writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
+          console.log("Write characteristic found with properties:", writeCharacteristic.properties);
+        } catch (e) {
+          console.log("Separate write characteristic not found, trying to use read characteristic for writing");
+
+          if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+            writeCharacteristic = characteristic;
+            console.log("Using read characteristic for writing");
+          } else {
+            console.log("Listing all characteristics in service:");
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+              console.log(`Characteristic UUID: ${char.uuid}, Properties:`, char.properties);
+              if (char.properties.write || char.properties.writeWithoutResponse) {
+                writeCharacteristic = char;
+                console.log("Found writable characteristic:", char.uuid);
+                break;
+              }
+            }
+          }
+        }
+
+        await characteristic.startNotifications();
+        characteristic.addEventListener("characteristicvaluechanged", handleData);
+
+        btn.textContent = "Disconnect"; btn.className = "connected";
+        isConnected = true;
+        updateConnectionState(true);
+        btn.onclick = disconnectFromDevice;
+
+        brightnessDataReceived = false;
+        alwaysOnDataReceived = false;
+        calibrationDataReceived = false;
+        receivedDataCount = 0;
+        sleepDataReceived = false;
+        currentCalibrationValue = null;
+
+        if (writeCharacteristic) {
+          console.log("Connected successfully, write characteristic available");
+        } else {
+          console.log("Connected but no write characteristic found");
+        }
+
+        device.addEventListener("gattserverdisconnected", handleDisconnection);
+      } catch (e) {
+        console.error("Connection error:", e);
+        handleDisconnection();
+      }
+    }
+
+    async function disconnectFromDevice() {
+      if (characteristic) {
+        try {
+          await characteristic.stopNotifications();
+        } catch (e) {
+          console.log("Error stopping notifications:", e);
+        }
+      }
+      if (device && device.gatt.connected) {
+        try {
+          await device.gatt.disconnect();
+        } catch (e) {
+          console.log("Error disconnecting:", e);
+        }
+      }
+      handleDisconnection();
+    }
+
+    function handleDisconnection() {
+      const btn = document.getElementById("connectButton");
+      if (btn) {
+        btn.textContent = "Connect";
+        btn.className = "disconnected";
+      }
+      // mark as disconnected
+      isConnected = false;
+      updateConnectionState(false);
+
+      // Reset charts and current-value displays so the UI shows the disconnected state
+      try {
+        // Clear chart data and reset counters
+        resetCharts();
+
+        // Update the textual current values to show '--' with the current units
+        const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+        const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+        const tempEl = document.getElementById("tempCurrentValue");
+        const pressureEl = document.getElementById("pressureCurrentValue");
+        const combinedEl = document.getElementById("combinedCurrentValue");
+
+        if (tempEl) tempEl.textContent = `Temperature: -- ${tempUnit}`;
+        if (pressureEl) pressureEl.textContent = `Pressure: -- ${pressureUnit}`;
+        if (combinedEl) combinedEl.innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
+      } catch (e) {
+        console.error("Error resetting charts/UI on disconnect:", e);
+      }
+
+      // Force gauges to update so they draw the disconnected state (shows --.- when not connected)
+      try {
+        updateGauges();
+      } catch (e) {
+        console.error("Error updating gauges on disconnect:", e);
+      }
+
+      // Clear BLE references so subsequent connect attempts are clean
+      characteristic = null;
+      writeCharacteristic = null;
+      device = null;
+      if (btn) btn.onclick = connectToDevice;
+
+      // Reset transient flags related to device data
+      brightnessDataReceived = false;
+      alwaysOnDataReceived = false;
+      calibrationDataReceived = false;
+      receivedDataCount = 0;
+      currentCalibrationValue = null;
+      firmwareDataReceived = false;
+      firmwareVersion = null;
+
+      // Reset firmware display
+      const firmwareDisplay = document.getElementById("firmwareVersionDisplay");
+      if (firmwareDisplay) {
+        firmwareDisplay.textContent = "--";
+      }
+    }
+
+    function updateChartRanges() {
+      // ---- Temperature limits ----
+      let tempMin, tempMax, tempLabel;
+
+      if (currentTempUnit === "F") {
+        tempMin = 40 * 9 / 5 + 32;   // 104°F
+        tempMax = 120 * 9 / 5 + 32; // 248°F
+        tempLabel = "Temperature (°F)";
+      } else {
+        tempMin = 40;
+        tempMax = 120;
+        tempLabel = "Temperature (°C)";
+      }
+
+      // ---- Pressure limits ----
+      let pressureMin, pressureMax, pressureLabel;
+
+      if (currentPressureUnit === "PSI") {
+        pressureMin = 0;
+        pressureMax = 16 * 14.5038; // ≈ 232 PSI
+        pressureLabel = "Pressure (PSI)";
+      } else {
+        pressureMin = 0;
+        pressureMax = 16;
+        pressureLabel = "Pressure (bar)";
+      }
+
+      // ---- Apply to temperature chart ----
+      tempChart.options.scales.y.min = tempMin;
+      tempChart.options.scales.y.max = tempMax;
+      tempChart.options.scales.y.title.text = tempLabel;
+
+      // ---- Apply to pressure chart ----
+      pressureChart.options.scales.y.min = pressureMin;
+      pressureChart.options.scales.y.max = pressureMax;
+      pressureChart.options.scales.y.title.text = pressureLabel;
+
+      // ---- Apply to combined chart ----
+      combinedChart.options.scales.y1.min = tempMin;
+      combinedChart.options.scales.y1.max = tempMax;
+
+      combinedChart.options.scales.y2.min = pressureMin;
+      combinedChart.options.scales.y2.max = pressureMax;
+
+      // ---- Redraw ----
+      tempChart.update('none');
+      pressureChart.update('none');
+      combinedChart.update('none');
+    }
+
+
+    // --- Button Setup ---
+    document.getElementById("connectButton").onclick = connectToDevice;
+
+    // --- Send data function ---
+    async function sendData(command) {
+      console.log("Attempting to send:", command);
+      console.log("Device:", device);
+      console.log("Device connected:", device && device.gatt && device.gatt.connected);
+      console.log("Write characteristic:", writeCharacteristic);
+
+      if (device && device.gatt && device.gatt.connected && writeCharacteristic) {
+        try {
+          console.log("Attempting to send data...");
+          console.log("Write characteristic properties:", writeCharacteristic.properties);
+
+          const encoder = new TextEncoder();
+          const data = encoder.encode(command);
+
+          if (writeCharacteristic.properties.writeWithoutResponse) {
+            console.log("Using writeWithoutResponse");
+            await writeCharacteristic.writeValueWithoutResponse(data);
+          } else if (writeCharacteristic.properties.write) {
+            console.log("Using regular write");
+            await writeCharacteristic.writeValue(data);
+          } else {
+            throw new Error("Characteristic doesn't support writing");
+          }
+
+          console.log("Data sent successfully");
+          addDataEntry(command, "sent");
+
+        } catch (error) {
+          console.error("Error sending data:", error);
+          addDataEntry(`Error: ${error.message}`, "error");
+        }
+      } else {
+        let errorMsg = "Cannot send data: ";
+        if (!device) {
+          errorMsg += "No device selected";
+        } else if (!device.gatt) {
+          errorMsg += "Device GATT not available";
+        } else if (!device.gatt.connected) {
+          errorMsg += "Device not connected";
+        } else if (!writeCharacteristic) {
+          errorMsg += "No writable characteristic found - check console for available characteristics";
+        }
+
+        console.log("Send error:", errorMsg);
+        addDataEntry(errorMsg, "error");
+      }
+    }
+
+    // --- Helper function to update connection state ---
+    function updateConnectionState(connected) {
+      const tempToggle = document.getElementById("tempToggle");
+      const pressureToggle = document.getElementById("pressureToggle");
+      const alwaysOnToggle = document.getElementById("alwaysOnToggle");
+      const brightnessContainer = document.getElementById("brightnessContainer");
+      const zeroBtn = document.getElementById("zeroPressureButton");
+      const setSleepBtn = document.getElementById("setSleepTimeButton");
+      const setCalBtn = document.getElementById("setPressureCalibrationButton");
+
+      if (connected) {
+        if (tempToggle) tempToggle.classList.remove("disabled");
+        if (pressureToggle) pressureToggle.classList.remove("disabled");
+        if (alwaysOnToggle) alwaysOnToggle.classList.remove("disabled");
+        if (brightnessContainer) brightnessContainer.classList.remove("disabled");
+
+        if (zeroBtn) zeroBtn.disabled = false;
+        if (setSleepBtn) setSleepBtn.disabled = false;
+        if (setCalBtn) setCalBtn.disabled = false;
+      } else {
+        if (tempToggle) tempToggle.classList.add("disabled");
+        if (pressureToggle) pressureToggle.classList.add("disabled");
+        if (alwaysOnToggle) alwaysOnToggle.classList.add("disabled");
+        if (brightnessContainer) brightnessContainer.classList.add("disabled");
+
+        if (zeroBtn) zeroBtn.disabled = true;
+        if (setSleepBtn) setSleepBtn.disabled = true;
+        if (setCalBtn) setCalBtn.disabled = true;
+      }
+    }
+
+    // --- Add data entry to scrolling list ---
+    function addDataEntry(data, type) {
+      const rawDataDisplay = document.getElementById("rawDataDisplay");
+      if (!rawDataDisplay) return; // Exit if element doesn't exist
+
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = {
+        timestamp,
+        data,
+        type
+      };
+
+      dataEntries.unshift(entry);
+
+      if (dataEntries.length > 100) {
+        dataEntries.pop();
+      }
+
+      updateDataDisplay();
+    }
+
+    // --- Update the data display ---
+    function updateDataDisplay() {
+      const rawDataDisplay = document.getElementById("rawDataDisplay");
+      if (!rawDataDisplay) return; // Exit if element doesn't exist
+
+      rawDataDisplay.innerHTML = "";
+
+      dataEntries.forEach(entry => {
+        const entryElement = document.createElement("div");
+        entryElement.className = `data-entry ${entry.type}`;
+
+        const timestampSpan = document.createElement("span");
+        timestampSpan.className = "data-timestamp";
+        timestampSpan.textContent = `[${entry.timestamp}]`;
+
+        const dataSpan = document.createElement("span");
+        dataSpan.textContent = entry.data;
+
+        entryElement.appendChild(timestampSpan);
+        entryElement.appendChild(dataSpan);
+        rawDataDisplay.appendChild(entryElement);
+      });
+
+      if (dataEntries.length === 0) {
+        const placeholder = document.createElement("div");
+        placeholder.className = "data-entry";
+        placeholder.textContent = "No data yet...";
+        rawDataDisplay.appendChild(placeholder);
+      }
+    }
+
+    // --- Reset charts function ---
+    function resetCharts() {
+      if (tempChart && pressureChart && combinedChart) {
+        chartData = { labels: [], temp: [], pressure: [] };
+        secondsCounter = 0;
+
+        tempChart.data.labels = [];
+        tempChart.data.datasets[0].data = [];
+        tempChart.update();
+
+        pressureChart.data.labels = [];
+        pressureChart.data.datasets[0].data = [];
+        pressureChart.update();
+
+        combinedChart.data.labels = [];
+        combinedChart.data.datasets[0].data = [];
+        combinedChart.data.datasets[1].data = [];
+        combinedChart.update();
+      }
+    }
+
+
+
+    // --- Chart reset by data points (configurable) ---
+    // ensure maxPointsValue has a default (do not redeclare if it already exists)
+    if (typeof maxPointsValue === 'undefined') { maxPointsValue = 50; }
+
+    // Load saved preference (if any)
+    try {
+      const saved = parseInt(localStorage.getItem('chartResetPoints'), 10);
+      if (!isNaN(saved) && saved >= 5) {
+        maxPointsValue = Math.min(saved, 240);
+      }
+    } catch (e) {
+      console.log('Error reading chartResetPoints from localStorage', e);
+    }
+
+    // Initialize input value and wire up Set button
+    document.addEventListener('DOMContentLoaded', function () {
+      const input = document.getElementById('chartResetInput');
+      if (input) input.value = String(maxPointsValue);
+
+      const btn = document.getElementById('setChartResetButton');
+      if (btn && input) {
+        btn.addEventListener('click', function () {
+          const val = parseInt(input.value, 10);
+          if (isNaN(val) || val < 5 || val > 240) {
+            alert('Please enter a number between 5 and 240 data points.');
+            input.value = String(maxPointsValue);
+            return;
+          }
+          maxPointsValue = val;
+          try { localStorage.setItem('chartResetPoints', String(maxPointsValue)); } catch (e) { console.log('Could not save chartResetPoints', e); }
+
+          // small visual feedback
+          btn.textContent = 'Saved';
+          setTimeout(() => { btn.textContent = 'Set'; }, 900);
+        });
+      }
+    });
+    // --- Temperature Toggle Switch Handler ---
+    document.getElementById("tempToggle").onclick = async () => {
+      if (document.getElementById("tempToggle").classList.contains("disabled")) {
+        return;
+      }
+
+      console.log("Temperature toggle switch clicked");
+
+      const command = tempToggleActive ? "C" : "F";
+      const newUnit = tempToggleActive ? "C" : "F";
+      updateTempToggleSwitch(newUnit);
+      updateChartRanges();
+
+      resetCharts();
+      updateCharts();
+      updateGauges();
+
+      skipNextData = true;
+      await sendData(command);
+    };
+
+    // --- Brightness Slider Handler ---
+    let brightnessTimeout = null;
+    let userInitiatedBrightnessChange = false;
+
+    document.getElementById("brightnessSlider").oninput = function () {
+      const value = this.value;
+      document.getElementById("brightnessValue").textContent = value;
+      userInitiatedBrightnessChange = true;
+    };
+
+    document.getElementById("brightnessSlider").onchange = function () {
+      const value = this.value;
+
+      if (userInitiatedBrightnessChange && isConnected) {
+        if (brightnessTimeout) {
+          clearTimeout(brightnessTimeout);
+        }
+
+        const formattedValue = value.padStart(3, '0');
+        const command = `L${formattedValue}`;
+        sendData(command);
+      }
+
+      userInitiatedBrightnessChange = false;
+    };
+
+    // --- Pressure Toggle Switch Handler ---
+    document.getElementById("pressureToggle").onclick = async () => {
+      const toggleEl = document.getElementById("pressureToggle");
+      if (toggleEl.classList.contains("disabled")) {
+        return;
+      }
+
+      console.log("Pressure toggle switch clicked");
+
+      const newActive = !pressureToggleActive;
+      const newUnit = newActive ? "PSI" : "Bar";
+
+      updatePressureToggleSwitch(newUnit);
+      updateChartRanges();
+
+      resetCharts();
+      updateCharts();
+      updateGauges();
+
+      skipNextData = true;
+
+      const command = newUnit === "PSI" ? "P" : "B";
+      await sendData(command);
+    };
+
+    // --- Always-On Toggle Switch Handler ---
+    document.getElementById("alwaysOnToggle").onclick = async () => {
+      if (document.getElementById("alwaysOnToggle").classList.contains("disabled")) {
+        return;
+      }
+
+      console.log("Always-on toggle switch clicked");
+
+      const newState = !alwaysOnToggleActive;
+      const command = newState ? "S1" : "S0";
+
+      updateAlwaysOnToggleSwitch(newState);
+
+      await sendData(command);
+    };
+
+    // --- Raw Data Toggle Switch Handler ---
+    document.addEventListener("DOMContentLoaded", function () {
+      const rawDataToggle = document.getElementById("rawDataToggle");
+      if (rawDataToggle) {
+        rawDataToggle.onclick = () => {
+          updateRawDataToggleSwitch(!rawDataToggleActive);
+        };
+      }
+    });
+
+    // --- Other Button Handlers ---
+    document.getElementById("pauseResumeButton").onclick = () => {
+      const btn = document.getElementById("pauseResumeButton");
+      paused = !paused;
+      btn.textContent = paused ? "Resume" : "Pause";
+
+      if (paused) {
+        btn.classList.add("resume");
+      } else {
+        btn.classList.remove("resume");
+      }
+    };
+
+    document.getElementById("resetButton").onclick = () => {
+      chartData = { labels: [], temp: [], pressure: [] }; secondsCounter = 0;
+
+      [tempChart, pressureChart, combinedChart].forEach(chart => {
+        chart.data.labels = [];
+        chart.data.datasets.forEach(ds => ds.data = []);
+        chart.update();
+      });
+
+      const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+      const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+
+      document.getElementById("tempCurrentValue").textContent = `Temperature: -- ${tempUnit}`;
+      document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
+      document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
+
+      updateGauges();
+    };
+
+    document.getElementById("toggleViewButton").onclick = () => {
+      if (!gaugeView) {
+        splitView = !splitView;
+        localStorage.setItem("viewChoice", splitView ? "split" : "combined");
+      }
+      updateView();
+    };
+
+    document.getElementById("toggleGaugeButton").onclick = () => {
+      gaugeView = !gaugeView;
+      localStorage.setItem("gaugeMode", gaugeView ? "true" : "false");
+      updateView();
+      if (gaugeView) {
+        setTimeout(() => {
+          updateGauges();
+        }, 50);
+      }
+    };
+
+    function updateView() {
+      document.body.classList.toggle('gauges-visible', gaugeView);
+      document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
+      document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
+      document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
+
+      const toggleViewButton = document.getElementById("toggleViewButton");
+
+      if (gaugeView) {
+        document.getElementById("splitView").style.display = "none";
+        document.getElementById("combinedView").style.display = "none";
+        document.getElementById("gaugeView").style.display = "flex";
+        toggleViewButton.style.display = "none";
+        document.getElementById("toggleGaugeButton").textContent = "Charts";
+      } else {
+        document.getElementById("splitView").style.display = splitView ? "flex" : "none";
+        document.getElementById("combinedView").style.display = splitView ? "none" : "flex";
+        document.getElementById("gaugeView").style.display = "none";
+        toggleViewButton.style.display = "inline-block";
+        toggleViewButton.textContent = splitView ? "Combine" : "Split";
+        document.getElementById("toggleGaugeButton").textContent = "Gauges";
+      }
+    }
+
+    // Load saved preferences
+    if (localStorage.getItem("viewChoice") === "combined") splitView = false;
+    if (localStorage.getItem("gaugeMode") === "true") gaugeView = true;
+    updateView();
+
+    // Initialize gauges with default values
+    setTimeout(() => {
+      updateGauges();
+    }, 100);
+
+    // --- Gauge Drawing Functions ---
+    function drawGauge(canvas, value, min, max, unit, color) {
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 100;
+
+      ctx.fillStyle = '#121212';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius + 15, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      const startAngle = 0.75 * Math.PI;
+      const endAngle = 2.25 * Math.PI;
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.strokeStyle = '#2a2a2a';
+      ctx.lineWidth = 20;
+      ctx.stroke();
+
+      if (isConnected && value !== null) {
+        const valueRange = max - min;
+        const normalizedValue = Math.max(0, Math.min(1, (value - min) / valueRange));
+        const valueAngle = startAngle + normalizedValue * (endAngle - startAngle);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, valueAngle);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 20;
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = '#999';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i <= 10; i++) {
+        const tickAngle = startAngle + (i / 10) * (endAngle - startAngle);
+        const innerRadius = radius - 20;
+        const outerRadius = radius + 10;
+        const labelRadius = radius + 28;
+
+        ctx.beginPath();
+        ctx.moveTo(
+          centerX + Math.cos(tickAngle) * innerRadius,
+          centerY + Math.sin(tickAngle) * innerRadius
+        );
+        ctx.lineTo(
+          centerX + Math.cos(tickAngle) * outerRadius,
+          centerY + Math.sin(tickAngle) * outerRadius
+        );
+        ctx.stroke();
+
+        const tickValue = min + (i / 10) * (max - min);
+        const labelX = centerX + Math.cos(tickAngle) * labelRadius;
+        const labelY = centerY + Math.sin(tickAngle) * labelRadius;
+        ctx.fillText(Math.round(tickValue).toString(), labelX, labelY);
+      }
+
+      ctx.fillStyle = color;
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (!isConnected || value === null) {
+        ctx.fillText("--.-", centerX, centerY - 15);
+      } else {
+        ctx.fillText(value.toFixed(1), centerX, centerY - 15);
+      }
+
+      ctx.fillStyle = '#ccc';
+      ctx.font = '18px Arial';
+      ctx.fillText(unit, centerX, centerY + 15);
+    }
+
+    function updateGauges() {
+      if (!gaugeView) return;
+
+      const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+      const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+
+      let displayTemp = isConnected ? currentTemp : null;
+      let displayPressure = isConnected ? currentPressure : null;
+
+      if (currentTempUnit === "F") {
+        displayTemp = displayTemp;
+      }
+
+      if (currentPressureUnit === "PSI") {
+        displayPressure = displayPressure;
+      }
+
+      let tempMin, tempMax;
+      if (currentTempUnit === "F") {
+        tempMin = 0;
+        tempMax = 302;
+      } else {
+        tempMin = 0;
+        tempMax = 150;
+      }
+
+      let pressureMin, pressureMax;
+      if (currentPressureUnit === "PSI") {
+        pressureMin = 0;
+        pressureMax = 262;
+      } else {
+        pressureMin = 0;
+        pressureMax = 18;
+      }
+
+      const tempCanvas = document.getElementById('tempGauge');
+      const pressureCanvas = document.getElementById('pressureGauge');
+
+      if (tempCanvas && pressureCanvas) {
+        drawGauge(tempCanvas, displayTemp, tempMin, tempMax, tempUnit, '#ff7f7f');
+        drawGauge(pressureCanvas, displayPressure, pressureMin, pressureMax, pressureUnit, '#7fbfff');
+      }
+    }
+
+    // --- Data Handling ---
+    function handleData(event) {
+      const rawData = new TextDecoder().decode(event.target.value).trim();
+
+      addDataEntry(rawData, "received");
+
+      receivedDataCount++;
+
+      if (skipNextData) {
+        console.log("Skipped dataset after toggle:", rawData);
+        skipNextData = false;
+        return;
+      }
+
+      const dataParts = rawData.split(",");
+      let isFahrenheit = false;
+      let isPSI = false;
+
+      if (dataParts.length >= 3) {
+        const thirdValue = dataParts[2].trim();
+        if (thirdValue === "C") {
+          updateTempToggleSwitch("C");
+          isFahrenheit = false;
+        } else if (thirdValue === "F") {
+          updateTempToggleSwitch("F");
+          isFahrenheit = true;
+        } else {
+          updateTempToggleSwitch("C");
+          isFahrenheit = false;
+        }
+      } else {
+        updateTempToggleSwitch("C");
+        isFahrenheit = false;
+      }
+
+      if (dataParts.length >= 4) {
+        const fourthValue = dataParts[3].trim();
+        if (fourthValue === "bar") {
+          updatePressureToggleSwitch("Bar");
+          isPSI = false;
+        } else if (fourthValue === "psi") {
+          updatePressureToggleSwitch("PSI");
+          isPSI = true;
+        } else {
+          isPSI = (currentPressureUnit === "PSI");
+        }
+      } else {
+        isPSI = (currentPressureUnit === "PSI");
+      }
+
+      if (dataParts.length >= 5 && !alwaysOnDataReceived) {
+        const fifthValue = dataParts[4].trim();
+        if (fifthValue === "1") {
+          updateAlwaysOnToggleSwitch(true);
+          alwaysOnDataReceived = true;
+          console.log("Always-on toggle set to ON from device");
+        } else if (fifthValue === "0") {
+          updateAlwaysOnToggleSwitch(false);
+          alwaysOnDataReceived = true;
+          console.log("Always-on toggle set to OFF from device");
+        }
+      }
+
+      if (dataParts.length >= 6 && !brightnessDataReceived) {
+        const sixthValue = dataParts[5].trim();
+        const brightnessValue = parseInt(sixthValue);
+
+        if (!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
+          updateBrightnessSlider(brightnessValue);
+          brightnessDataReceived = true;
+          console.log(`Initial brightness set from device: ${brightnessValue}`);
+        }
+      }
+
+      if (receivedDataCount === 6 && dataParts.length >= 1 && !brightnessDataReceived) {
+        const brightnessValue = parseInt(dataParts[0].trim());
+        if (!isNaN(brightnessValue) && brightnessValue >= 10 && brightnessValue <= 250) {
+          updateBrightnessSlider(brightnessValue);
+          brightnessDataReceived = true;
+          console.log(`Initial brightness set from 6th packet: ${brightnessValue}`);
+        }
+      }
+
+      if (dataParts.length >= 7 && !calibrationDataReceived) {
+        const seventhValue = dataParts[6].trim();
+        const calibrationValue = parseFloat(seventhValue);
+
+        if (!isNaN(calibrationValue)) {
+          currentCalibrationValue = calibrationValue;
+          calibrationDataReceived = true;
+          console.log(`Calibration value received from device: ${calibrationValue}`);
+
+          const calInput = document.getElementById("pressureCalibrationInput");
+          if (calInput) {
+            calInput.value = calibrationValue.toFixed(2);
+          }
+        }
+      }
+
+      if (receivedDataCount === 7 && dataParts.length >= 1 && !calibrationDataReceived) {
+        const calibrationValue = parseFloat(dataParts[0].trim());
+        if (!isNaN(calibrationValue)) {
+          currentCalibrationValue = calibrationValue;
+          calibrationDataReceived = true;
+          console.log(`Calibration value received from 7th packet: ${calibrationValue}`);
+
+          const calInput = document.getElementById("pressureCalibrationInput");
+          if (calInput) {
+            calInput.value = calibrationValue.toFixed(2);
+          }
+        }
+      }
+
+      if (isConnected && !calibrationDataReceivedOnce && dataParts.length >= 7) {
+        const seventhValue = dataParts[6].trim();
+        const calVal = parseFloat(seventhValue);
+        if (!isNaN(calVal) && calVal >= -5 && calVal <= 5) {
+          const calInput = document.getElementById("pressureCalibrationInput");
+          if (calInput) {
+            calInput.value = calVal.toFixed(2);
+            calibrationDataReceivedOnce = true;
+            console.log(`Calibration value set from device on connect: ${calVal.toFixed(2)}`);
+          }
+        }
+      }
+
+      if (isConnected && !sleepDataReceived && dataParts.length >= 10) {
+        const tenthValue = dataParts[9].trim();
+        const sleepVal = parseInt(tenthValue);
+        if (!isNaN(sleepVal) && sleepVal >= 1 && sleepVal <= 60) {
+          const sleepInput = document.getElementById("sleepTimeInput");
+          if (sleepInput) {
+            sleepInput.value = sleepVal;
+            sleepDataReceived = true;
+            console.log(`Sleep time set from device on connect: ${sleepVal} min`);
+          }
+        }
+      }
+
+      // --- Firmware version (11th data point, index 10) ---
+      if (!firmwareDataReceived && dataParts.length >= 11) {
+
+        const firmwareValue = dataParts[10].trim();
+
+        // Basic sanity check: avoid garbage / partial fields
+        if (firmwareValue.length > 0 && firmwareValue.length <= 16) {
+
+          firmwareVersion = firmwareValue;
+          firmwareDataReceived = true;
+
+          const firmwareDisplay = document.getElementById("firmwareVersionDisplay");
+          if (firmwareDisplay) {
+            firmwareDisplay.textContent = firmwareVersion;
+          }
+
+          console.log("Firmware version received from device:", firmwareVersion);
+        }
+      }
+
+
+
+      // --- Battery (8th data point) + charging (9th) ---
+      if (dataParts.length >= 8) {
+        const batteryPercent = parseInt(dataParts[7].trim());
+        const chargingFlag = dataParts.length >= 9 ? dataParts[8].trim() === "1" : true;
+        if (!isNaN(batteryPercent)) {
+          updateBattery(batteryPercent, chargingFlag);
+          batteryDataReceived = true;
+          console.log(`Battery: ${batteryPercent}% ${chargingFlag ? "(charging)" : ""}`);
+        }
+
+      }
+
+      if (paused) return;
+
+      if (dataParts.length >= 2) {
+        const tempStr = dataParts[0];
+        const pressureStr = dataParts[1];
+
+        currentTemp = parseFloat(tempStr);
+        currentPressure = Math.max(0, parseFloat(pressureStr));
+
+        updateCharts();
+        updateGauges();
+      }
+    }
+
+    // --- Update Charts Function ---
+    function updateCharts() {
+      const label = secondsCounter++;
+      chartData.labels.push(label);
+      chartData.temp.push(currentTemp);
+      chartData.pressure.push(currentPressure);
+
+      if (chartData.labels.length >= (maxPointsValue + 2)) {
+        // Reset charts after reaching the configured number of data points
+        console.log(`Resetting charts after ${maxPointsValue} data points`);
+        // Clear existing data and start fresh with the most recent point as the first entry
+        const lastTemp = chartData.temp[chartData.temp.length - 1];
+        const lastPressure = chartData.pressure[chartData.pressure.length - 1];
+        chartData.labels = [label];
+        chartData.temp = [lastTemp];
+        chartData.pressure = [lastPressure];
+        secondsCounter = 0;
+      }
+
+      const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+      tempChart.data.labels = chartData.labels;
+      tempChart.data.datasets[0].data = chartData.temp;
+      tempChart.data.datasets[0].label = `Temp (${tempUnit})`;
+      tempChart.options.scales.y.title.text = `Temperature (${tempUnit})`;
+
+      let displayTemp = currentTemp;
+      if (currentTempUnit === "F") {
+        displayTemp = currentTemp;
+      }
+      document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
+
+      tempChart.update();
+
+      const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+      let displayPressure = currentPressure;
+
+      if (currentPressureUnit === "PSI") {
+        displayPressure = barToPsi(currentPressure);
+      }
+
+      pressureChart.data.labels = chartData.labels;
+      pressureChart.data.datasets[0].data = chartData.pressure.map(p => {
+        return currentPressureUnit === "PSI" ? barToPsi(p) : p;
+      });
+      pressureChart.data.datasets[0].label = `Pressure (${pressureUnit})`;
+      pressureChart.options.scales.y.title.text = `Pressure (${pressureUnit})`;
+
+      document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}`;
+
+      pressureChart.update();
+
+      combinedChart.data.labels = chartData.labels;
+      combinedChart.data.datasets[0].data = chartData.temp.map(t => {
+        return currentTempUnit === "F" ? t : t;
+      });
+      combinedChart.data.datasets[1].data = chartData.pressure.map(p => {
+        return currentPressureUnit === "PSI" ? barToPsi(p) : p;
+      });
+      combinedChart.data.datasets[0].label = `Temp (${tempUnit})`;
+      combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
+
+      document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}</span>`;
+
+      combinedChart.update();
+    }
+
+    // --- Auto-check BLE every second ---
+    setInterval(() => {
+      const btn = document.getElementById("connectButton");
+      if (device) {
+        if (device.gatt.connected) {
+          btn.textContent = "Disconnect"; btn.className = "connected";
+          if (!isConnected) {
+            isConnected = true;
+            updateConnectionState(true);
+            updateGauges();
+          }
+        } else {
+          btn.textContent = "Connect"; btn.className = "disconnected";
+          if (isConnected) {
+            isConnected = false;
+            updateConnectionState(false);
+            updateGauges();
+          }
+        }
+      }
+    }, 1000);
+
+    // Initialize toggles and brightness slider as disabled on page load
+    updateConnectionState(false);
+
+    // --- Advance Toggle ---
+    document.addEventListener("DOMContentLoaded", function () {
+      const btn = document.getElementById("advanceToggle");
+      const advContent = document.getElementById("advanceContent");
+      if (btn && advContent) {
+        btn.addEventListener("click", function () {
+          if (advContent.style.display === "none" || advContent.style.display === "") {
+            advContent.style.display = "block";
+            btn.textContent = "Advance ▲";
+            setTimeout(function () { ensureAdvancePanelVisible(advContent); }, 60);
+          } else {
+            advContent.style.display = "none";
+            btn.textContent = "Advance ▼";
+          }
+        });
+      }
+    });
+
+    // --- Sleep Time Button Handler ---
+    document.getElementById("setSleepTimeButton").onclick = async () => {
+      const input = document.getElementById("sleepTimeInput");
+      let val = parseInt(input.value, 10);
+      if (isNaN(val) || val < 1 || val > 60) {
+        alert("Please enter a number between 1 and 60.");
+        return;
+      }
+      const formatted = val.toString().padStart(2, '0');
+      const command = `n${formatted}`;
+      await sendData(command);
+    };
+
+    // --- Pressure Calibration Button Handler ---
+    document.getElementById("setPressureCalibrationButton").onclick = async () => {
+      const input = document.getElementById("pressureCalibrationInput");
+      let val = input.value.trim();
+      if (!/^\d(\.\d{1,2})?$/.test(val)) {
+        alert("Please enter a valid number like 1.29 (max 4 chars).");
+        return;
+      }
+      if (val.length > 4) {
+        alert("Calibration value must be 4 characters or less.");
+        return;
+      }
+      const command = `c${val}`;
+      await sendData(command);
+    };
+
+    // --- Zero Button Handler ---
+    document.getElementById("zeroPressureButton").onclick = async () => {
+      const btn = document.getElementById("zeroPressureButton");
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = "Zeroing...";
+      try {
+        if (!(device && device.gatt && device.gatt.connected)) {
+          try {
+            await connectToDevice();
+          } catch (connectErr) {
+            console.error("Connect failed or cancelled:", connectErr);
+            addDataEntry("Zero command cancelled: not connected", "error");
+            throw connectErr;
+          }
+        }
+        await sendData('g');
+        addDataEntry("Zero command sent ('g')", "sent");
+      } catch (err) {
+        console.error("Zero command error:", err);
+        addDataEntry("Zero command failed: " + (err && err.message ? err.message : err), "error");
+      } finally {
+        // Keep "Zeroing..." visible for 3 seconds before reverting
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = origText || "Zero";
+        }, 900);
+      }
+    };
+
+    // Initialize disabled state for advanced buttons
+    document.addEventListener("DOMContentLoaded", function () {
+      try {
+        const zeroBtn = document.getElementById("zeroPressureButton");
+        const setSleepBtn = document.getElementById("setSleepTimeButton");
+        const setCalBtn = document.getElementById("setPressureCalibrationButton");
+        if (zeroBtn) zeroBtn.disabled = true;
+        if (setSleepBtn) setSleepBtn.disabled = true;
+        if (setCalBtn) setCalBtn.disabled = true;
+      } catch (e) {
+        console.log("init button disable error", e);
+      }
+    });
+  </script>
+
+  <script>
+    function versionCompare(v1, v2) {
+      const parts1 = v1.split('.').map(Number);
+      const parts2 = v2.split('.').map(Number);
+      const maxLen = Math.max(parts1.length, parts2.length);
+      for (let i = 0; i < maxLen; i++) {
+        const p1 = parts1[i] || 0;
+        const p2 = parts2[i] || 0;
+        if (p1 > p2) return 1;
+        if (p1 < p2) return -1;
+      }
+      return 0;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const checkFirmwareButton = document.getElementById('checkFirmwareButton');
+      if (checkFirmwareButton) {
+        checkFirmwareButton.addEventListener('click', async function () {
+          try {
+            const response = await fetch('latest_version.txt'); // Assumes the file is 'latest_version.txt' on the same server
+            if (!response.ok) {
+              throw new Error('Failed to fetch latest version');
+            }
+            const latestVersion = await response.text();
+            const latest = latestVersion.trim();
+            if (firmwareVersion && versionCompare(latest, firmwareVersion) > 0) {
+              const shouldUpdate = confirm(`Update available! Current: ${firmwareVersion}, Latest: ${latest}\nDo you want to update now?`);
+              if (shouldUpdate) {
+                if (isConnected) {
+                  await sendData('V1');
+                  window.location.href = 'setup.html';
+                } else {
+                  alert('Please connect to the device first.');
+                }
+              }
+            } else {
+              alert(`Firmware is up to date. Current: ${firmwareVersion || '--'}, Latest: ${latest}`);
+            }
+          } catch (error) {
+            alert('Error checking latest version: ' + error.message);
+          }
+        });
+      }
+    });
+  </script>
+
+  </div>
+
+  <!-- Minimal footer with coffee-bean icon link to game.html -->
+  <footer id="pageFooter" class="minimal-footer" role="contentinfo" aria-label="Site footer">
+    <div class="footer-inner">
+      <a href="game.html" class="footer-link" aria-label="Play Game" title="Play Game">
+        <!-- Coffee bean SVG icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          aria-hidden="true" focusable="false">
+          <path
+            d="M21.36 11.04c-1.04-3.12-4.08-6.36-8.04-6.36-0.84 0-1.68 0.12-2.46 0.36 0.9 0.54 1.74 1.32 2.46 2.28 1.74 2.4 2.04 5.04 2.16 6.48 0.12 1.44-0.24 3.18-1.38 4.74 2.64-0.72 5.1-3 6.36-7.5 0.42-1.32 0.36-2.22 0.24-2.99z"
+            fill="#6b4f4b" />
+          <path
+            d="M3.24 12.96c1.04 3.12 4.08 6.36 8.04 6.36 0.84 0 1.68-0.12 2.46-0.36-0.9-0.54-1.74-1.32-2.46-2.28-1.74-2.4-2.04-5.04-2.16-6.48-0.12-1.44 0.24-3.18 1.38-4.74-2.64 0.72-5.1 3-6.36 7.5-0.42 1.32-0.36 2.22-0.24 2.99z"
+            fill="#704942" />
+        </svg>
+        <span class="sr-only">Play Game</span>
+      </a>
+      <div class="footer-text">SirusPTB</div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function getBtnText(btn) {
+        if (!btn) return '';
+        return (btn.tagName === 'INPUT') ? btn.value : btn.textContent;
+      }
+      function setBtnText(btn, text) {
+        if (!btn) return;
+        if (btn.tagName === 'INPUT') btn.value = text;
+        else btn.textContent = text;
+      }
+
+      function addSavedFeedback(btn) {
+        if (!btn) return;
+        if (btn._savedFeedbackAttached) return;
+        btn._savedFeedbackAttached = true;
+
+        btn.addEventListener('click', function () {
+          const prev = getBtnText(btn) || 'Set';
+          setBtnText(btn, 'Saved');
+          setTimeout(() => setBtnText(btn, prev), 900);
+        });
+      }
+
+      const sleepButtonIds = [
+        'setSleepButton', 'setSleep', 'setSleepBtn', 'sleepSetButton', 'sleepSet'
+      ];
+      const calButtonIds = [
+        'setCalibrationButton', 'setCal', 'setCalButton', 'setCalBtn', 'setCalibration', 'pressureCalSet', 'setPressureCalibration'
+      ];
+
+      sleepButtonIds.concat(calButtonIds).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) addSavedFeedback(el);
+      });
+
+      ['sleepTimeInput', 'pressureCalibrationInput'].forEach(inputId => {
+        const inputEl = document.getElementById(inputId);
+        if (!inputEl) return;
+        const parent = inputEl.parentElement || inputEl.closest('td') || inputEl.closest('tr');
+        if (!parent) return;
+        const candidate = parent.querySelector('button, input[type="button"], input[type="submit"]');
+        if (candidate) addSavedFeedback(candidate);
+      });
+    });
+  </script>
+
+
+  <!-- Help button script injected by ChatGPT -->
+  <script>
+    (function () {
+      function $(id) { return document.getElementById(id); }
+      const helpBtn = $("helpButton");
+      const modal = $("helpModal");
+      const closeBtn = $("helpClose");
+      const deviceBtn = $("deviceHelpBtn");
+      const appBtn = $("appHelpBtn");
+      const deviceSec = $("deviceHelp");
+      const appSec = $("appHelp");
+
+      if (!helpBtn || !modal) return;
+
+      function openModal() {
+        modal.style.display = "flex";
+        modal.setAttribute("aria-hidden", "false");
+        deviceSec.classList.remove("show");
+        appSec.classList.remove("show");
+        // focus first actionable element
+        setTimeout(() => deviceBtn && deviceBtn.focus(), 50);
+      }
+      function closeModal() {
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+        helpBtn && helpBtn.focus();
+      }
+
+      helpBtn.addEventListener("click", openModal);
+      helpBtn.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(); }
+      });
+
+      closeBtn && closeBtn.addEventListener("click", closeModal);
+      modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
+
+      deviceBtn && deviceBtn.addEventListener("click", function () {
+        deviceSec.classList.add("show");
+        appSec.classList.remove("show");
+        deviceSec.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+      appBtn && appBtn.addEventListener("click", function () {
+        appSec.classList.add("show");
+        deviceSec.classList.remove("show");
+        appSec.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+
+      // allow Escape key to close modal
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal.style.display === "flex") { closeModal(); }
+      });
+    })();
+  </script>
+
+</body>
+
+</html>
