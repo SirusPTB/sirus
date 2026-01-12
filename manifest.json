@@ -1,7 +1,7 @@
 {
-  "name": "SirusPTB",
+  "name": "EMA SirusPTB",
   "short_name": "SirusPTB",
-  "description": "Bluetooth pressure & temperature monitor with Coffee Catch game",
+  "description": "Bluetooth pressure & temperature monitor.",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#121212",
