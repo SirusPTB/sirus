@@ -10,6 +10,15 @@
   <title>SirusPTB </title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    #installButton {
+      background-color: #2a7cff;
+      color: #fff;
+    }
+
+    #installButton.hidden {
+      display: none !important;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -1096,6 +1105,8 @@
     <!-- Graphs Page -->
     <div id="graphPage">
       <div class="button-row">
+
+
         <button class="disconnected" id="connectButton">Connect</button>
         <div class="toggle-container">
           <n>°C/°F:</n>
@@ -1109,6 +1120,9 @@
             <div class="toggle-slider">Bar</div>
           </div>
         </div>
+        <button id="installButton">
+          Install App
+        </button>
       </div>
     </div>
 
@@ -2966,13 +2980,47 @@
   </script>
 
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registered', reg))
-          .catch(err => console.log('Service Worker registration failed', err));
-      });
-    }
+
+    let deferredInstallPrompt = null;
+    const installButton = document.getElementById("installButton");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      // Prevent browser mini-infobar
+      e.preventDefault();
+
+      deferredInstallPrompt = e;
+      installButton.style.display = "inline-block";
+    });
+
+    installButton.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) return;
+
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+
+      if (outcome === "accepted") {
+        installButton.style.display = "none";
+      }
+
+      deferredInstallPrompt = null;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      installButton.style.display = "none";
+      deferredInstallPrompt = null;
+    });
+  </script>
+
+
+  if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+  navigator.serviceWorker.register('sw.js')
+  .then(reg => console.log('Service Worker registered', reg))
+  .catch(err => console.log('Service Worker registration failed', err));
+  });
+  }
+
+
   </script>
 
 </body>
