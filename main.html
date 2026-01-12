@@ -1120,9 +1120,10 @@
             <div class="toggle-slider">Bar</div>
           </div>
         </div>
-        <button id="installButton">
+        <button id="installButton" style="display:none;">
           Install App
         </button>
+
       </div>
     </div>
 
@@ -3010,15 +3011,15 @@
       deferredInstallPrompt = null;
     });
   </script>
+  <script>
 
-
-  if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-  navigator.serviceWorker.register('sw.js')
-  .then(reg => console.log('Service Worker registered', reg))
-  .catch(err => console.log('Service Worker registration failed', err));
-  });
-  }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered', reg))
+          .catch(err => console.log('Service Worker registration failed', err));
+      });
+    }
 
 
   </script>
