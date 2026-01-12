@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SirusPTB OTA Firmware Update Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #e4e4e7;
+            background: #09090b;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #18181b;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid #27272a;
+        }
+
+        header {
+            background: #27272a;
+            color: #e4e4e7;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 1px solid #3f3f46;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #27272a;
+            border-radius: 12px;
+            border-left: 5px solid #6366f1;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #6366f1;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.1em;
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            color: #a5b4fc;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .step-content {
+            margin-left: 50px;
+            color: #d4d4d8;
+        }
+
+        .warning {
+            background: #422006;
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .warning-title {
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .tip {
+            background: #164e63;
+            border-left: 5px solid #06b6d4;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .tip-title {
+            font-weight: bold;
+            color: #67e8f9;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        code {
+            background: #27272a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #f472b6;
+        }
+
+        .code-block {
+            background: #09090b;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #27272a;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        footer {
+            background: #27272a;
+            padding: 25px;
+            text-align: center;
+            color: #a1a1aa;
+            border-top: 1px solid #3f3f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SirusPTB OTA Firmware Update Guide</h1>
+        </header>
+
+        <div class="content">
+            <div class="warning">
+                <div class="warning-title">⚠️ Important Notice</div>
+                When updating firmware on the SirusPTB you need to ensure the device doesn't lose power during the update so make sure to fully charge the device before starting the update. The device will reboot automatically after a successful update.
+            </div>
+
+            <!-- NEW STEP 1 -->
+            <div class="step">
+                <h2 class="step-title"><span class="step-number">1</span>Download Firmware</h2>
+                <div class="step-content">
+                    <p>First, download the latest firmware file to your computer or mobile device.</p>
+                    <div class="code-block" style="text-align: center; background: #27272a; border: none;">
+                        <!-- 'download' attribute forces the browser to save the file -->
+                        <a href="SirusPTB.bin" download style="color: rgb(234, 95, 206); text-decoration: none; font-weight: bold; font-size: 1.2em;">
+                            ⬇️ Download SirusPTB.bin
+                        </a>
+                    </div>
+                    <p>Once download has completed go on to step 2</p>
+                </div>
+            </div>
+
+            <!-- OLD STEP 1 becomes STEP 2 -->
+            <div class="step">
+                <h2 class="step-title"><span class="step-number">2</span>Connect to Your SirusPTB</h2>
+                <div class="step-content">
+                    <p>Connect your computer or mobile device to the same network as your SirusPTB.</p>
+                    <ul>
+                        <li>Check your computer or phone Wifi list</li>
+                        <li>Look for the Network named SirusPTB-OTA</li>
+                        <li>Join the network. Don't worry if it says no internet.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- OLD STEP 2 becomes STEP 3 -->
+            <div class="step">
+                <h2 class="step-title"><span class="step-number">3</span>Access the OTA Web Interface</h2>
+                <div class="step-content">
+                    <p>Click this link <a href="http://192.168.4.1" style="color: rgb(234, 95, 206);">OTA begin page</a> or type the following into the address bar of your web browser</p>
+                    <div class="code-block">192.168.4.1</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                <div class="warning-title">⚡ Critical: Charge to 100% before starting</div>
+                Keep the SirusPTB as close as possible (within 1 meter) to the device you are using to update the firmware.
+            </div>
+        <footer>
+            <p><strong>SirusPTB OTA Update</strong></p>
+        </footer>
+    </div>
+</body>
+</html>
