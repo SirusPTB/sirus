@@ -1880,7 +1880,7 @@
       // Reset firmware display
       const firmwareDisplay = document.getElementById("firmwareVersionDisplay");
       if (firmwareDisplay) {
-        firmwareDisplay.textContent = "--";
+        firmwareDisplay.textContent = "---";
       }
     }
 
@@ -2580,9 +2580,9 @@
       }
 
       // --- Firmware version (11th data point, index 10) ---
-      if (!firmwareDataReceived && dataParts.length >= 11) {
+      if (!firmwareDataReceived && dataParts.length >= 12) {
 
-        const firmwareValue = dataParts[10].trim();
+        const firmwareValue = dataParts[11].trim();
 
         // Basic sanity check: avoid garbage / partial fields
         if (firmwareValue.length > 0 && firmwareValue.length <= 16) {
