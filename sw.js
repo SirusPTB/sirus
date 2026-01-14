@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sirusptb-v2';
+const CACHE_NAME = 'sirusptb-v3';
 
 const URLS_TO_CACHE = [
   './',
