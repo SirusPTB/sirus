@@ -777,15 +777,21 @@
 
     <script>
 
-        let deferredPrompt = null; // Stores the install event
+        const installButton = document.getElementById('installButton');
+        let deferredPrompt = null;
 
-        // Capture the beforeinstallprompt event (Android/Chrome/Edge etc.)
         window.addEventListener('beforeinstallprompt', (e) => {
+            // If already installed, NEVER show the button
+            if (isAppInstalled()) {
+                installButton.style.display = 'none';
+                console.log('PWA already installed – ignoring beforeinstallprompt');
+                return;
+            }
+
             e.preventDefault();
             deferredPrompt = e;
-            // Always ensure button is visible in browser mode
-            document.getElementById('installButton').style.display = 'block';
-            console.log('Install prompt captured - button shown');
+            installButton.style.display = 'block';
+            console.log('Install prompt available – button shown');
         });
 
         // Hide button after successful install
@@ -820,17 +826,15 @@
 
         // On page load: Hide button ONLY if running as installed PWA (standalone mode)
         window.addEventListener('load', () => {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                (window.navigator.standalone === true);
-
-            if (isStandalone) {
-                document.getElementById('installButton').style.display = 'none';
-                console.log('Running in PWA standalone mode - install button hidden');
+            if (isAppInstalled()) {
+                installButton.style.display = 'none';
+                console.log('Standalone / installed mode – button hidden');
             } else {
-                document.getElementById('installButton').style.display = 'block';
-                console.log('Running in browser - install button shown');
+                installButton.style.display = 'none'; // wait for beforeinstallprompt
+                console.log('Browser mode – waiting for install eligibility');
             }
         });
+
 
         let manualDisconnect = false;
         let reconnectAttempts = 0;
@@ -2137,6 +2141,14 @@
             if (pressureBtn) {
                 pressureBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
             }
+        }
+
+        function isAppInstalled() {
+            return (
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+                window.navigator.standalone === true
+            );
         }
 
 
