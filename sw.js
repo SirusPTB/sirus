@@ -1,6 +1,5 @@
-console.log('SW VERSION 2026-02-14-01');
-
-const CACHE_NAME = 'sirusptb-v4';
+const SW_VERSION = '2026-02-14-02';
+const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
 const URLS_TO_CACHE = [
   './',
@@ -14,9 +13,11 @@ const URLS_TO_CACHE = [
   'favicon.ico'
 ];
 
+console.log('SW VERSION', SW_VERSION);
+
 // Install
 self.addEventListener('install', event => {
-  self.skipWaiting(); // force install immediately
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
@@ -31,7 +32,7 @@ self.addEventListener('activate', event => {
           keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
         )
       ),
-      self.clients.claim() //  take control immediately
+      self.clients.claim()
     ])
   );
 });
