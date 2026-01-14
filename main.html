@@ -1295,10 +1295,25 @@
 
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registered', reg))
-          .catch(err => console.log('Service Worker registration failed', err));
+      window.addEventListener('load', async () => {
+
+        const reg = await navigator.serviceWorker.register('sw.js');
+        console.log('Service Worker registered', reg);
+
+        // 🔴 Force update check on every load
+        reg.update();
+
+        // 🔴 Auto-reload when a new version activates
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('New version activated, reloading...');
+          window.location.reload();
+        });
+
+        // 🔴 Periodic update check while app is open
+        setInterval(async () => {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) registration.update();
+        }, 60 * 1000); // every 60 seconds
       });
     }
 
