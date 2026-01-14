@@ -1,4 +1,4 @@
-const SW_VERSION = '2026-02-14-02';
+const SW_VERSION = '2026-02-14-03';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
 const URLS_TO_CACHE = [
@@ -15,7 +15,6 @@ const URLS_TO_CACHE = [
 
 console.log('SW VERSION', SW_VERSION);
 
-// Install
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -23,33 +22,21 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate
 self.addEventListener('activate', event => {
   event.waitUntil(
     Promise.all([
       caches.keys().then(keys =>
-        Promise.all(
-          keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-        )
+        Promise.all(keys.map(k => caches.delete(k)))
       ),
       self.clients.claim()
     ])
   );
 });
 
-// Fetch (network-first)
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    fetch(event.request)
-      .then(res => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(cache =>
-          cache.put(event.request, copy)
-        );
-        return res;
-      })
-      .catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
