@@ -1,3 +1,5 @@
+console.log('SW VERSION 2026-01-14-01');
+
 const CACHE_NAME = 'sirusptb-v3';
 
 const URLS_TO_CACHE = [
