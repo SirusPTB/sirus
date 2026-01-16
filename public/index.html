@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LVR-1</title>
-    <!-- Add link to manifest for PWA -->
     <link rel="manifest" href="manifest.json">
-    <!-- Add meta tags for iOS support (optional but recommended) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="LVR-1">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png"> <!-- Assume icons are created -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta name="mobile-web-app-capable" content="yes">
     <style>
@@ -19,10 +17,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        .brightness-control {
-            display: none;
         }
 
         @font-face {
@@ -99,7 +93,7 @@
             gap: 1rem;
         }
 
-        h2 {
+        h2, h3 {
             font-size: 1.8rem;
         }
 
@@ -287,12 +281,6 @@
 
         .shot-time.stopped {
             color: #666;
-        }
-
-        .panel-label {
-            font-size: 1.6rem;
-            margin-top: 1rem;
-            color: #ccc;
         }
 
         .graph-container {
@@ -506,7 +494,6 @@
             background: #333;
         }
 
-        /* Remove spinner arrows */
         .pid-input::-webkit-inner-spin-button,
         .pid-input::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -529,32 +516,31 @@
             flex-direction: column;
         }
 
-        .graph-stats {
-            margin-top: 15px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            font-size: 14px;
+        .axis-controls {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #1a1a1a;
+            border-radius: 12px;
         }
 
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .axis-controls .settings-row {
+            justify-content: center;
+            background: transparent;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        .stat-value {
-            color: #06b6d4;
-            font-family: monospace;
+        .axis-controls input[type="number"] {
+            width: 100px;
+            padding: 0.5rem;
+            font-size: 1.2rem;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            text-align: center;
         }
 
-        .disabled-nav {
-            opacity: 0.4;
-            pointer-events: none;
-            cursor: default;
-        }
-
-        /* === FIX MINI GRAPH INITIAL SIZE === */
         #mainPage .graph-container.nav-graph {
             flex: none;
             height: 90vh;
@@ -562,7 +548,6 @@
             max-height: 240px;
         }
 
-        /* === FIX MINI GRAPH CANVAS SIZE === */
         #mainPage #miniGraph {
             height: 90% !important;
         }
@@ -571,10 +556,6 @@
             font-size: 1.9rem;
             line-height: 1;
             padding: 0.6rem 0.8rem;
-        }
-
-        /* === Black background for settings (three-dot) button === */
-        .nav-settings {
             background: #000;
         }
 
@@ -585,7 +566,6 @@
 </head>
 
 <body>
-
     <button id="installButton"
         style="position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;"
         onclick="triggerInstall()">
@@ -600,8 +580,7 @@
                     <button class="btn btn-primary ble-connect-btn" onclick="toggleBLE()">Connect BLE</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn nav-settings" onclick="showPage('settings')">⋮</button>
@@ -656,7 +635,6 @@
             </div>
 
             <div style="flex: 0.3;"></div>
-
         </div>
 
         <div class="page" id="settingsPage">
@@ -665,8 +643,7 @@
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('main')">← Back</button>
@@ -724,8 +701,7 @@
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn btn-success" id="pauseBtn" onclick="togglePause()">Pause</button>
@@ -735,6 +711,32 @@
                     <button class="btn" onclick="showPage('main')">← Back</button>
                 </div>
             </div>
+
+            <div class="axis-controls">
+                <div class="settings-row">
+                    <strong>Custom Axis Scales (enter values in °C and bar)</strong>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; align-items: center;">
+                    <div class="settings-row">
+                        <div class="settings-label">Temperature (°C)</div>
+                        <div class="settings-controls">
+                            <input type="number" id="tempGraphMinInput" step="1" value="40">
+                            <span style="font-size: 1.8rem; padding: 0 1rem;">–</span>
+                            <input type="number" id="tempGraphMaxInput" step="1" value="120">
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-label">Pressure (bar)</div>
+                        <div class="settings-controls">
+                            <input type="number" id="pressGraphMinInput" step="0.5" value="0">
+                            <span style="font-size: 1.8rem; padding: 0 1rem;">–</span>
+                            <input type="number" id="pressGraphMaxInput" step="0.5" value="12">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="resetGraphScales()">Reset Defaults</button>
+                </div>
+            </div>
+
             <div class="graph-container full-graph">
                 <canvas id="fullGraph"></canvas>
                 <div class="graph-legend">
@@ -760,8 +762,7 @@
                     <button class="btn btn-danger" onclick="resetAllPID()">Reset Defaults</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('settings')">← Back</button>
@@ -778,18 +779,14 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             if (isAppInstalled()) {
                 installButton.style.display = 'none';
-                console.log('PWA already installed – ignoring beforeinstallprompt');
                 return;
             }
-
             e.preventDefault();
             deferredPrompt = e;
             installButton.style.display = 'block';
-            console.log('Install prompt available – button shown');
         });
 
         window.addEventListener('appinstalled', () => {
-            console.log('App installed successfully');
             document.getElementById('installButton').style.display = 'none';
             deferredPrompt = null;
         });
@@ -798,28 +795,18 @@
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choice) => {
-                    if (choice.outcome === 'accepted') {
-                        console.log('User accepted install');
-                    } else {
-                        console.log('User dismissed install');
-                    }
                     deferredPrompt = null;
                 });
             } else {
-                alert('To install this app:\n\n' +
-                    '• On iPhone/iPad (Safari): Tap the Share button → "Add to Home Screen"\n' +
-                    '• On Android/Chrome: Tap the menu → "Install app" or "Add to Home Screen"\n' +
-                    '• On desktop: Use browser menu → "Install LVR-1"');
+                alert('To install this app:\n\n• On iPhone/iPad (Safari): Tap Share → Add to Home Screen\n• On Android/Chrome: Tap menu → Install app');
             }
         }
 
         window.addEventListener('load', () => {
             if (isAppInstalled()) {
                 installButton.style.display = 'none';
-                console.log('Standalone / installed mode – button hidden');
             } else {
                 installButton.style.display = 'none';
-                console.log('Browser mode – waiting for install eligibility');
             }
         });
 
@@ -829,7 +816,6 @@
 
         const RECONNECT_BASE_DELAY = 1000;
         const RECONNECT_MAX_DELAY = 30000;
-        const RECONNECT_MAX_TRIES = Infinity;
 
         let state = {
             bleDevice: null,
@@ -850,12 +836,14 @@
             brightness: 200,
             shotRunning: false,
             shotTime: 0,
-            shotStartTime: null,
-            shotInterval: null,
             tempHistory: [],
             pressureHistory: [],
             hasReceivedFirstData: false,
             dataCollectionPaused: false,
+            tempGraphMin: 40,
+            tempGraphMax: 120,
+            pressGraphMin: 0,
+            pressGraphMax: 12,
             pidGains: {
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
@@ -869,63 +857,14 @@
         const miniTooltip = document.querySelector('.nav-graph .graph-tooltip');
         const fullTooltip = document.querySelector('.full-graph .graph-tooltip');
 
-        function snap(v) {
-            return Math.round(v) + 0.5;
-        }
-
         function smooth(prev, next, alpha = 0.2) {
             return prev == null ? next : prev + alpha * (next - prev);
-        }
-
-        function attemptReconnect() {
-            if (manualDisconnect) return;
-            if (!state.bleDevice) return;
-            if (state.bleConnected) return;
-
-            const delay = Math.min(
-                RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts),
-                RECONNECT_MAX_DELAY
-            );
-
-            reconnectTimer = setTimeout(async () => {
-                reconnectAttempts++;
-                updateBLEUI(true);
-
-                try {
-                    await connectBLE(true);
-                } catch {
-                    attemptReconnect();
-                }
-            }, delay);
-        }
-
-        function disconnectBLE() {
-            try {
-                if (state.characteristic) {
-                    state.characteristic.removeEventListener(
-                        'characteristicvaluechanged',
-                        handleBLEData
-                    );
-                }
-
-                if (state.bleDevice?.gatt?.connected) {
-                    state.bleDevice.gatt.disconnect();
-                }
-            } catch { }
-
-            state.characteristic = null;
-            state.bleConnected = false;
         }
 
         async function toggleBLE() {
             if (state.bleConnected) {
                 manualDisconnect = true;
-
-                if (reconnectTimer) {
-                    clearTimeout(reconnectTimer);
-                    reconnectTimer = null;
-                }
-
+                if (reconnectTimer) clearTimeout(reconnectTimer);
                 reconnectAttempts = 0;
                 disconnectBLE();
                 updateBLEUI();
@@ -936,75 +875,43 @@
             }
         }
 
-        function resetLiveData() {
-            state.brewTemp = 0;
-            state.steamTemp = 0;
-            state.groupTemp = 0;
-            state.groupPressure = 0;
-
-            state.brewReady = false;
-            state.steamReady = false;
-            state.groupReady = false;
-
-            state.brewFault = false;
-            state.steamFault = false;
-            state.groupFault = false;
-
-            state.shotRunning = false;
-            const shotElem = document.getElementById('shotTime');
-            if (shotElem) {
-                shotElem.textContent = '00';
-                shotElem.classList.add('stopped');
-                shotElem.classList.remove('running');
-            }
-
-            state.tempHistory = [];
-            state.pressureHistory = [];
-
-            drawMiniGraph();
-            drawFullGraph();
-            updateDisplay();
+        function disconnectBLE() {
+            try {
+                if (state.characteristic) {
+                    state.characteristic.removeEventListener('characteristicvaluechanged', handleBLEData);
+                }
+                if (state.bleDevice?.gatt?.connected) {
+                    state.bleDevice.gatt.disconnect();
+                }
+            } catch {}
+            state.characteristic = null;
+            state.bleConnected = false;
         }
+
         async function connectBLE(isReconnect = false) {
             if (!navigator.bluetooth) {
                 alert('Web Bluetooth not supported');
                 return;
             }
-
             try {
                 let device = state.bleDevice;
-
                 if (!device || !isReconnect) {
                     device = await navigator.bluetooth.requestDevice({
                         filters: [{ name: 'LVR-1' }],
                         optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
                     });
-
                     state.bleDevice = device;
                     device.addEventListener('gattserverdisconnected', handleDisconnect);
                 }
-
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService(
-                    '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
-                );
-                const characteristic = await service.getCharacteristic(
-                    'beb5483e-36e1-4688-b7f5-ea07361b26a8'
-                );
-
+                const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+                const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
                 await characteristic.startNotifications();
-                characteristic.addEventListener(
-                    'characteristicvaluechanged',
-                    handleBLEData
-                );
-
+                characteristic.addEventListener('characteristicvaluechanged', handleBLEData);
                 state.characteristic = characteristic;
                 state.bleConnected = true;
-
                 reconnectAttempts = 0;
                 updateBLEUI();
-
-                console.log('BLE connected');
             } catch (err) {
                 console.warn('BLE connect failed:', err);
                 throw err;
@@ -1012,50 +919,40 @@
         }
 
         function handleDisconnect() {
-            console.warn('BLE disconnected');
-
-            if (reconnectTimer) {
-                clearTimeout(reconnectTimer);
-                reconnectTimer = null;
-            }
-
+            if (reconnectTimer) clearTimeout(reconnectTimer);
             state.bleConnected = false;
             state.characteristic = null;
-
             updateBLEUI();
             resetLiveData();
-
             if (manualDisconnect) {
                 manualDisconnect = false;
                 return;
             }
-
             reconnectAttempts = 0;
             attemptReconnect();
         }
 
-        function updateBLEUI(reconnecting = false) {
-            const connected =
-                state.bleConnected === true &&
-                state.bleDevice !== null &&
-                state.characteristic !== null;
-
-            document.querySelectorAll('.ble-connect-btn').forEach(btn => {
-                if (connected) {
-                    btn.textContent = 'Disconnect';
-                    btn.classList.add('btn-danger');
-                    btn.classList.remove('btn-primary');
-                } else if (reconnecting) {
-                    btn.textContent = 'Reconnecting…';
-                    btn.classList.remove('btn-danger');
-                    btn.classList.add('btn-primary');
-                } else {
-                    btn.textContent = 'Connect BLE';
-                    btn.classList.remove('btn-danger');
-                    btn.classList.add('btn-primary');
+        function attemptReconnect() {
+            if (manualDisconnect || !state.bleDevice || state.bleConnected) return;
+            const delay = Math.min(RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts), RECONNECT_MAX_DELAY);
+            reconnectTimer = setTimeout(async () => {
+                reconnectAttempts++;
+                updateBLEUI(true);
+                try {
+                    await connectBLE(true);
+                } catch {
+                    attemptReconnect();
                 }
-            });
+            }, delay);
+        }
 
+        function updateBLEUI(reconnecting = false) {
+            const connected = state.bleConnected && state.bleDevice && state.characteristic;
+            document.querySelectorAll('.ble-connect-btn').forEach(btn => {
+                btn.textContent = connected ? 'Disconnect' : reconnecting ? 'Reconnecting…' : 'Connect BLE';
+                btn.classList.toggle('btn-danger', connected);
+                btn.classList.toggle('btn-primary', !connected);
+            });
             document.querySelectorAll('.ble-indicator').forEach(ind => {
                 ind.classList.toggle('connected', connected);
                 ind.classList.toggle('disconnected', !connected);
@@ -1064,17 +961,8 @@
 
         function handleBLEData(event) {
             const text = new TextDecoder().decode(event.target.value);
-            console.log('Raw BLE data received:', text);
-
             let data;
-
-            try { data = JSON.parse(text); }
-            catch (e) { console.error('Parse error:', e); return; }
-
-            const slider = document.getElementById('brightnessSlider');
-            if (slider && slider.value != state.brightness) {
-                slider.value = Math.round(state.brightness);
-            }
+            try { data = JSON.parse(text); } catch { return; }
 
             if (data.pid) {
                 if (data.pid.brew) Object.assign(state.pidGains.brew, data.pid.brew);
@@ -1095,9 +983,6 @@
                 brewReady: data.brewReady ?? state.brewReady,
                 steamReady: data.steamReady ?? state.steamReady,
                 groupReady: data.groupReady ?? state.groupReady,
-                brewFault: data.brewFault ?? state.brewFault,
-                steamFault: data.steamFault ?? state.steamFault,
-                groupFault: data.groupFault ?? state.groupFault,
                 brightness: data.brightness ?? state.brightness,
                 useFahrenheit: data.useFahrenheit ?? state.useFahrenheit,
                 pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
@@ -1127,13 +1012,12 @@
 
             updateDisplay();
         }
+
         async function sendBLECommand(command) {
             if (!state.characteristic) return;
-
             try {
                 const encoder = new TextEncoder();
                 await state.characteristic.writeValue(encoder.encode(JSON.stringify(command)));
-                console.log('Sent command:', command);
             } catch (error) {
                 console.error('BLE write failed:', error);
             }
@@ -1145,19 +1029,11 @@
                 return;
             }
 
-            document.querySelectorAll('.page').forEach(page =>
-                page.classList.remove('active')
-            );
-
-            const pageEl = document.getElementById(pageName + 'Page');
-            pageEl.classList.add('active');
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageName + 'Page').classList.add('active');
 
             if (pageName === 'main') {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        drawMiniGraph();
-                    });
-                });
+                requestAnimationFrame(() => requestAnimationFrame(() => drawMiniGraph()));
             }
 
             if (pageName === 'pid') {
@@ -1167,14 +1043,16 @@
 
             if (pageName === 'graph') {
                 drawFullGraph();
+                document.getElementById('tempGraphMinInput').value = state.tempGraphMin;
+                document.getElementById('tempGraphMaxInput').value = state.tempGraphMax;
+                document.getElementById('pressGraphMinInput').value = state.pressGraphMin;
+                document.getElementById('pressGraphMaxInput').value = state.pressGraphMax;
             }
 
             if (pageName === 'settings') {
                 updateUnitButtons();
                 const slider = document.getElementById('brightnessSlider');
-                if (slider) {
-                    slider.value = state.brightness;
-                }
+                if (slider) slider.value = state.brightness;
             }
         }
 
@@ -1183,28 +1061,21 @@
         function toggleTempUnit() {
             state.useFahrenheit = !state.useFahrenheit;
             document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
-            if (state.bleConnected) {
-                sendBLECommand({ type: 'unit', unitType: 'temp', value: state.useFahrenheit });
-            }
+            if (state.bleConnected) sendBLECommand({ type: 'unit', unitType: 'temp', value: state.useFahrenheit });
             updateDisplay();
             drawMiniGraph();
-            if (document.getElementById('graphPage').classList.contains('active')) {
-                drawFullGraph();
-            }
+            if (document.getElementById('graphPage').classList.contains('active')) drawFullGraph();
         }
 
         function togglePressureUnit() {
             state.pressureIsBar = !state.pressureIsBar;
             document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
-            if (state.bleConnected) {
-                sendBLECommand({ type: 'unit', unitType: 'pressure', value: state.pressureIsBar });
-            }
+            if (state.bleConnected) sendBLECommand({ type: 'unit', unitType: 'pressure', value: state.pressureIsBar });
             updateDisplay();
             drawMiniGraph();
-            if (document.getElementById('graphPage').classList.contains('active')) {
-                drawFullGraph();
-            }
+            if (document.getElementById('graphPage').classList.contains('active')) drawFullGraph();
         }
+
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
@@ -1246,6 +1117,7 @@
 
             updateUnitButtons();
         }
+
         function updateBrightness(value) {
             state.brightness = parseInt(value);
             sendBLECommand({ type: 'brightness', value: state.brightness });
@@ -1279,187 +1151,28 @@
         let lastPressure = null;
 
         setInterval(() => {
-            if (state.bleConnected && state.characteristic) {
-                sendBLECommand({ type: "ping" });
-            }
+            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
         }, 3000);
 
         setInterval(() => {
-            if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) {
-                handleDisconnect();
-            }
+            if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) handleDisconnect();
         }, 1000);
 
         setInterval(() => {
             if (!state.bleConnected || !state.hasReceivedFirstData) return;
-
             if (!state.dataCollectionPaused) {
                 lastTemp = smooth(lastTemp, state.brewTemp);
                 lastPressure = smooth(lastPressure, state.groupPressure);
-
                 state.tempHistory.push(lastTemp);
                 state.pressureHistory.push(lastPressure);
-
                 if (state.tempHistory.length > 600) {
                     state.tempHistory.shift();
                     state.pressureHistory.shift();
                 }
             }
-
             drawMiniGraph();
-
-            const graphPage = document.getElementById('graphPage');
-            if (graphPage && graphPage.classList.contains('active')) {
-                drawFullGraph();
-            }
+            if (document.getElementById('graphPage').classList.contains('active')) drawFullGraph();
         }, 1000);
-
-        function handleGraphHover(event, canvasId) {
-            event.preventDefault();
-            const canvas = document.getElementById(canvasId);
-            const rect = canvas.getBoundingClientRect();
-            const isTouch = event.touches !== undefined;
-            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
-            const relX = clientX - rect.left;
-
-            if (relX < 0 || relX > rect.width) {
-                handleGraphLeave(canvasId);
-                return;
-            }
-
-            const isMini = canvasId === 'miniGraph';
-
-            let paddingLeft, paddingRight, paddingTop, paddingBottom;
-            if (isMini) {
-                paddingLeft = 40;
-                paddingRight = 40;
-                paddingTop = 40;
-                paddingBottom = 40;
-            } else {
-                paddingLeft = 65;
-                paddingRight = 65;
-                paddingTop = 30;
-                paddingBottom = 30;
-            }
-
-            const plotStart = paddingLeft;
-            const plotEnd = rect.width - paddingRight;
-            if (relX < plotStart || relX > plotEnd) {
-                handleGraphLeave(canvasId);
-                return;
-            }
-
-            const fraction = (relX - plotStart) / (plotEnd - plotStart);
-            const maxIndex = state.tempHistory.length - 1;
-            if (maxIndex < 0) return;
-
-            const index = Math.round(fraction * maxIndex);
-            if (isMini) miniHoveredIndex = index;
-            else fullHoveredIndex = index;
-
-            const tempValues = state.tempHistory;
-            const pressValues = state.pressureHistory;
-
-            const tempMinRaw = Math.min(...tempValues);
-            const tempMaxRaw = Math.max(...tempValues);
-            const defaultTempRange = isMini ? 10 : 20;
-            let tempRange = (tempMaxRaw - tempMinRaw) || defaultTempRange;
-            const tempPad = tempRange * 0.05;
-            let tempMin = tempMinRaw - tempPad;
-            let tempMax = tempMaxRaw + tempPad;
-
-            const pressMinRaw = Math.min(...pressValues);
-            const pressMaxRaw = Math.max(...pressValues);
-            const defaultPressRange = isMini ? 3 : 5;
-            let pressRange = (pressMaxRaw - pressMinRaw) || defaultPressRange;
-            const pressPad = pressRange * 0.1;
-            let pressMin = pressMinRaw - pressPad;
-            if (isMini) pressMin = Math.max(0, pressMin);
-            let pressMax = pressMaxRaw + pressPad;
-
-            const plotWidth = rect.width - paddingLeft - paddingRight;
-            const plotHeight = rect.height - paddingTop - paddingBottom;
-
-            const x_canvas = paddingLeft + fraction * plotWidth;
-
-            const fractionTemp = (tempValues[index] - tempMin) / (tempMax - tempMin);
-            const y_temp_canvas = isMini
-                ? rect.height - paddingBottom - fractionTemp * plotHeight
-                : paddingTop + (1 - fractionTemp) * plotHeight;
-
-            const fractionPress = (pressValues[index] - pressMin) / (pressMax - pressMin);
-            const y_press_canvas = isMini
-                ? rect.height - paddingBottom - fractionPress * plotHeight
-                : paddingTop + (1 - fractionPress) * plotHeight;
-
-            const container = canvas.parentElement.getBoundingClientRect();
-
-            const pointX = rect.left - container.left + x_canvas;
-            const pointYTemp = rect.top - container.top + y_temp_canvas;
-            const pointYPress = rect.top - container.top + y_press_canvas;
-
-            const centerY = (pointYTemp + pointYPress) / 2;
-
-            const tempUnit = state.useFahrenheit ? '°F' : '°C';
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
-
-            const tempVal = state.useFahrenheit ? cToF(tempValues[index]) : tempValues[index];
-            const pressVal = pressValues[index] * pressureConv;
-            const timeSec = index;
-
-            const html = `
-                <strong>Time: ${timeSec}s</strong><br>
-                Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
-                Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
-            `;
-
-            const tooltip = isMini ? miniTooltip : fullTooltip;
-            tooltip.innerHTML = html;
-
-            tooltip.style.left = '-9999px';
-            tooltip.style.top = '-9999px';
-            tooltip.style.display = 'block';
-
-            const tooltipWidth = tooltip.offsetWidth;
-            const tooltipHeight = tooltip.offsetHeight;
-
-            let tooltipX = pointX + 14;
-            let tooltipY = centerY - tooltipHeight / 2;
-
-            const containerRect = canvas.parentElement.getBoundingClientRect();
-            const containerWidth = containerRect.width;
-            const containerHeight = containerRect.height;
-
-            if (tooltipX + tooltipWidth > containerWidth - 8) {
-                tooltipX = pointX - tooltipWidth - 14;
-            }
-
-            tooltipY = Math.max(
-                8,
-                Math.min(containerHeight - tooltipHeight - 8, tooltipY)
-            );
-
-            tooltip.style.left = Math.round(tooltipX) + 'px';
-            tooltip.style.top = Math.round(tooltipY) + 'px';
-
-            if (isMini) drawMiniGraph();
-            else drawFullGraph();
-        }
-
-        function handleGraphLeave(canvasId) {
-            const isMini = canvasId === 'miniGraph';
-            if (isMini) {
-                miniHoveredIndex = -1;
-                miniTooltip.style.display = 'none';
-                drawMiniGraph();
-            } else {
-                fullHoveredIndex = -1;
-                fullTooltip.style.display = 'none';
-                drawFullGraph();
-            }
-        }
 
         function drawMiniGraph() {
             const canvas = document.getElementById('miniGraph');
@@ -1474,45 +1187,24 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, width, height);
 
-            if (state.tempHistory.length < 2) {
-                ctx.fillStyle = '#888';
-                ctx.font = '16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                const message = state.bleConnected
-                    ? 'Collecting data...'
-                    : 'Connect to view live graph';
-                ctx.fillText(message, width / 2, height / 2);
-                return;
-            }
-
             const padding = 40;
 
-            let tempMin = Math.min(...state.tempHistory);
-            let tempMax = Math.max(...state.tempHistory);
-            let tempRange = tempMax - tempMin || 10;
-            let tempPad = tempRange * 0.05;
-            tempMin -= tempPad;
-            tempMax += tempPad;
-            tempRange = tempMax - tempMin;
+            const tempMin = 40;
+            const tempMax = 120;
+            const tempRange = tempMax - tempMin;
 
-            let pressureMin = Math.min(...state.pressureHistory);
-            let pressureMax = Math.max(...state.pressureHistory);
-            let pressureRange = pressureMax - pressureMin || 3;
-            let pressurePad = pressureRange * 0.1;
-            pressureMin = Math.max(0, pressureMin - pressurePad);
-            pressureMax += pressurePad;
-            pressureRange = pressureMax - pressureMin;
+            const pressureMin = 0;
+            const pressureMax = 12;
+            const pressureRange = pressureMax - pressureMin;
 
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
-
             const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
             const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
             const dispTempRange = dispTempMax - dispTempMin;
 
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
             const dispPressureMin = pressureMin * pressureConv;
             const dispPressureMax = pressureMax * pressureConv;
             const dispPressureRange = dispPressureMax - dispPressureMin;
@@ -1564,13 +1256,28 @@
             }
             ctx.fillText(pressureUnit, width - padding + 8, padding + 10);
 
+            ctx.fillStyle = '#888';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Time →', width / 2, height - 6);
+
+            if (state.tempHistory.length === 0) {
+                ctx.fillStyle = '#888';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(state.bleConnected ? 'Collecting data...' : 'Connect to view live graph', width / 2, height / 2);
+                return;
+            }
+
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 data.forEach((v, i) => {
                     const x = padding + (i / (data.length - 1)) * (width - padding * 2);
-                    const fraction = (v - minV) / rangeV;
+                    let fraction = (v - minV) / rangeV;
+                    fraction = Math.max(0, Math.min(1, fraction));
                     const y = height - padding - fraction * (height - padding * 2);
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -1594,7 +1301,8 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                fractionTemp = Math.max(0, Math.min(1, fractionTemp));
                 const yTemp = height - padding - fractionTemp * (height - padding * 2);
                 ctx.fillStyle = '#f00';
                 ctx.beginPath();
@@ -1604,7 +1312,8 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                fractionPress = Math.max(0, Math.min(1, fractionPress));
                 const yPress = height - padding - fractionPress * (height - padding * 2);
                 ctx.fillStyle = '#00f';
                 ctx.beginPath();
@@ -1614,11 +1323,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
-
-            ctx.fillStyle = '#888';
-            ctx.font = '11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('Time →', width / 2, height - 6);
         }
 
         function drawFullGraph() {
@@ -1633,14 +1337,6 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, width, height);
 
-            if (state.tempHistory.length < 2) {
-                ctx.fillStyle = '#666';
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Collecting temperature data...', width / 2, height / 2);
-                return;
-            }
-
             const paddingTop = 30;
             const paddingBottom = 30;
             const paddingLeft = 65;
@@ -1648,31 +1344,30 @@
             const plotWidth = width - paddingLeft - paddingRight;
             const plotHeight = height - paddingTop - paddingBottom;
 
-            let tempMin = Math.min(...state.tempHistory);
-            let tempMax = Math.max(...state.tempHistory);
-            let tempRange = tempMax - tempMin || 20;
-            let tempPad = tempRange * 0.05;
-            tempMin -= tempPad;
-            tempMax += tempPad;
-            tempRange = tempMax - tempMin;
+            let tempMin = state.tempGraphMin;
+            let tempMax = state.tempGraphMax;
+            let tempRange = tempMax - tempMin;
+            if (tempRange <= 0) {
+                tempRange = 80;
+                tempMin = tempMax - tempRange;
+            }
 
-            let pressureMin = Math.min(...state.pressureHistory);
-            let pressureMax = Math.max(...state.pressureHistory);
-            let pressureRange = pressureMax - pressureMin || 5;
-            let pressurePad = pressureRange * 0.1;
-            pressureMin = Math.max(0, pressureMin - pressurePad);
-            pressureMax += pressurePad;
-            pressureRange = pressureMax - pressureMin;
+            let pressureMin = state.pressGraphMin;
+            let pressureMax = state.pressGraphMax;
+            let pressureRange = pressureMax - pressureMin;
+            if (pressureRange <= 0) {
+                pressureRange = 12;
+                pressureMin = pressureMax - pressureRange;
+            }
 
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
-
             const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
             const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
             const dispTempRange = dispTempMax - dispTempMin;
 
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
             const dispPressureMin = pressureMin * pressureConv;
             const dispPressureMax = pressureMax * pressureConv;
             const dispPressureRange = dispPressureMax - dispPressureMin;
@@ -1685,7 +1380,6 @@
                 ctx.moveTo(paddingLeft, y);
                 ctx.lineTo(width - paddingRight, y);
                 ctx.stroke();
-
                 const x = paddingLeft + (i / 5) * plotWidth;
                 ctx.beginPath();
                 ctx.moveTo(x, paddingTop);
@@ -1734,13 +1428,23 @@
             }
             ctx.fillText(pressureUnit, width - paddingRight + 10, paddingTop + 15);
 
+            if (state.tempHistory.length === 0) {
+                ctx.fillStyle = '#666';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('No data collected yet', width / 2, height / 2);
+                return;
+            }
+
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 data.forEach((v, i) => {
                     const x = paddingLeft + (i / (data.length - 1)) * plotWidth;
-                    const fraction = (v - minV) / rangeV;
+                    let fraction = (v - minV) / rangeV;
+                    fraction = Math.max(0, Math.min(1, fraction));
                     const y = paddingTop + (1 - fraction) * plotHeight;
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -1764,7 +1468,8 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                fractionTemp = Math.max(0, Math.min(1, fractionTemp));
                 const yTemp = paddingTop + (1 - fractionTemp) * plotHeight;
                 ctx.fillStyle = '#f00';
                 ctx.beginPath();
@@ -1774,7 +1479,8 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                fractionPress = Math.max(0, Math.min(1, fractionPress));
                 const yPress = paddingTop + (1 - fractionPress) * plotHeight;
                 ctx.fillStyle = '#00f';
                 ctx.beginPath();
@@ -1784,8 +1490,138 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
             }
-
         }
+
+        function handleGraphHover(event, canvasId) {
+            event.preventDefault();
+            const canvas = document.getElementById(canvasId);
+            const rect = canvas.getBoundingClientRect();
+            const isTouch = event.touches !== undefined;
+            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
+            const relX = clientX - rect.left;
+
+            if (relX < 0 || relX > rect.width) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const isMini = canvasId === 'miniGraph';
+
+            const paddingLeft = isMini ? 40 : 65;
+            const paddingRight = isMini ? 40 : 65;
+            const paddingTop = isMini ? 40 : 30;
+            const paddingBottom = isMini ? 40 : 30;
+
+            const plotStart = paddingLeft;
+            const plotEnd = rect.width - paddingRight;
+            if (relX < plotStart || relX > plotEnd) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const fraction = (relX - plotStart) / (plotEnd - plotStart);
+            const maxIndex = state.tempHistory.length - 1;
+            if (maxIndex < 0) return;
+
+            const index = Math.round(fraction * maxIndex);
+            if (isMini) miniHoveredIndex = index;
+            else fullHoveredIndex = index;
+
+            const tempMin = isMini ? 40 : state.tempGraphMin;
+            const tempMax = isMini ? 120 : state.tempGraphMax;
+            let tempRange = tempMax - tempMin;
+            if (tempRange <= 0) tempRange = 80;
+
+            const pressureMin = isMini ? 0 : state.pressGraphMin;
+            const pressureMax = isMini ? 12 : state.pressGraphMax;
+            let pressureRange = pressureMax - pressureMin;
+            if (pressureRange <= 0) pressureRange = 12;
+
+            const plotWidth = rect.width - paddingLeft - paddingRight;
+            const plotHeight = rect.height - paddingTop - paddingBottom;
+
+            const x_canvas = paddingLeft + fraction * plotWidth;
+
+            let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+            fractionTemp = Math.max(0, Math.min(1, fractionTemp));
+            const y_temp_canvas = isMini
+                ? rect.height - paddingBottom - fractionTemp * plotHeight
+                : paddingTop + (1 - fractionTemp) * plotHeight;
+
+            let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+            fractionPress = Math.max(0, Math.min(1, fractionPress));
+            const y_press_canvas = isMini
+                ? rect.height - paddingBottom - fractionPress * plotHeight
+                : paddingTop + (1 - fractionPress) * plotHeight;
+
+            const container = canvas.parentElement.getBoundingClientRect();
+
+            const pointX = rect.left - container.left + x_canvas;
+            const pointYTemp = rect.top - container.top + y_temp_canvas;
+            const pointYPress = rect.top - container.top + y_press_canvas;
+
+            const centerY = (pointYTemp + pointYPress) / 2;
+
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
+            const tempVal = state.useFahrenheit ? cToF(state.tempHistory[index]) : state.tempHistory[index];
+            const pressVal = state.pressureHistory[index] * pressureConv;
+            const timeSec = index;
+
+            const html = `
+                <strong>Time: ${timeSec}s</strong><br>
+                Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
+                Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
+            `;
+
+            const tooltip = isMini ? miniTooltip : fullTooltip;
+            tooltip.innerHTML = html;
+            tooltip.style.display = 'block';
+
+            let tooltipX = pointX + 14;
+            let tooltipY = centerY - tooltip.offsetHeight / 2;
+
+            const containerRect = canvas.parentElement.getBoundingClientRect();
+            if (tooltipX + tooltip.offsetWidth > containerRect.width - 8) {
+                tooltipX = pointX - tooltip.offsetWidth - 14;
+            }
+
+            tooltipY = Math.max(8, Math.min(containerRect.height - tooltip.offsetHeight - 8, tooltipY));
+
+            tooltip.style.left = Math.round(tooltipX) + 'px';
+            tooltip.style.top = Math.round(tooltipY) + 'px';
+
+            if (isMini) drawMiniGraph();
+            else drawFullGraph();
+        }
+
+        function handleGraphLeave(canvasId) {
+            if (canvasId === 'miniGraph') {
+                miniHoveredIndex = -1;
+                miniTooltip.style.display = 'none';
+                drawMiniGraph();
+            } else {
+                fullHoveredIndex = -1;
+                fullTooltip.style.display = 'none';
+                drawFullGraph();
+            }
+        }
+
+        const miniCanvas = document.getElementById('miniGraph');
+        const fullCanvas = document.getElementById('fullGraph');
+
+        miniCanvas.addEventListener('mousemove', e => handleGraphHover(e, 'miniGraph'));
+        miniCanvas.addEventListener('touchmove', e => handleGraphHover(e, 'miniGraph'), { passive: false });
+        miniCanvas.addEventListener('mouseleave', () => handleGraphLeave('miniGraph'));
+        miniCanvas.addEventListener('touchend', () => handleGraphLeave('miniGraph'));
+
+        fullCanvas.addEventListener('mousemove', e => handleGraphHover(e, 'fullGraph'));
+        fullCanvas.addEventListener('touchmove', e => handleGraphHover(e, 'fullGraph'), { passive: false });
+        fullCanvas.addEventListener('mouseleave', () => handleGraphLeave('fullGraph'));
+        fullCanvas.addEventListener('touchend', () => handleGraphLeave('fullGraph'));
 
         function togglePause() {
             state.dataCollectionPaused = !state.dataCollectionPaused;
@@ -1800,26 +1636,23 @@
                 alert('No data to save yet.');
                 return;
             }
-
             const data = {
                 tempHistory: state.tempHistory,
                 pressureHistory: state.pressureHistory,
                 savedAt: new Date().toISOString(),
                 note: 'LVR-1 graph data (brew temperature and group pressure)'
             };
-
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `lvr1-graph-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            a.download = `lvr1-graph-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
 
         function clearData() {
             if (!confirm('Clear all recorded graph data? This cannot be undone.')) return;
-
             state.tempHistory = [];
             state.pressureHistory = [];
             lastTemp = null;
@@ -1828,81 +1661,51 @@
             fullHoveredIndex = -1;
             miniTooltip.style.display = 'none';
             fullTooltip.style.display = 'none';
-
             drawMiniGraph();
             drawFullGraph();
         }
 
-        document.getElementById('loadFileInput').addEventListener('change', function (e) {
+        document.getElementById('loadFileInput').addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = function (ev) {
+            reader.onload = ev => {
                 try {
                     const data = JSON.parse(ev.target.result);
-
-                    if (!Array.isArray(data.tempHistory) || !Array.isArray(data.pressureHistory)) {
-                        throw new Error('Invalid format');
-                    }
-
+                    if (!Array.isArray(data.tempHistory) || !Array.isArray(data.pressureHistory)) throw new Error('Invalid format');
                     const len = Math.min(data.tempHistory.length, data.pressureHistory.length);
                     state.tempHistory = data.tempHistory.slice(-len).map(Number);
                     state.pressureHistory = data.pressureHistory.slice(-len).map(Number);
-
                     lastTemp = state.tempHistory.length > 0 ? state.tempHistory[state.tempHistory.length - 1] : null;
                     lastPressure = state.pressureHistory.length > 0 ? state.pressureHistory[state.pressureHistory.length - 1] : null;
-
-                    miniHoveredIndex = -1;
-                    fullHoveredIndex = -1;
-                    miniTooltip.style.display = 'none';
-                    fullTooltip.style.display = 'none';
-
                     drawMiniGraph();
                     drawFullGraph();
-
                     alert('Data loaded successfully (' + state.tempHistory.length + ' samples).');
                 } catch (err) {
                     alert('Failed to load file: ' + err.message);
                 }
             };
             reader.readAsText(file);
-
             e.target.value = '';
         });
 
         function updatePIDFromInput(input, zone, param) {
             let val = parseFloat(input.value);
             if (isNaN(val) || val < 0) val = 0;
-
-            if (param.includes('Ki')) {
-                val = Math.round(val * 100) / 100;
-            } else {
-                val = Math.round(val * 10) / 10;
-            }
-
+            if (param.includes('Ki')) val = Math.round(val * 100) / 100;
+            else val = Math.round(val * 10) / 10;
             state.pidGains[zone][param] = val;
             input.value = val.toFixed(2);
-
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
         }
 
         function adjustPID(zone, param, delta) {
             let newVal = Math.max(0, state.pidGains[zone][param] + delta);
-
-            if (param.includes('Ki')) {
-                newVal = Math.round(newVal * 100) / 100;
-            } else {
-                newVal = Math.round(newVal * 10) / 10;
-            }
-
+            if (param.includes('Ki')) newVal = Math.round(newVal * 100) / 100;
+            else newVal = Math.round(newVal * 10) / 10;
             state.pidGains[zone][param] = newVal;
-
             const input = document.getElementById(`${zone}-${param}`);
-            if (input) {
-                input.value = newVal.toFixed(2);
-            }
-
+            if (input) input.value = newVal.toFixed(2);
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
         }
 
@@ -1959,135 +1762,87 @@
         }
 
         function resetAllPID() {
-            if (!confirm("Are you sure you want to reset ALL PID gains to factory defaults?\n\nThis will overwrite the current settings on the webpage and (if connected) on the device.\n\nThis action cannot be undone.")) {
-                return;
-            }
-
-            const defaults = {
-                consKp: 1.00,
-                consKi: 0.05,
-                consKd: 0.25,
-                aggKp: 4.00,
-                aggKi: 0.20,
-                aggKd: 1.00
-            };
-
+            if (!confirm("Reset ALL PID gains to factory defaults? This cannot be undone.")) return;
+            const defaults = { consKp: 1.00, consKi: 0.05, consKd: 0.25, aggKp: 4.00, aggKi: 0.20, aggKd: 1.00 };
             ['brew', 'steam', 'group'].forEach(zone => {
                 state.pidGains[zone] = { ...defaults };
-
-                if (state.bleConnected) {
-                    sendBLECommand({
-                        type: 'pid',
-                        zone: zone,
-                        gains: state.pidGains[zone]
-                    });
-                }
+                if (state.bleConnected) sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
             });
-
             renderPIDSettings();
         }
 
-        function setupGraphObservers() {
-            const miniContainer = document.querySelector('.graph-container.nav-graph');
-            if (miniContainer) {
-                new ResizeObserver(() => {
-                    drawMiniGraph();
-                }).observe(miniContainer);
-            }
+        function updateGraphScales() {
+            let minT = parseFloat(document.getElementById('tempGraphMinInput').value);
+            let maxT = parseFloat(document.getElementById('tempGraphMaxInput').value);
+            let minP = parseFloat(document.getElementById('pressGraphMinInput').value);
+            let maxP = parseFloat(document.getElementById('pressGraphMaxInput').value);
 
-            const fullContainer = document.querySelector('.graph-container.full-graph');
-            if (fullContainer) {
-                new ResizeObserver(() => {
-                    drawFullGraph();
-                }).observe(fullContainer);
-            }
+            if (isNaN(minT)) minT = 40;
+            if (isNaN(maxT)) maxT = 120;
+            if (isNaN(minP)) minP = 0;
+            if (isNaN(maxP)) maxP = 12;
+
+            if (minT >= maxT) { maxT = minT + 20; document.getElementById('tempGraphMaxInput').value = maxT; }
+            if (minP >= maxP) { maxP = minP + 3; document.getElementById('pressGraphMaxInput').value = maxP; }
+
+            state.tempGraphMin = minT;
+            state.tempGraphMax = maxT;
+            state.pressGraphMin = minP;
+            state.pressGraphMax = maxP;
+
+            drawFullGraph();
         }
 
-        const miniCanvas = document.getElementById('miniGraph');
-        const fullCanvas = document.getElementById('fullGraph');
+        function resetGraphScales() {
+            state.tempGraphMin = 40;
+            state.tempGraphMax = 120;
+            state.pressGraphMin = 0;
+            state.pressGraphMax = 12;
+            document.getElementById('tempGraphMinInput').value = 40;
+            document.getElementById('tempGraphMaxInput').value = 120;
+            document.getElementById('pressGraphMinInput').value = 0;
+            document.getElementById('pressGraphMaxInput').value = 12;
+            drawFullGraph();
+        }
 
-        miniCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'miniGraph'));
-        miniCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'miniGraph'), { passive: false });
-        miniCanvas.addEventListener('mouseleave', () => handleGraphLeave('miniGraph'));
-        miniCanvas.addEventListener('touchend', () => handleGraphLeave('miniGraph'));
-        miniCanvas.addEventListener('touchcancel', () => handleGraphLeave('miniGraph'));
-
-        fullCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'fullGraph'));
-        fullCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'fullGraph'), { passive: false });
-        fullCanvas.addEventListener('mouseleave', () => handleGraphLeave('fullGraph'));
-        fullCanvas.addEventListener('touchend', () => handleGraphLeave('fullGraph'));
-        fullCanvas.addEventListener('touchcancel', () => handleGraphLeave('fullGraph'));
+        function setupGraphObservers() {
+            const miniContainer = document.querySelector('.nav-graph');
+            if (miniContainer) new ResizeObserver(() => drawMiniGraph()).observe(miniContainer);
+            const fullContainer = document.querySelector('.full-graph');
+            if (fullContainer) new ResizeObserver(() => drawFullGraph()).observe(fullContainer);
+        }
 
         setupGraphObservers();
 
         window.addEventListener('load', () => {
             drawMiniGraph();
             updateDisplay();
+            ['tempGraphMinInput', 'tempGraphMaxInput', 'pressGraphMinInput', 'pressGraphMaxInput'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateGraphScales);
+                    el.addEventListener('change', updateGraphScales);
+                }
+            });
         });
-
-        document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
-        document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
-
-        updateDisplay();
-        updateBLEUI();
-        drawMiniGraph();
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('sw.js')
-                    .then(function (registration) {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(function (error) {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js');
-
-            let newWorker;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                window.location.reload();
-            });
-
-            navigator.serviceWorker.ready.then(reg => {
-                reg.addEventListener('updatefound', () => {
-                    newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            if (confirm('New version available! Reload now?')) {
-                                window.location.reload();
-                            }
-                        }
-                    });
-                });
-            });
-        }
 
         function updateUnitButtons() {
             const tempBtn = document.getElementById('tempUnitBtn');
             const pressureBtn = document.getElementById('pressureUnitBtn');
-
-            if (tempBtn) {
-                tempBtn.textContent = state.useFahrenheit ? '°F' : '°C';
-            }
-
-            if (pressureBtn) {
-                pressureBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
-            }
+            if (tempBtn) tempBtn.textContent = state.useFahrenheit ? '°F' : '°C';
+            if (pressureBtn) pressureBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
         }
 
         function isAppInstalled() {
-            return (
-                window.matchMedia('(display-mode: standalone)').matches ||
-                window.matchMedia('(display-mode: window-controls-overlay)').matches ||
-                window.navigator.standalone === true
-            );
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+                   window.navigator.standalone === true;
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
-
 </body>
 
 </html>
