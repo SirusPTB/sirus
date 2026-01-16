@@ -200,31 +200,24 @@
         }
 
         .central-panel {
-            /* Removed background, border, border-radius, and padding */
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Center the two panels horizontally */
             gap: 3rem;
-            /* Space between the two separate panels */
         }
 
         @media (max-width: 640px) {
             .central-panel {
                 gap: 1.5rem;
-                /* Smaller gap on phones */
             }
 
             .left-readings,
             .shot-timer-section {
                 padding: 1.2rem;
-                /* Less padding to save horizontal space */
                 border-radius: 12px;
-                /* Slightly smaller corners for compact feel */
             }
 
-            /* Slightly larger relative sizing on narrow screens for better readability */
             .reading-value {
                 font-size: clamp(2.5rem, 12vw, 3.3rem);
             }
@@ -284,7 +277,6 @@
 
         .shot-time {
             font-size: clamp(2rem, 8vw, 4rem);
-            /* slightly larger for better segment visibility */
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
         }
@@ -462,28 +454,37 @@
 
         .pid-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .pid-column h4 {
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .pid-column h4.aggressive {
-            color: #fb923c;
-        }
-
-        .pid-column h4.conservative {
-            color: #06b6d4;
-        }
-
-        .pid-row {
-            display: flex;
-            justify-content: space-between;
+            grid-template-columns: auto 1fr 1fr;
+            gap: 1.2rem;
             align-items: center;
-            margin-bottom: 10px;
+        }
+
+        .pid-header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            padding: 0.5rem 0;
+        }
+
+        .pid-header.aggressive {
+            color: #fb923c;
+            grid-column: 2;
+        }
+
+        .pid-header.conservative {
+            color: #06b6d4;
+            grid-column: 3;
+        }
+
+        .pid-label {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .pid-cell {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
         }
 
         .pid-input {
@@ -556,9 +557,7 @@
         /* === FIX MINI GRAPH INITIAL SIZE === */
         #mainPage .graph-container.nav-graph {
             flex: none;
-            /* stop flex height guessing */
             height: 90vh;
-            /* real height on first layout */
             min-height: 140px;
             max-height: 240px;
         }
@@ -587,7 +586,6 @@
 
 <body>
 
-    <!-- Update the install button HTML (no changes needed here, but ensure it's present) -->
     <button id="installButton"
         style="position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;"
         onclick="triggerInstall()">
@@ -773,15 +771,11 @@
         </div>
     </div>
 
-
-
     <script>
-
         const installButton = document.getElementById('installButton');
         let deferredPrompt = null;
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // If already installed, NEVER show the button
             if (isAppInstalled()) {
                 installButton.style.display = 'none';
                 console.log('PWA already installed – ignoring beforeinstallprompt');
@@ -794,29 +788,24 @@
             console.log('Install prompt available – button shown');
         });
 
-        // Hide button after successful install
         window.addEventListener('appinstalled', () => {
             console.log('App installed successfully');
             document.getElementById('installButton').style.display = 'none';
             deferredPrompt = null;
         });
 
-        // Main install function
         function triggerInstall() {
             if (deferredPrompt) {
-                // Native prompt available (Android/Chrome etc.)
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choice) => {
                     if (choice.outcome === 'accepted') {
                         console.log('User accepted install');
                     } else {
                         console.log('User dismissed install');
-                        // Keep button visible for retry
                     }
                     deferredPrompt = null;
                 });
             } else {
-                // Fallback for iOS or browsers without native prompt
                 alert('To install this app:\n\n' +
                     '• On iPhone/iPad (Safari): Tap the Share button → "Add to Home Screen"\n' +
                     '• On Android/Chrome: Tap the menu → "Install app" or "Add to Home Screen"\n' +
@@ -824,25 +813,23 @@
             }
         }
 
-        // On page load: Hide button ONLY if running as installed PWA (standalone mode)
         window.addEventListener('load', () => {
             if (isAppInstalled()) {
                 installButton.style.display = 'none';
                 console.log('Standalone / installed mode – button hidden');
             } else {
-                installButton.style.display = 'none'; // wait for beforeinstallprompt
+                installButton.style.display = 'none';
                 console.log('Browser mode – waiting for install eligibility');
             }
         });
-
 
         let manualDisconnect = false;
         let reconnectAttempts = 0;
         let reconnectTimer = null;
 
-        const RECONNECT_BASE_DELAY = 1000;   // 1s
-        const RECONNECT_MAX_DELAY = 30000;  // 30s cap
-        const RECONNECT_MAX_TRIES = Infinity; // or set to e.g. 10
+        const RECONNECT_BASE_DELAY = 1000;
+        const RECONNECT_MAX_DELAY = 30000;
+        const RECONNECT_MAX_TRIES = Infinity;
 
         let state = {
             bleDevice: null,
@@ -890,7 +877,6 @@
             return prev == null ? next : prev + alpha * (next - prev);
         }
 
-        /////////////////////////
         function attemptReconnect() {
             if (manualDisconnect) return;
             if (!state.bleDevice) return;
@@ -903,12 +889,12 @@
 
             reconnectTimer = setTimeout(async () => {
                 reconnectAttempts++;
-                updateBLEUI(true); // "Reconnecting…"
+                updateBLEUI(true);
 
                 try {
                     await connectBLE(true);
                 } catch {
-                    attemptReconnect(); // next backoff
+                    attemptReconnect();
                 }
             }, delay);
         }
@@ -930,9 +916,6 @@
             state.characteristic = null;
             state.bleConnected = false;
         }
-
-
-        /////////////////////////
 
         async function toggleBLE() {
             if (state.bleConnected) {
@@ -980,7 +963,7 @@
 
             drawMiniGraph();
             drawFullGraph();
-            updateDisplay();  // or your existing UI refresh
+            updateDisplay();
         }
         async function connectBLE(isReconnect = false) {
             if (!navigator.bluetooth) {
@@ -991,7 +974,6 @@
             try {
                 let device = state.bleDevice;
 
-                // FIRST connection (user click only)
                 if (!device || !isReconnect) {
                     device = await navigator.bluetooth.requestDevice({
                         filters: [{ name: 'LVR-1' }],
@@ -1043,13 +1025,11 @@
             updateBLEUI();
             resetLiveData();
 
-            // ❗ DO NOT wipe device on manual disconnect
             if (manualDisconnect) {
                 manualDisconnect = false;
                 return;
             }
 
-            // Auto reconnect only if unexpected
             reconnectAttempts = 0;
             attemptReconnect();
         }
@@ -1091,13 +1071,11 @@
             try { data = JSON.parse(text); }
             catch (e) { console.error('Parse error:', e); return; }
 
-            // Sync brightness slider with live BLE data
             const slider = document.getElementById('brightnessSlider');
             if (slider && slider.value != state.brightness) {
                 slider.value = Math.round(state.brightness);
             }
 
-            // PID packet
             if (data.pid) {
                 if (data.pid.brew) Object.assign(state.pidGains.brew, data.pid.brew);
                 if (data.pid.steam) Object.assign(state.pidGains.steam, data.pid.steam);
@@ -1106,7 +1084,6 @@
                 return;
             }
 
-            // Live data
             Object.assign(state, {
                 brewTemp: data.brewTemp ?? state.brewTemp,
                 steamTemp: data.steamTemp ?? state.steamTemp,
@@ -1128,7 +1105,6 @@
 
             updateUnitButtons();
 
-            // Shot timer sync
             if ('shotRunning' in data && 'shotSeconds' in data) {
                 state.shotRunning = data.shotRunning;
                 const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
@@ -1138,7 +1114,6 @@
                 shotElem.classList.toggle('stopped', !state.shotRunning);
             }
 
-            // Graph history (if not paused)
             if (!state.dataCollectionPaused) {
                 state.tempHistory.push(state.brewTemp);
                 state.pressureHistory.push(state.groupPressure);
@@ -1150,8 +1125,7 @@
                 drawFullGraph();
             }
 
-            // Quick UI refresh (add your existing update calls here)
-            updateDisplay();  // or call your individual element updates
+            updateDisplay();
         }
         async function sendBLECommand(command) {
             if (!state.characteristic) return;
@@ -1178,7 +1152,6 @@
             const pageEl = document.getElementById(pageName + 'Page');
             pageEl.classList.add('active');
 
-            // 🔥 FORCE mini graph resize AFTER layout resolves
             if (pageName === 'main') {
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
@@ -1198,14 +1171,12 @@
 
             if (pageName === 'settings') {
                 updateUnitButtons();
-                // Sync brightness slider to current state when opening settings
                 const slider = document.getElementById('brightnessSlider');
                 if (slider) {
                     slider.value = state.brightness;
                 }
             }
         }
-
 
         function cToF(c) { return c * 9 / 5 + 32; }
 
@@ -1237,7 +1208,6 @@
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-            // Main page temperature cards (safe guard)
             let el = document.getElementById('brewTempCard');
             if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
 
@@ -1247,7 +1217,6 @@
             el = document.getElementById('groupTempCard');
             if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
 
-            // Status card readiness (main page only)
             el = document.getElementById('brewStatus');
             if (el) el.className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
 
@@ -1257,7 +1226,6 @@
             el = document.getElementById('groupStatus');
             if (el) el.className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
 
-            // Pressure reading (main page only)
             el = document.getElementById('pressureDisplay');
             if (el) {
                 const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
@@ -1267,7 +1235,6 @@
             el = document.getElementById('pressureUnit');
             if (el) el.textContent = state.pressureIsBar ? 'bar' : 'psi';
 
-            // Setpoint displays (settings page only)
             el = document.getElementById('brewSetpointDisplay');
             if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
 
@@ -1277,7 +1244,6 @@
             el = document.getElementById('groupSetpointDisplay');
             if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
 
-            // Unit toggle buttons (settings page only - already has null checks inside)
             updateUnitButtons();
         }
         function updateBrightness(value) {
@@ -1951,69 +1917,42 @@
                 let html = `
                     <h3>${zone.charAt(0).toUpperCase() + zone.slice(1)} Boiler</h3>
                     <div class="pid-grid">
-                        <div class="pid-column">
-                            <h4 class="aggressive">Aggressive</h4>
-                            <div class="pid-row">
-                                <span>Kp:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKp', -0.1)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-aggKp" 
-                                       value="${state.pidGains[zone].aggKp.toFixed(2)}" 
-                                       step="0.1" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKp')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKp', 0.1)">+</button>
-                            </div>
-                            <div class="pid-row">
-                                <span>Ki:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKi', -0.01)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-aggKi" 
-                                       value="${state.pidGains[zone].aggKi.toFixed(2)}" 
-                                       step="0.01" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKi')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKi', 0.01)">+</button>
-                            </div>
-                            <div class="pid-row">
-                                <span>Kd:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKd', -0.1)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-aggKd" 
-                                       value="${state.pidGains[zone].aggKd.toFixed(2)}" 
-                                       step="0.1" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKd')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKd', 0.1)">+</button>
-                            </div>
-                        </div>
-                        <div class="pid-column">
-                            <h4 class="conservative">Conservative</h4>
-                            <div class="pid-row">
-                                <span>Kp:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKp', -0.1)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-consKp" 
-                                       value="${state.pidGains[zone].consKp.toFixed(2)}" 
-                                       step="0.1" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'consKp')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKp', 0.1)">+</button>
-                            </div>
-                            <div class="pid-row">
-                                <span>Ki:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKi', -0.01)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-consKi" 
-                                       value="${state.pidGains[zone].consKi.toFixed(2)}" 
-                                       step="0.01" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'consKi')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKi', 0.01)">+</button>
-                            </div>
-                            <div class="pid-row">
-                                <span>Kd:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKd', -0.1)">−</button>
-                                <input type="number" class="pid-input" id="${zone}-consKd" 
-                                       value="${state.pidGains[zone].consKd.toFixed(2)}" 
-                                       step="0.1" min="0"
-                                       onchange="updatePIDFromInput(this, '${zone}', 'consKd')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKd', 0.1)">+</button>
-                            </div>
-                        </div>
-                    </div>
+                        <div class="pid-header aggressive">Aggressive</div>
+                        <div class="pid-header conservative">Conservative</div>
                 `;
 
+                const params = [
+                    { key: 'Kp', delta: 0.1, step: '0.1' },
+                    { key: 'Ki', delta: 0.01, step: '0.01' },
+                    { key: 'Kd', delta: 0.1, step: '0.1' }
+                ];
+
+                params.forEach(p => {
+                    const aggKey = 'agg' + p.key;
+                    const consKey = 'cons' + p.key;
+
+                    html += `
+                        <div class="pid-label">${p.key}:</div>
+                        <div class="pid-cell">
+                            <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', '${aggKey}', -${p.delta})">−</button>
+                            <input type="number" class="pid-input" id="${zone}-${aggKey}"
+                                   value="${state.pidGains[zone][aggKey].toFixed(2)}"
+                                   step="${p.step}" min="0"
+                                   onchange="updatePIDFromInput(this, '${zone}', '${aggKey}')">
+                            <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', '${aggKey}', ${p.delta})">+</button>
+                        </div>
+                        <div class="pid-cell">
+                            <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', '${consKey}', -${p.delta})">−</button>
+                            <input type="number" class="pid-input" id="${zone}-${consKey}"
+                                   value="${state.pidGains[zone][consKey].toFixed(2)}"
+                                   step="${p.step}" min="0"
+                                   onchange="updatePIDFromInput(this, '${zone}', '${consKey}')">
+                            <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', '${consKey}', ${p.delta})">+</button>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
                 div.innerHTML = html;
                 container.appendChild(div);
             });
@@ -2093,7 +2032,6 @@
         updateBLEUI();
         drawMiniGraph();
 
-        // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('sw.js')
@@ -2109,7 +2047,6 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
 
-            // Detect updates and prompt reload
             let newWorker;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 window.location.reload();
@@ -2120,7 +2057,6 @@
                     newWorker = reg.installing;
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Show a toast/button: "Update available – tap to reload"
                             if (confirm('New version available! Reload now?')) {
                                 window.location.reload();
                             }
@@ -2150,8 +2086,6 @@
                 window.navigator.standalone === true
             );
         }
-
-
     </script>
 
 </body>
