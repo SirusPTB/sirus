@@ -4,6 +4,7 @@
   "description": "Bluetooth pressure & temperature monitor.",
   "start_url": "index.html",
   "display": "standalone",
+  "display_override": ["standalone"],
   "background_color": "#121212",
   "theme_color": "#121212",
   "orientation": "any",

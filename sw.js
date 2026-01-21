@@ -1,5 +1,6 @@
-const SW_VERSION = '2026-01-14-08';
+const SW_VERSION = '2026-01-14-09';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
+
 
 const URLS_TO_CACHE = [
   './',
