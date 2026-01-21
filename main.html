@@ -54,6 +54,47 @@
       margin: 10px 0 30px;
     }
 
+    /* Top bar layout: Connect on left, battery on right */
+    .top-bar {
+      justify-content: space-between !important;
+      align-items: center;
+    }
+
+    /* Left group */
+    .top-bar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Battery alignment */
+    #battery {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Battery icon size consistency */
+    #batteryIcon {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-radius: 3px;
+      box-sizing: border-box;
+      padding: 0 6px 0 2px;
+    }
+
+    /* Constrain the top bar width and center it */
+    .top-bar {
+      max-width:50%;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+
     button {
       padding: 10px 18px;
       border: none;
@@ -1023,23 +1064,7 @@
 
     <header style="position:relative;padding:10px 12px;">
       <div style="font-weight:bold;display:inline-block;">SirusPTB</div>
-      <div id="battery" style="display:inline-flex;align-items:center;gap:8px;position:absolute;right:12px;top:8px;">
-        <div id="batteryIcon" aria-hidden="true"
-          style="position:relative;width:34px;height:18px;border:2px solid #fff;border-radius:3px;box-sizing:border-box;padding:0 6px 0 2px;">
-          <div id="batteryLevel"
-            style="position:absolute;left:3px;top:3px;bottom:3px;right:8px;width:60%;max-width:24px;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;">
-          </div>
-          <div style="position:absolute;right:-6px;top:5px;width:4px;height:8px;background:#fff;border-radius:1px;">
-          </div>
-          <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18">
-            <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
-          </svg>
-        </div>
-        <!-- <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.55em;">--%</div> -->
-      </div>
     </header>
-
-
 
     <!-- Floating Help Button + Modal (added by ChatGPT) -->
     <div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
@@ -1175,27 +1200,44 @@
 
     <!-- Graphs Page -->
     <div id="graphPage">
-      <div class="button-row">
+      <div class="button-row top-bar">
 
+        <!-- LEFT SIDE -->
+        <div class="top-bar-left">
+          <button class="disconnected" id="connectButton">Connect</button>
 
-        <button class="disconnected" id="connectButton">Connect</button>
-        <div class="toggle-container">
-          <n>°C/°F:</n>
-          <div class="toggle-switch" id="tempToggle">
-            <div class="toggle-slider">C</div>
+          <div class="toggle-container">
+            <n>°C/°F:</n>
+            <div class="toggle-switch" id="tempToggle">
+              <div class="toggle-slider">C</div>
+            </div>
+          </div>
+
+          <div class="toggle-container">
+            <n>Bar/PSI:</n>
+            <div class="toggle-switch" id="pressureToggle">
+              <div class="toggle-slider">Bar</div>
+            </div>
+          </div>
+
+          <button id="installButton" style="display:none;">
+            Install App
+          </button>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div id="battery">
+          <div id="batteryIcon">
+            <div id="batteryLevel"></div>
+            <div class="battery-terminal"></div>
+            <svg class="battery-bolt" viewBox="0 0 24 24">
+              <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
+            </svg>
           </div>
         </div>
-        <div class="toggle-container">
-          <n>Bar/PSI:</n>
-          <div class="toggle-switch" id="pressureToggle">
-            <div class="toggle-slider">Bar</div>
-          </div>
-        </div>
-        <button id="installButton" style="display:none;">
-          Install App
-        </button>
 
       </div>
+
     </div>
 
     <!-- Updated raw data display with clear button -->
