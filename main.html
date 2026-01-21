@@ -2892,18 +2892,6 @@
         console.log("init button disable error", e);
       }
     });
-
-       document.addEventListener('DOMContentLoaded', () => {
-      const installBtn = document.getElementById('installButton');
-
-      // Hide install button when running as PWA
-      if (installBtn && isStandalonePWA()) {
-        installBtn.style.display = 'none';
-      }
-
-      // Debug confirmation (remove later if you want)
-      console.log('Running as standalone PWA:', isStandalonePWA());
-    });
   </script>
 
   <script>
