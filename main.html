@@ -832,6 +832,22 @@
       font-weight: 700;
     }
 
+    #battery.battery-charging {
+      animation: strong-glow 1.6s infinite ease-in-out;
+    }
+
+    @keyframes strong-glow {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 6px #4CAF50) drop-shadow(0 0 12px #66BB6A) drop-shadow(0 0 24px rgba(76, 175, 80, 0.5));
+      }
+
+      50% {
+        filter: drop-shadow(0 0 6px #81C784) drop-shadow(0 0 12px #A5D6A7) drop-shadow(0 0 24px rgba(129, 199, 132, 0.8));
+      }
+    }
+
     /* small visual emphasis when charging */
   </style>
 
@@ -970,7 +986,7 @@
             <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
           </svg>
         </div>
-        <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.55em;">--%</div>
+        <!-- <div id="batteryPercent" style="min-width:34px;text-align:right;font-size:0.55em;">--%</div> -->
       </div>
     </header>
 
@@ -1713,25 +1729,49 @@
     }
 
 
-    // --- Battery update helper ---
-    function updateBattery(percent, charging) {
-      const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
-      const pctEl = document.getElementById("batteryPercent");
+    function updateBattery(percent, charging = false) {
+      const batteryEl = document.getElementById("battery");
       const levelEl = document.getElementById("batteryLevel");
-      if (pctEl) pctEl.textContent = pct + "%";
+      const pctEl = document.getElementById("batteryPercent");
+
+      // Disconnected / unknown state
+      if (percent == null) {
+        if (levelEl) {
+          levelEl.style.width = "0%";
+          levelEl.classList.remove("low", "medium", "high");
+          levelEl.style.backgroundColor = "#555555"; // neutral gray
+        }
+        if (pctEl) {
+          pctEl.textContent = "--%";
+        }
+        if (batteryEl) {
+          batteryEl.classList.remove("battery-charging");
+        }
+        return;
+      }
+
+      // Connected state - normal operation
+      const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
+
+      if (pctEl) {
+        pctEl.textContent = pct + "%";
+      }
+
       if (levelEl) {
         levelEl.style.width = pct + "%";
         levelEl.classList.remove("low", "medium", "high");
+        levelEl.style.backgroundColor = ""; // clear inline gray so class colors apply
         if (pct <= 10) levelEl.classList.add("low");
         else if (pct <= 39) levelEl.classList.add("medium");
         else levelEl.classList.add("high");
       }
 
-      // Charging icon toggle
-      const batteryEl = document.getElementById("battery");
       if (batteryEl) {
-        if (charging) batteryEl.classList.add("battery-charging");
-        else batteryEl.classList.remove("battery-charging");
+        if (charging) {
+          batteryEl.classList.add("battery-charging");
+        } else {
+          batteryEl.classList.remove("battery-charging");
+        }
       }
     }
 
@@ -1881,6 +1921,8 @@
       if (firmwareDisplay) {
         firmwareDisplay.textContent = "---";
       }
+
+      updateBattery(null, false);
     }
 
     function updateChartRanges() {
@@ -1937,7 +1979,6 @@
     // --- Button Setup ---
     document.getElementById("connectButton").onclick = connectToDevice;
 
-    // --- Send data function ---
     async function sendData(command) {
       console.log("Attempting to send:", command);
       console.log("Device:", device);
@@ -1956,8 +1997,8 @@
             console.log("Using writeWithoutResponse");
             await writeCharacteristic.writeValueWithoutResponse(data);
           } else if (writeCharacteristic.properties.write) {
-            console.log("Using regular write");
-            await writeCharacteristic.writeValue(data);
+            console.log("Using writeWithResponse");  // <-- modern explicit call
+            await writeCharacteristic.writeValueWithResponse(data);
           } else {
             throw new Error("Characteristic doesn't support writing");
           }
@@ -2565,6 +2606,16 @@
         }
       }
 
+      if (dataParts.length >= 8) {
+        const batteryPercent = parseInt(dataParts[7].trim());
+        const chargingFlag = dataParts.length >= 9 ? dataParts[8].trim() === "1" : true;
+        if (!isNaN(batteryPercent)) {
+          updateBattery(batteryPercent, chargingFlag);
+          batteryDataReceived = true;
+          console.log(`Battery: ${batteryPercent}% ${chargingFlag ? "(charging)" : ""}`);
+        }
+      }
+
       if (isConnected && !sleepDataReceived && dataParts.length >= 10) {
         const tenthValue = dataParts[9].trim();
         const sleepVal = parseInt(tenthValue);
@@ -2578,39 +2629,24 @@
         }
       }
 
-      // --- Firmware version (11th data point, index 10) ---
+      if (dataParts.length >= 11) {
+        console.log("11th field (index 10):", dataParts[10]?.trim() || '(empty)');
+      }
+
       if (!firmwareDataReceived && dataParts.length >= 12) {
-
         const firmwareValue = dataParts[11].trim();
-
-        // Basic sanity check: avoid garbage / partial fields
         if (firmwareValue.length > 0 && firmwareValue.length <= 16) {
-
           firmwareVersion = firmwareValue;
           firmwareDataReceived = true;
-
           const firmwareDisplay = document.getElementById("firmwareVersionDisplay");
           if (firmwareDisplay) {
             firmwareDisplay.textContent = firmwareVersion;
           }
-
           console.log("Firmware version received from device:", firmwareVersion);
         }
       }
 
 
-
-      // --- Battery (8th data point) + charging (9th) ---
-      if (dataParts.length >= 8) {
-        const batteryPercent = parseInt(dataParts[7].trim());
-        const chargingFlag = dataParts.length >= 9 ? dataParts[8].trim() === "1" : true;
-        if (!isNaN(batteryPercent)) {
-          updateBattery(batteryPercent, chargingFlag);
-          batteryDataReceived = true;
-          console.log(`Battery: ${batteryPercent}% ${chargingFlag ? "(charging)" : ""}`);
-        }
-
-      }
 
       if (paused) return;
 
