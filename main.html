@@ -87,7 +87,7 @@
 
     /* Constrain the top bar width and center it */
     .top-bar {
-      max-width:50%;
+      max-width: 50%;
       margin-left: auto;
       margin-right: auto;
       padding-left: 12px;
@@ -752,22 +752,6 @@
       padding-right: 6px !important;
     }
 
-    /* Align the Zero button inline with its label */
-    /* #advanceContent .adv-table tr:first-child .label-cell {
-  width: auto !important;
-  padding-right: 10px !important;
-  text-align: left !important;
-  vertical-align: middle !important;
-}
-
-#advanceContent .adv-table tr:first-child .control-cell {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-} */
-
     /* --- Keep "Zero pressure" label + button inline on small screens --- */
     @media (max-width: 420px) {
       .adv-table tr:first-child {
@@ -805,6 +789,26 @@
     }
   </style>
   <style>
+    .top-bar {
+      overflow: visible;
+    }
+
+    /* Battery positive terminal (tip) */
+    .battery-terminal {
+      position: absolute;
+      right: -6px;
+      top: 5px;
+      width: 4px;
+      height: 8px;
+      background: #ffffff;
+      border-radius: 1px;
+    }
+
+
+    #batteryIcon {
+      overflow: visible;
+    }
+
     /* Battery icon styles */
     #battery {
       font-family: Arial, Helvetica, sans-serif;
@@ -888,8 +892,6 @@
         filter: drop-shadow(0 0 6px #81C784) drop-shadow(0 0 12px #A5D6A7) drop-shadow(0 0 24px rgba(129, 199, 132, 0.8));
       }
     }
-
-    /* small visual emphasis when charging */
   </style>
 
 
