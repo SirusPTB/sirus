@@ -54,47 +54,6 @@
       margin: 10px 0 30px;
     }
 
-    /* Top bar layout: Connect on left, battery on right */
-    .top-bar {
-      justify-content: space-between !important;
-      align-items: center;
-    }
-
-    /* Left group */
-    .top-bar-left {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    /* Battery alignment */
-    #battery {
-      display: flex;
-      align-items: center;
-    }
-
-    /* Battery icon size consistency */
-    #batteryIcon {
-      position: relative;
-      width: 34px;
-      height: 18px;
-      border: 2px solid #fff;
-      border-radius: 3px;
-      box-sizing: border-box;
-      padding: 0 6px 0 2px;
-    }
-
-    /* Constrain the top bar width and center it */
-    .top-bar {
-      max-width: 50%;
-      margin-left: auto;
-      margin-right: auto;
-      padding-left: 12px;
-      padding-right: 12px;
-    }
-
-
     button {
       padding: 10px 18px;
       border: none;
@@ -752,6 +711,22 @@
       padding-right: 6px !important;
     }
 
+    /* Align the Zero button inline with its label */
+    /* #advanceContent .adv-table tr:first-child .label-cell {
+  width: auto !important;
+  padding-right: 10px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+#advanceContent .adv-table tr:first-child .control-cell {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+} */
+
     /* --- Keep "Zero pressure" label + button inline on small screens --- */
     @media (max-width: 420px) {
       .adv-table tr:first-child {
@@ -789,26 +764,6 @@
     }
   </style>
   <style>
-    .top-bar {
-      overflow: visible;
-    }
-
-    /* Battery positive terminal (tip) */
-    .battery-terminal {
-      position: absolute;
-      right: -4.5px;
-      top: 3.2px;
-      width: 4px;
-      height: 8px;
-      background: #ffffff;
-      border-radius: 1px;
-    }
-
-
-    #batteryIcon {
-      overflow: visible;
-    }
-
     /* Battery icon styles */
     #battery {
       font-family: Arial, Helvetica, sans-serif;
@@ -892,6 +847,8 @@
         filter: drop-shadow(0 0 6px #81C784) drop-shadow(0 0 12px #A5D6A7) drop-shadow(0 0 24px rgba(129, 199, 132, 0.8));
       }
     }
+
+    /* small visual emphasis when charging */
   </style>
 
 
@@ -1057,6 +1014,35 @@
     html {
       scrollbar-width: none;
     }
+
+    /* Ensure the top bar centers its content */
+    .top-bar {
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 10px 12px !important;
+      box-sizing: border-box;
+      width: 100%;
+      margin-bottom: 20px !important;
+    }
+
+    /* Change to inline-flex so the group shrinks-to-fit and can be centered */
+    .top-bar-left {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* Battery percentage text – make visible and styled */
+    #batteryPercent {
+      color: #fff;
+      opacity: 0.8;
+      font-weight: 300;
+      font-size: 0.8em;
+      min-width: 40px;
+      text-align: left;
+    }
   </style>
 
 </head>
@@ -1064,8 +1050,8 @@
 <body>
   <div id="page-wrapper">
 
-    <header style="position:relative;padding:10px 12px;">
-      <div style="font-weight:bold;display:inline-block;">SirusPTB</div>
+    <header style="text-align: center; padding: 10px 12px;">
+      <div style="font-weight: bold;">SirusPTB</div>
     </header>
 
     <!-- Floating Help Button + Modal (added by ChatGPT) -->
@@ -1203,8 +1189,7 @@
     <!-- Graphs Page -->
     <div id="graphPage">
       <div class="button-row top-bar">
-
-        <!-- LEFT SIDE -->
+        <!-- Everything now in one centered group -->
         <div class="top-bar-left">
           <button class="disconnected" id="connectButton">Connect</button>
 
@@ -1225,19 +1210,24 @@
           <button id="installButton" style="display:none;">
             Install App
           </button>
-        </div>
 
-        <!-- RIGHT SIDE -->
-        <div id="battery">
-          <div id="batteryIcon">
-            <div id="batteryLevel"></div>
-            <div class="battery-terminal"></div>
-            <svg class="battery-bolt" viewBox="0 0 24 24">
-              <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
-            </svg>
+          <!-- Battery moved here (next to toggles when Install is hidden) -->
+          <div id="battery" style="display: flex; align-items: center; gap: 8px;">
+            <div id="batteryIcon" aria-hidden="true"
+              style="position:relative;width:34px;height:18px;border:2px solid #fff;border-radius:3px;box-sizing:border-box;">
+              <div id="batteryLevel"
+                style="position:absolute;left:3px;top:3px;bottom:3px;right:8px;width:60%;max-width:24px;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;">
+              </div>
+              <div
+                style="position:absolute;right:-5px;top:3.2px;width:4px;height:8px;background:#fff;border-radius:1px;">
+              </div>
+              <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18">
+                <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
+              </svg>
+            </div>
+            <!-- <div id="batteryPercent">--%</div> -->
           </div>
         </div>
-
       </div>
 
     </div>

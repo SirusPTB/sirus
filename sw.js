@@ -1,4 +1,4 @@
-const SW_VERSION = '2026-01-14-18';
+const SW_VERSION = '2026-01-14-19';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
 
