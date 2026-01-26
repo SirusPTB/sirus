@@ -76,6 +76,29 @@
       background-color: red;
     }
 
+    /* Cursor feedback for disabled controls */
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    textarea:disabled {
+      cursor: not-allowed !important;
+    }
+
+    /* Range sliders (brightness, etc.) */
+    input[type="range"]:disabled {
+      cursor: not-allowed !important;
+    }
+
+    /* Toggle switches (div-based, not real inputs) */
+    .toggle-switch.disabled {
+      cursor: not-allowed !important;
+    }
+
+    .toggle-switch.disabled * {
+      cursor: not-allowed !important;
+    }
+
+
     #resetButton,
     #toggleViewButton {
       background-color: #444;
