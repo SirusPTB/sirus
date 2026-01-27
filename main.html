@@ -10,6 +10,65 @@
   <title>SirusPTB </title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Custom tooltip styling for disabled controls */
+    [data-tooltip] {
+      position: relative;
+    }
+
+    [data-tooltip]::after,
+    [data-tooltip]::before {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 10000;
+    }
+
+    /* Tooltip text box */
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      bottom: calc(100% + 14px);
+      /* Position above the element */
+      background: #1e1e1e;
+      color: #e0e0e0;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+      border: 1px solid #333;
+    }
+
+    /* Arrow pointing down to the element */
+    [data-tooltip]::before {
+      content: "";
+      bottom: calc(100% + 6px);
+      /* Position between tooltip and element */
+      border: 8px solid transparent;
+      border-top-color: #1e1e1e;
+      /* Matches tooltip background */
+    }
+
+    /* Show on hover/focus */
+    [data-tooltip]:hover::after,
+    [data-tooltip]:hover::before,
+    [data-tooltip]:focus::after,
+    [data-tooltip]:focus::before {
+      opacity: 1;
+    }
+
+    /* Optional: small delay so tooltip doesn't flash on quick mouseover */
+    [data-tooltip]::after {
+      transition-delay: 0s;
+    }
+
+    [data-tooltip]:hover::after,
+    [data-tooltip]:focus::after {
+      transition-delay: 0s;
+    }
+
     #installButton {
       background-color: #2a7cff;
       color: #fff;
@@ -141,6 +200,7 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      position: relative;
     }
 
     .toggle-switch {
@@ -1461,16 +1521,36 @@
     let firmwareDataReceived = false;
 
     function setControlsEnabled(enabled) {
-      // Disable all buttons except Connect
+      const tooltipText = "Connect to device to enable";
+
+      // Regular controls (buttons except Connect, inputs, selects, range sliders)
+      // These get native disabled + tooltip directly on the element
       document.querySelectorAll(
-        'button:not(#connectButton), input, select, .toggle-switch, input[type="range"]'
+        'button:not(#connectButton), input, select, input[type="range"]'
       ).forEach(el => {
         el.disabled = !enabled;
+
+        if (!enabled) {
+          el.setAttribute("data-tooltip", tooltipText);
+          el.removeAttribute("title");  // Prevent any native tooltip
+        } else {
+          el.removeAttribute("data-tooltip");
+          el.removeAttribute("title");
+        }
       });
 
-      // Toggles are divs, not inputs
+      // Toggle switches: only apply visual disabled class (keeps dimming on the switch itself)
       document.querySelectorAll('.toggle-switch').forEach(t => {
         t.classList.toggle('disabled', !enabled);
+      });
+
+      // Toggle containers: add bright tooltip to the parent group (label + switch)
+      document.querySelectorAll('.toggle-container').forEach(container => {
+        if (!enabled) {
+          container.setAttribute("data-tooltip", tooltipText);
+        } else {
+          container.removeAttribute("data-tooltip");
+        }
       });
     }
 
