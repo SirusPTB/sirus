@@ -9,7 +9,98 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>SirusPTB </title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
+    :root {
+      /* Core background and text */
+      --bg-main: #121212;
+      --bg-panel: #1e1e1e;
+      --bg-card: #141414;
+      --bg-button: #444;
+      --bg-toggle-inactive: #666;
+      --bg-input: #1b1b1b;
+      --text-main: #e0e0e0;
+      --text-muted: #9aa3ad;
+
+      /* Accent colors - unified palette */
+      --accent-primary: #2a7cff;
+      /* Bright blue - used for Install, potential future primary actions */
+      --accent-success: #28a745;
+      /* Green - positive actions (Set, Connected, Always-On active) */
+      --accent-warning: #ff8c00;
+      /* Orange - caution/important (Zero, Connecting, Pause/Resume) */
+      --accent-danger: #ff4444;
+      /* Red - error/negative (Disconnected) */
+
+      /* Reading accents - kept distinct for quick visual identification */
+      --accent-temp: #ff7f7f;
+      /* Red-ish for temperature (hot) */
+      --accent-pressure: #7fbfff;
+      /* Blue-ish for pressure */
+
+      /* Toggle-specific colors - distinguished but using consistent shades */
+      --toggle-temp: #8B3A3A;
+      /* Dull red for temperature toggle */
+      --toggle-pressure: #2d5884;
+      /* Blue for pressure toggle */
+      --toggle-always-on: var(--accent-success);
+      /* Green when active */
+      --toggle-raw: #8A2BE2;
+      /* Purple for raw data (debug feel) */
+
+      /* Battery indicator - standard progressive colors */
+      --battery-low: #ff6b6b;
+      --battery-medium: #ffb86b;
+      --battery-high: #7fff7f;
+    }
+
+    #advanceContent .adv-table #checkFirmwareButton.control-btn.adv-btn {
+      width: auto !important;
+      min-width: 120px !important;
+      padding: 0px 10px !important;
+      font-size: 1em !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Optional: On very small screens, allow the firmware row to stack gracefully */
+    @media (max-width: 420px) {
+      #checkFirmwareButton {
+        min-width: 100px !important;
+        padding: 0 8px !important;
+        font-size: 0.95em !important;
+      }
+
+      /* Stack firmware display above button on tiny screens */
+      .adv-table tr:nth-last-child(1) .control-cell {
+        display: flex !important;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
+      }
+
+      #firmwareVersionDisplay {
+        margin-bottom: 4px;
+      }
+
+      #checkFirmwareButton {
+        margin-left: 0 !important;
+        align-self: flex-start;
+      }
+    }
+  </style>
+
+  <style>
+    /* Dimmed state for specific buttons when disconnected */
+    button.dim-on-disconnect {
+      transition: opacity 0.3s ease;
+    }
+
+    button.dim-on-disconnect.dimmed {
+      opacity: 0.6 !important;
+    }
+
     /* Custom tooltip styling for disabled controls */
     [data-tooltip] {
       position: relative;
@@ -31,7 +122,7 @@
       content: attr(data-tooltip);
       bottom: calc(100% + 14px);
       /* Position above the element */
-      background: #1e1e1e;
+      background: var(--bg-panel);
       color: #e0e0e0;
       padding: 9px 14px;
       border-radius: 8px;
@@ -70,7 +161,7 @@
     }
 
     #installButton {
-      background-color: #2a7cff;
+      background-color: var(--accent-primary);
       color: #fff;
     }
 
@@ -81,8 +172,8 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #121212;
-      color: #e0e0e0;
+      background: var(--bg-main);
+      color: var(--text-main);
       text-align: center;
     }
 
@@ -101,7 +192,7 @@
     canvas {
       width: 100% !important;
       height: 100% !important;
-      background: #1e1e1e;
+      background: var(--bg-panel);
       border-radius: 8px;
     }
 
@@ -119,20 +210,20 @@
       border-radius: 8px;
       font-size: 1em;
       cursor: pointer;
-      color: white;
-      background-color: #444;
+      background-color: var(--bg-button);
+      color: #fff;
     }
 
     #connectButton.connecting {
-      background-color: orange;
+      background-color: var(--accent-warning);
     }
 
     #connectButton.connected {
-      background-color: green;
+      background-color: var(--accent-success);
     }
 
     #connectButton.disconnected {
-      background-color: red;
+      background-color: var(--accent-danger);
     }
 
     /* Cursor feedback for disabled controls */
@@ -168,12 +259,12 @@
     }
 
     #pauseResumeButton.resume {
-      background-color: #CC6600;
+      background-color: var(--accent-warning);
     }
 
     /* Zero button — make it orange (stronger override) */
     #zeroPressureButton {
-      background-color: #ff8c00 !important;
+      background-color: var(--accent-warning) !important;
       background-image: none !important;
       color: #ffffff !important;
       border: 1px solid rgba(0, 0, 0, 0.15) !important;
@@ -225,31 +316,31 @@
     }
 
     #tempToggle.active {
-      background-color: #8B3A3A;
+      background-color: var(--toggle-temp);
     }
 
     /* Pressure toggle - lighter blue */
     #pressureToggle,
     #pressureToggle.active {
-      background-color: #2d5884 !important;
+      background-color: var(--toggle-pressure);
     }
 
     /* Always on toggle - green when active */
     #alwaysOnToggle {
-      background-color: #666;
+      background-color: var(--bg-toggle-inactive);
     }
 
     #alwaysOnToggle.active {
-      background-color: #4CAF50;
+      background-color: var(--toggle-always-on);
     }
 
     /* Raw data toggle - purple when active */
     #rawDataToggle {
-      background-color: #666;
+      background-color: var(--bg-toggle-inactive);
     }
 
     #rawDataToggle.active {
-      background-color: #8A2BE2;
+      background-color: var(--toggle-raw);
     }
 
     .toggle-slider {
@@ -424,7 +515,7 @@
       text-align: left !important;
       padding: 12px 12px 12px 14px !important;
       border-radius: 6px !important;
-      background: #141414 !important;
+      background: var(--bg-card) !important;
       border: 1px solid #222 !important;
       box-shadow: none !important;
     }
@@ -457,10 +548,10 @@
       min-width: 120px;
       padding: 0 12px;
       border-radius: 6px;
-      background: #1b1b1b;
+      background: var(--bg-input);
       border: 1px solid #272727;
-      color: #e6eef6;
-      font-size: 13px;
+      color: var(--text-main);
+      font-size: 1em;
       box-sizing: border-box;
     }
 
@@ -529,7 +620,7 @@
       /* override the 120px min-width */
       padding: 4px 6px !important;
       /* tighten horizontal padding */
-      font-size: 13px !important;
+      font-size: 1em !important;
       /* slightly smaller label */
       line-height: 1 !important;
       box-sizing: border-box !important;
@@ -571,7 +662,7 @@
     #combinedGaugesButton,
     #resetButton {
       padding: 4px 10px !important;
-      font-size: 13px !important;
+      font-size: 1em !important;
       border-radius: 6px !important;
     }
 
@@ -704,7 +795,7 @@
     button[id^="Set"],
     .control-btn[id^="set"],
     .control-btn[id^="Set"] {
-      background-color: #28a745 !important;
+      background-color: var(--accent-success) !important;
       background-image: none !important;
       color: #ffffff !important;
       border: 1px solid rgba(0, 0, 0, 0.12) !important;
@@ -836,7 +927,7 @@
         width: auto !important;
         min-width: 36px !important;
         padding: 6px 8px !important;
-        font-size: 13px !important;
+        font-size: 1em !important;
       }
     }
   </style>
@@ -858,15 +949,15 @@
     }
 
     #batteryLevel.low {
-      background: #ff6b6b !important;
+      background: var(--battery-low) !important;
     }
 
     #batteryLevel.medium {
-      background: #ffb86b !important;
+      background: var(--battery-medium) !important;
     }
 
     #batteryLevel.high {
-      background: #7fff7f !important;
+      background: var(--battery-high) !important;
     }
 
     #batteryPercent {
@@ -1136,11 +1227,6 @@
 
 <body>
   <div id="page-wrapper">
-
-    <header style="text-align: center; padding: 10px 12px;">
-      <!-- <div style="font-weight: bold;">SirusPTB</div> -->
-    </header>
-
     <!-- Floating Help Button + Modal (added by ChatGPT) -->
     <div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
 
@@ -1305,30 +1391,30 @@
               <div id="batteryLevel"
                 style="position:absolute;left:3px;top:3px;bottom:3px;right:8px;width:60%;max-width:24px;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;">
               </div>
-              <div
-                style="position:absolute;right:-5px;top:3.2px;width:4px;height:8px;background:#fff;border-radius:1px;">
+              <div id="batteryNub"
+                style="position:absolute;right:-5px;top:3.2px;width:4px;height:8px;background:#fff;border-radius:<script>1px;">
               </div>
               <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18">
                 <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
               </svg>
             </div>
+
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- Updated raw data display with clear button -->
     <div id="splitView" style="display:flex; flex-direction:column; width:100%; align-items:center;">
       <div style="width: 90%; margin: 0 auto;">
         <div id="tempCurrentValue"
-          style="background: #121212; color: #ff7f7f; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+          style="background: var(--bg-main); color: var(--accent-temp); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Temperature: -- °C</div>
         <div class="canvas-container"><canvas id="tempChart"></canvas></div>
       </div>
       <div style="width: 90%; margin: 0 auto;">
         <div id="pressureCurrentValue"
-          style="background: #121212; color: #7fbfff; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
+          style="background: var(--bg-main); color: var(--accent-pressure); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Pressure: -- bar</div>
         <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
       </div>
@@ -1365,14 +1451,14 @@
     </div>
 
     <div class="button-row">
-      <button id="pauseResumeButton">Pause</button>
+      <button id="pauseResumeButton" class="dim-on-disconnect">Pause</button>
       <button id="resetButton">Reset</button>
       <button id="toggleViewButton">Toggle View</button>
       <button id="toggleGaugeButton">Toggle Gauges</button>
     </div>
 
     <div class="button-row">
-      <button id="saveButton">Save</button>
+      <button id="saveButton" class="dim-on-disconnect">Save</button>
       <button id="loadButton">Load</button>
       <button id="deleteButton">Delete</button>
     </div>
@@ -1523,28 +1609,52 @@
     function setControlsEnabled(enabled) {
       const tooltipText = "Connect to device to enable";
 
-      // Regular controls (buttons except Connect, inputs, selects, range sliders)
-      // These get native disabled + tooltip directly on the element
-      document.querySelectorAll(
-        'button:not(#connectButton), input, select, input[type="range"]'
-      ).forEach(el => {
-        el.disabled = !enabled;
+      // === Fully disable + tooltip these controls when disconnected ===
+      const deviceControlSelectors = [
+        '#brightnessSlider',
+        '#zeroPressureButton',
+        '#setSleepTimeButton',
+        '#sleepTimeInput',
+        '#setPressureCalibrationButton',
+        '#pressureCalibrationInput',
+        '#chartResetInput',
+        '#setChartResetButton',
+        '#checkFirmwareButton',               // "Check Latest" button - blocked per request
+        '#saveButton',                        // Save button - blocked per request
+        '#pauseResumeButton'
+        // Note: Save and Pause are no longer here — they will only be dimmed
+      ];
 
-        if (!enabled) {
-          el.setAttribute("data-tooltip", tooltipText);
-          el.removeAttribute("title");  // Prevent any native tooltip
-        } else {
-          el.removeAttribute("data-tooltip");
-          el.removeAttribute("title");
+      deviceControlSelectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) {
+          el.disabled = !enabled;
+          if (!enabled) {
+            el.setAttribute("data-tooltip", tooltipText);
+            el.removeAttribute("title");
+          } else {
+            el.removeAttribute("data-tooltip");
+            el.removeAttribute("title");
+          }
         }
       });
 
-      // Toggle switches: only apply visual disabled class (keeps dimming on the switch itself)
+      // === Dim (visual only) Save and Pause buttons when disconnected ===
+      // They remain clickable because they can still be useful offline
+      const dimSelectors = ['#saveButton', '#pauseResumeButton'];
+      dimSelectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) {
+          el.classList.toggle('dimmed', !enabled);
+        }
+      });
+
+      // === Toggle switches: visual disabled class only ===
       document.querySelectorAll('.toggle-switch').forEach(t => {
         t.classList.toggle('disabled', !enabled);
       });
 
-      // Toggle containers: add bright tooltip to the parent group (label + switch)
+      // === Toggle containers: group tooltip ===
       document.querySelectorAll('.toggle-container').forEach(container => {
         if (!enabled) {
           container.setAttribute("data-tooltip", tooltipText);
@@ -1930,53 +2040,66 @@
       console.log(`Brightness updated from device: ${clampedValue}`);
     }
 
-
     function updateBattery(percent, charging = false) {
       const batteryEl = document.getElementById("battery");
       const levelEl = document.getElementById("batteryLevel");
       const pctEl = document.getElementById("batteryPercent");
+      const iconEl = document.getElementById("batteryIcon");
+      const nubEl = document.getElementById("batteryNub");
 
-      // Disconnected / unknown state
       if (percent == null) {
+        // Disconnected / unknown state → empty and greyed out
         if (levelEl) {
           levelEl.style.width = "0%";
           levelEl.classList.remove("low", "medium", "high");
-          levelEl.style.backgroundColor = "#555555"; // neutral gray
+          levelEl.style.backgroundColor = "transparent";
         }
         if (pctEl) {
           pctEl.textContent = "--%";
+          pctEl.style.color = "#888";
+          pctEl.style.opacity = "0.6";
+        }
+        if (iconEl) {
+          iconEl.style.borderColor = "#666";
+        }
+        if (nubEl) {
+          nubEl.style.background = "#666";
         }
         if (batteryEl) {
           batteryEl.classList.remove("battery-charging");
         }
-        return;
-      }
+      } else {
+        // Connected state - normal behaviour
+        const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
 
-      // Connected state - normal operation
-      const pct = Math.max(0, Math.min(100, parseInt(percent || 0)));
-
-      if (pctEl) {
-        pctEl.textContent = pct + "%";
-      }
-
-      if (levelEl) {
-        levelEl.style.width = pct + "%";
-        levelEl.classList.remove("low", "medium", "high");
-        levelEl.style.backgroundColor = ""; // clear inline gray so class colors apply
-        if (pct <= 10) levelEl.classList.add("low");
-        else if (pct <= 39) levelEl.classList.add("medium");
-        else levelEl.classList.add("high");
-      }
-
-      if (batteryEl) {
-        if (charging) {
-          batteryEl.classList.add("battery-charging");
-        } else {
-          batteryEl.classList.remove("battery-charging");
+        if (pctEl) {
+          pctEl.textContent = pct + "%";
+          pctEl.style.color = "#fff";
+          pctEl.style.opacity = "0.8";
+        }
+        if (levelEl) {
+          levelEl.style.width = pct + "%";
+          levelEl.classList.remove("low", "medium", "high");
+          levelEl.style.backgroundColor = ""; // let CSS classes control colour
+          if (pct <= 10) levelEl.classList.add("low");
+          else if (pct <= 39) levelEl.classList.add("medium");
+          else levelEl.classList.add("high");
+        }
+        if (iconEl) {
+          iconEl.style.borderColor = "rgba(255, 255, 255, 0.9)";
+        }
+        if (nubEl) {
+          nubEl.style.background = "#fff";
+        }
+        if (batteryEl) {
+          if (charging) {
+            batteryEl.classList.add("battery-charging");
+          } else {
+            batteryEl.classList.remove("battery-charging");
+          }
         }
       }
     }
-
     // --- Pressure conversion functions ---
     function barToPsi(bar) {
       return bar;
@@ -2377,6 +2500,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       setControlsEnabled(false);
+      updateBattery(null);
     });
 
     // --- Temperature Toggle Switch Handler ---
@@ -3054,6 +3178,8 @@
         console.log("init button disable error", e);
       }
     });
+
+
   </script>
 
   <script>
