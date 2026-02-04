@@ -724,18 +724,19 @@
                 </div>
             </div>
 
-
-
             <div class="graph-container full-graph">
                 <canvas id="fullGraph"></canvas>
                 <div class="graph-legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background: #f00;"></div>
                         <span>Brew Temperature</span>
+                        <span id="fullLegendTemp" style="margin-left: auto; font-weight: bold; color: #ff8888;"></span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #00f;"></div>
                         <span>Group Pressure</span>
+                        <span id="fullLegendPressure"
+                            style="margin-left: auto; font-weight: bold; color: #8888ff;"></span>
                     </div>
                 </div>
                 <div class="graph-tooltip"></div>
@@ -1063,6 +1064,7 @@
             if (pageName === 'graph') {
                 drawFullGraph();
                 syncAxisInputs();
+                updateFullLegend();
             }
 
             if (pageName === 'settings') {
@@ -1160,6 +1162,7 @@
             if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
 
             updateUnitButtons();
+            updateFullLegend();
         }
 
         function updateBrightness(value) {
@@ -1367,6 +1370,20 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
+        }
+
+        function updateFullLegend() {
+            const tempEl = document.getElementById('fullLegendTemp');
+            const pressEl = document.getElementById('fullLegendPressure');
+            if (!tempEl || !pressEl) return;
+
+            const tempVal = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1);
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            tempEl.textContent = `${tempVal} ${tempUnit}`;
+
+            const pressVal = (state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038).toFixed(1);
+            const pressUnit = state.pressureIsBar ? 'bar' : 'psi';
+            pressEl.textContent = `${pressVal} ${pressUnit}`;
         }
 
         function drawFullGraph() {
@@ -1722,6 +1739,11 @@
                     state.pressureHistory = data.pressureHistory.slice(-len).map(Number);
                     lastTemp = state.tempHistory.length > 0 ? state.tempHistory[state.tempHistory.length - 1] : null;
                     lastPressure = state.pressureHistory.length > 0 ? state.pressureHistory[state.pressureHistory.length - 1] : null;
+                    if (state.tempHistory.length > 0) {
+                        state.brewTemp = state.tempHistory[state.tempHistory.length - 1];
+                        state.groupPressure = state.pressureHistory[state.pressureHistory.length - 1];
+                    }
+                    updateDisplay();  // this will also call updateFullLegend()
                     drawMiniGraph();
                     drawFullGraph();
                     alert('Data loaded successfully (' + state.tempHistory.length + ' samples).');
