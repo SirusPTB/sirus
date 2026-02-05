@@ -194,6 +194,52 @@
             background: #1a1a1a;
         }
 
+        .status-card {
+            position: relative;
+            /* required for absolute label positioning */
+        }
+
+        /* LABELS: Brew / Steam / Group */
+        .status-label {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 1.00rem;
+            font-family: monospace;
+            font-weight: 300;
+            color: #9a9a9a;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        /* Keep temp values centered as-is */
+        .status-temp {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 300;
+            line-height: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.15em;
+        }
+
+        /* Numeric value */
+        .temp-value {
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+
+        /* Unit label */
+        .temp-unit {
+            font-size: 0.5em;
+            opacity: 0.8;
+            margin-top: 0.15em;
+            color: #9a9a9a;
+            transition: color 0.3s ease;
+        }
+
         .central-panel {
             margin-bottom: 0.5rem;
             display: flex;
@@ -202,6 +248,7 @@
             gap: 3rem;
         }
 
+        /* 
         @media (max-width: 640px) {
             .central-panel {
                 gap: 1.5rem;
@@ -224,6 +271,21 @@
             .shot-time {
                 font-size: clamp(3.5rem, 15vw, 4.5rem);
             }
+        } */
+
+        .left-readings,
+        .shot-timer-section {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            position: relative;
+            /* ← Added for absolute label positioning */
         }
 
         .left-readings {
@@ -274,6 +336,23 @@
             font-size: clamp(2rem, 8vw, 4rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .container.ble-disconnected .temp-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .temp-unit {
+            color: #777 !important;
+        }
+
+        .container.ble-disconnected .status-label {
+            color: #777 !important;
+        }
+
+        .container.ble-disconnected #shotTime {
+            color: #666 !important;
         }
 
         .shot-time.running {
@@ -550,6 +629,10 @@
             font-size: 1.3rem;
         }
 
+        .pressure-display {
+            font-size: clamp(2rem, 9vw, 4.2rem);
+        }
+
         #mainPage .graph-container.nav-graph {
             flex: none;
             height: 90vh;
@@ -570,6 +653,25 @@
 
         .nav-settings:hover {
             background: #111;
+        }
+
+        .pressure-display {
+            font-size: clamp(2rem, 9vw, 4.2rem);
+            align-items: baseline;
+            /* ← Aligns text baselines (unit sits on bottom line of large number) */
+            gap: 0.1em;
+            /* ← Slightly tighter gap for baseline alignment */
+        }
+
+        /* New dedicated class for pressure unit */
+        .pressure-unit {
+            font-size: 0.5em;
+            /* same as temp-unit */
+            opacity: 0.8;
+            /* same as temp-unit */
+            color: #9a9a9a;
+            /* same as temp-unit */
+            /* no margin-top → stays bottom-aligned via baseline */
         }
     </style>
 </head>
@@ -599,32 +701,44 @@
 
             <div class="status-grid">
                 <div class="status-card" id="brewStatus">
-                    <div class="status-temp" id="brewTempCard">0.0°</div>
+                    <div class="status-temp">
+                        <span class="temp-value" id="brewTempValue">0.0</span>
+                        <span class="temp-unit" id="brewTempUnit">°C</span>
+                    </div>
                     <div class="status-label">Brew</div>
                 </div>
 
-                <div class="status-card" id="steamStatus">
-                    <div class="status-temp" id="steamTempCard">0.0°</div>
-                    <div class="status-label">Steam</div>
+                <div class="status-card" id="groupStatus">
+                    <div class="status-temp">
+                        <span class="temp-value" id="groupTempValue">0.0</span>
+                        <span class="temp-unit" id="groupTempUnit">°C</span>
+                    </div>
+                    <div class="status-label">Group</div>
                 </div>
 
-                <div class="status-card" id="groupStatus">
-                    <div class="status-temp" id="groupTempCard">0.0°</div>
-                    <div class="status-label">Group</div>
+                <div class="status-card" id="steamStatus">
+                    <div class="status-temp">
+                        <span class="temp-value" id="steamTempValue">0.0</span>
+                        <span class="temp-unit" id="steamTempUnit">°C</span>
+                    </div>
+                    <div class="status-label">Steam</div>
                 </div>
             </div>
 
             <div class="central-panel">
                 <div class="left-readings">
+                    <div class="status-label">Pressure</div>
                     <div class="reading-item">
-                        <div class="reading-row">
-                            <div class="reading-value" id="pressureDisplay">0.0</div>
-                            <div class="reading-unit" id="pressureUnit">bar</div>
+                        <!-- Updated to use dedicated pressure-unit class and baseline alignment -->
+                        <div class="status-temp pressure-display">
+                            <span class="temp-value" id="pressureDisplay">0.0</span>
+                            <span class="pressure-unit" id="pressureUnit">bar</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="shot-timer-section">
+                    <div class="status-label">Shot</div>
                     <div class="shot-time stopped" id="shotTime">00</div>
                 </div>
             </div>
@@ -973,6 +1087,9 @@
                 ind.classList.toggle('connected', connected);
                 ind.classList.toggle('disconnected', !connected);
             });
+
+            // Add/remove disconnected class on main container for value dimming
+            document.querySelector('.container').classList.toggle('ble-disconnected', !connected);
         }
 
         function handleBLEData(event) {
@@ -1125,41 +1242,35 @@
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-            let el = document.getElementById('brewTempCard');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
+            // Fixed: update the actual value and unit spans (previous code targeted non-existent IDs like brewTempCard)
+            const formatTemp = (val) => state.useFahrenheit ? cToF(val).toFixed(1) : val.toFixed(1);
 
-            el = document.getElementById('steamTempCard');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1) + tempUnit;
+            document.getElementById('brewTempValue').textContent = formatTemp(state.brewTemp);
+            document.getElementById('brewTempUnit').textContent = tempUnit;
 
-            el = document.getElementById('groupTempCard');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
+            document.getElementById('steamTempValue').textContent = formatTemp(state.steamTemp);
+            document.getElementById('steamTempUnit').textContent = tempUnit;
 
-            el = document.getElementById('brewStatus');
-            if (el) el.className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
+            document.getElementById('groupTempValue').textContent = formatTemp(state.groupTemp);
+            document.getElementById('groupTempUnit').textContent = tempUnit;
 
-            el = document.getElementById('steamStatus');
-            if (el) el.className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
+            // Status card ready/heating classes
+            document.getElementById('brewStatus').className = 'status-card ' +
+                (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected ? 'heating' : '');
+            document.getElementById('steamStatus').className = 'status-card ' +
+                (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected ? 'heating' : '');
+            document.getElementById('groupStatus').className = 'status-card ' +
+                (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected ? 'heating' : '');
 
-            el = document.getElementById('groupStatus');
-            if (el) el.className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
+            // Pressure (already correct, kept as-is)
+            const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
+            document.getElementById('pressureDisplay').textContent = pressureValue.toFixed(1);
+            document.getElementById('pressureUnit').textContent = state.pressureIsBar ? 'bar' : 'psi';
 
-            el = document.getElementById('pressureDisplay');
-            if (el) {
-                const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
-                el.textContent = pressureValue.toFixed(1);
-            }
-
-            el = document.getElementById('pressureUnit');
-            if (el) el.textContent = state.pressureIsBar ? 'bar' : 'psi';
-
-            el = document.getElementById('brewSetpointDisplay');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
-
-            el = document.getElementById('steamSetpointDisplay');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
-
-            el = document.getElementById('groupSetpointDisplay');
-            if (el) el.textContent = (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+            // Setpoints
+            document.getElementById('brewSetpointDisplay').textContent = formatTemp(state.brewSetpoint) + ' ' + tempUnit;
+            document.getElementById('steamSetpointDisplay').textContent = formatTemp(state.steamSetpoint) + ' ' + tempUnit;
+            document.getElementById('groupSetpointDisplay').textContent = formatTemp(state.groupSetpoint) + ' ' + tempUnit;
 
             updateUnitButtons();
             updateFullLegend();
@@ -1902,6 +2013,7 @@
             drawMiniGraph();
             updateDisplay();
             syncAxisInputs();
+            updateBLEUI(); // Ensure initial disconnected state is applied
             ['tempGraphMinInput', 'tempGraphMaxInput', 'pressGraphMinInput', 'pressGraphMaxInput'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
