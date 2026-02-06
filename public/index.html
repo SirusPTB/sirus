@@ -876,6 +876,8 @@
     <script>
         const installButton = document.getElementById('installButton');
         let deferredPrompt = null;
+        let chooserOpen = false;
+
 
         window.addEventListener('beforeinstallprompt', (e) => {
             if (isAppInstalled()) {
@@ -1036,6 +1038,12 @@
                 alert('Web Bluetooth not supported');
                 return;
             }
+
+            if (!isReconnect && chooserOpen) {
+                console.warn('Bluetooth chooser already open');
+                return;
+            }
+
             try {
                 let device = state.bleDevice;
                 if (!device || !isReconnect) {
