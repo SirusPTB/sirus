@@ -1125,10 +1125,17 @@
         // ==============================================================
 
         function handleDisconnect() {
+            if (!state.bleConnected && isReconnecting) return;
+
+            console.warn('BLE disconnected');
+
             state.bleConnected = false;
             state.characteristic = null;
+            isReconnecting = true;
+
             updateBLEUI();
             resetLiveData();
+
             scheduleAutoReconnect();
         }
 
@@ -1364,6 +1371,7 @@
 
         let lastTemp = null;
         let lastPressure = null;
+        let isReconnecting = false;
 
         setInterval(() => {
             if (state.bleConnected && Date.now() - state.lastDataTime > 5000) {  // 10s no data
@@ -2113,28 +2121,19 @@
                 if (state.bleConnected) {
                     clearInterval(reconnectTimer);
                     reconnectTimer = null;
+                    isReconnecting = false;
                     return;
                 }
-
-                if (MAX_RECONNECT_ATTEMPTS &&
-                    reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                    clearInterval(reconnectTimer);
-                    reconnectTimer = null;
-                    console.warn('Max reconnect attempts reached');
-                    return;
-                }
-
-                reconnectAttempts++;
 
                 try {
-                    console.log('Attempting auto-reconnect…');
-                    await connectBLE(true); // ← no chooser
-                    console.log('Auto-reconnect successful');
-                } catch (err) {
-                    console.log('Auto-reconnect failed, retrying…');
+                    console.log('Auto-reconnect attempt…');
+                    await connectBLE(true);
+                } catch {
+                    // stay quiet, keep retrying
                 }
-            }, 3000); // every 3 seconds
+            }, 3000);
         }
+
 
     </script>
 </body>
