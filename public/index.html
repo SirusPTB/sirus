@@ -965,7 +965,8 @@
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
                 group: { consKp: 1.40, consKi: 0.03, consKd: 0.80, aggKp: 5.00, aggKi: 0.12, aggKd: 2.00 }
-            }
+            },
+            lastDataTime: 0
         };
 
         let miniHoveredIndex = -1;
@@ -1047,6 +1048,7 @@
                 characteristic.addEventListener('characteristicvaluechanged', handleBLEData);
                 state.characteristic = characteristic;
                 state.bleConnected = true;
+                state.lastDataTime = Date.now();
                 reconnectAttempts = 0;
                 updateBLEUI();
             } catch (err) {
@@ -1139,6 +1141,8 @@
                 return;
             }
 
+            state.lastDataTime = Date.now();
+
             Object.assign(state, {
                 brewTemp: data.brewTemp ?? state.brewTemp,
                 steamTemp: data.steamTemp ?? state.steamTemp,
@@ -1185,12 +1189,13 @@
             try {
                 const encoder = new TextEncoder();
                 const data = encoder.encode(JSON.stringify(command));
-                // Use writeValueWithResponse for reliable, acknowledged writes
                 await state.characteristic.writeValueWithResponse(data);
             } catch (error) {
-                console.error('BLE write failed:', error);
-                // Optional: add user-facing feedback if desired
-                // alert('Failed to send command to device');
+                console.error('BLE write failed – forcing disconnect:', error);
+                // Any write failure means the link is dead
+                handleDisconnect();
+                // Optional: give user feedback (uncomment if desired)
+                alert('Connection lost to LVR-1');
             }
         }
 
@@ -1341,6 +1346,13 @@
 
         let lastTemp = null;
         let lastPressure = null;
+
+        setInterval(() => {
+            if (state.bleConnected && Date.now() - state.lastDataTime > 5000) {  // 10s no data
+                console.warn('No data received for 10s – forcing disconnect');
+                handleDisconnect();
+            }
+        }, 5000);
 
         setInterval(() => {
             if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
