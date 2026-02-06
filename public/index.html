@@ -874,6 +874,40 @@
     </div>
 
     <script>
+        let manualDisconnect = false;
+        let watchAbortController = null;
+
+        function startAdvertisementWatch() {
+            if (!state.bleDevice || state.bleConnected) return;
+
+            // Abort any previous watching
+            if (watchAbortController) watchAbortController.abort();
+
+            const abortController = new AbortController();
+            watchAbortController = abortController;
+
+            console.log('Starting to watch for LVR-1 advertisements...');
+
+            state.bleDevice.addEventListener('advertisementreceived', async () => {
+                abortController.abort();
+                watchAbortController = null;
+                console.log('LVR-1 advertisement received – attempting auto-reconnect');
+                try {
+                    await connectBLE(true);  // Direct reconnect (often no dialog)
+                } catch (err) {
+                    console.warn('Auto-reconnect failed – restarting watch', err);
+                    startAdvertisementWatch();  // Try watching again if connect failed
+                }
+            }, { once: true });
+
+            state.bleDevice.watchAdvertisements({ signal: abortController.signal })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.warn('watchAdvertisements failed (may be browser limitation)', err);
+                    }
+                });
+        }
+
         const installButton = document.getElementById('installButton');
         let deferredPrompt = null;
 
@@ -967,6 +1001,7 @@
                 group: { consKp: 1.40, consKi: 0.03, consKd: 0.80, aggKp: 5.00, aggKi: 0.12, aggKd: 2.00 }
             },
             lastDataTime: 0
+
         };
 
         let miniHoveredIndex = -1;
@@ -984,6 +1019,12 @@
 
         async function toggleBLE() {
             if (state.bleConnected) {
+                manualDisconnect = true;
+                // Stop any watching
+                if (watchAbortController) {
+                    watchAbortController.abort();
+                    watchAbortController = null;
+                }
                 disconnectBLE();
                 updateBLEUI();
                 return;
@@ -991,24 +1032,24 @@
 
             let success = false;
 
-            // If we have a previous device, try direct reconnect first (often no dialog)
+            // Try direct reconnect first if we have a previous device
             if (state.bleDevice) {
                 try {
                     await connectBLE(true);
                     success = true;
                 } catch (err) {
-                    console.warn('Direct reconnect failed, falling back to device selection', err);
+                    console.warn('Direct reconnect failed', err);
                 }
             }
 
-            // If direct failed or no previous device, use the full requestDevice flow
+            // If failed or no device, show chooser
             if (!success) {
-                state.bleDevice = null;  // clear stale reference
+                state.bleDevice = null;
                 try {
-                    await connectBLE(false);  // this shows the Bluetooth chooser
+                    await connectBLE(false);
                 } catch (err) {
                     console.error('Connection failed:', err);
-                    alert('Failed to connect to LVR-1. Check that it is powered on and in range.');
+                    alert('Failed to connect to LVR-1. Is it powered on and in range?');
                 }
             }
         }
@@ -1048,7 +1089,14 @@
                 characteristic.addEventListener('characteristicvaluechanged', handleBLEData);
                 state.characteristic = characteristic;
                 state.bleConnected = true;
+                manualDisconnect = false;
                 state.lastDataTime = Date.now();
+
+                if (watchAbortController) {
+                    watchAbortController.abort();
+                    watchAbortController = null;
+                }
+
                 reconnectAttempts = 0;
                 updateBLEUI();
             } catch (err) {
@@ -1059,49 +1107,20 @@
 
         // ==================== AUTO-CONNECT ADDITION ====================
         async function autoConnect() {
-            if (!navigator.bluetooth || state.bleConnected) return;
+            if (!navigator.bluetooth || state.bleConnected || !state.bleDevice) return;
 
+            // First, try an immediate direct reconnect (silent, no dialog in most cases)
             try {
-                const devices = await navigator.bluetooth.getDevices();
-
-                for (const device of devices) {
-                    if (device.name !== 'LVR-1') continue;
-
-                    state.bleDevice = device;
-                    device.addEventListener('gattserverdisconnected', handleDisconnect);
-
-                    // Try immediate connection first
-                    try {
-                        await connectBLE(true);
-                        console.log('Auto-connected immediately to LVR-1');
-                        return;
-                    } catch (err) {
-                        console.log('Immediate auto-connect failed – watching for advertisements');
-                    }
-
-                    // If immediate fails, watch for advertisements
-                    const abortController = new AbortController();
-
-                    device.addEventListener('advertisementreceived', async () => {
-                        abortController.abort();
-                        console.log('LVR-1 advertisement received – attempting connection');
-                        try {
-                            await connectBLE(true);
-                            console.log('Auto-connected after advertisement');
-                        } catch (err) {
-                            console.error('Auto-connect after advertisement failed:', err);
-                        }
-                    }, { once: true });
-
-                    try {
-                        await device.watchAdvertisements({ signal: abortController.signal });
-                    } catch (err) {
-                        console.warn('watchAdvertisements error:', err);
-                    }
-                }
+                await connectBLE(true);
+                console.log('Auto-connected immediately to previously paired LVR-1');
+                return;
             } catch (err) {
-                console.error('autoConnect error:', err);
+                console.log('Immediate auto-connect failed – will watch for advertisements', err);
             }
+
+            // If immediate connect failed, fall back to watching advertisements
+            // (This reuses the exact same logic we use after a natural disconnect)
+            startAdvertisementWatch();
         }
         // ==============================================================
 
@@ -1110,6 +1129,13 @@
             state.characteristic = null;
             updateBLEUI();
             resetLiveData();
+
+            // If this was a natural disconnect (not user clicking Disconnect), start watching for reconnect
+            if (!manualDisconnect) {
+                startAdvertisementWatch();
+            } else {
+                manualDisconnect = false;  // Reset flag for next time
+            }
         }
 
         function updateBLEUI() {
