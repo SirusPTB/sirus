@@ -1106,12 +1106,10 @@
         // ==============================================================
 
         function handleDisconnect() {
-            if (reconnectTimer) clearTimeout(reconnectTimer);
             state.bleConnected = false;
             state.characteristic = null;
             updateBLEUI();
             resetLiveData();
-            // No automatic reconnect attempts
         }
 
         function updateBLEUI() {
