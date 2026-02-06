@@ -972,6 +972,11 @@
         let miniHoveredIndex = -1;
         let fullHoveredIndex = -1;
 
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 0; // 0 = unlimited
+
+
         const miniTooltip = document.querySelector('.nav-graph .graph-tooltip');
         const fullTooltip = document.querySelector('.full-graph .graph-tooltip');
 
@@ -1050,6 +1055,12 @@
                 state.bleConnected = true;
                 state.lastDataTime = Date.now();
                 reconnectAttempts = 0;
+
+                if (reconnectTimer) {
+                    clearInterval(reconnectTimer);
+                    reconnectTimer = null;
+                }
+
                 updateBLEUI();
             } catch (err) {
                 console.warn('LVR-1 connection failed:', err);
@@ -1110,6 +1121,7 @@
             state.characteristic = null;
             updateBLEUI();
             resetLiveData();
+            scheduleAutoReconnect();
         }
 
         function updateBLEUI() {
@@ -2084,6 +2096,38 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
+
+        function scheduleAutoReconnect() {
+            if (reconnectTimer) return;
+            if (!state.bleDevice) return;
+
+            reconnectTimer = setInterval(async () => {
+                if (state.bleConnected) {
+                    clearInterval(reconnectTimer);
+                    reconnectTimer = null;
+                    return;
+                }
+
+                if (MAX_RECONNECT_ATTEMPTS &&
+                    reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                    clearInterval(reconnectTimer);
+                    reconnectTimer = null;
+                    console.warn('Max reconnect attempts reached');
+                    return;
+                }
+
+                reconnectAttempts++;
+
+                try {
+                    console.log('Attempting auto-reconnect…');
+                    await connectBLE(true); // ← no chooser
+                    console.log('Auto-reconnect successful');
+                } catch (err) {
+                    console.log('Auto-reconnect failed, retrying…');
+                }
+            }, 3000); // every 3 seconds
+        }
+
     </script>
 </body>
 
