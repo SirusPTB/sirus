@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,20 +20,22 @@
             box-sizing: border-box;
         }
 
-.brightness-control {
-    display: none;
-}
-@font-face {
-    font-family: 'DSEG7Classic';
-    src: url('DSEG7Classic-Bold.woff2') format('woff2'),
-         url('DSEG7Classic-Bold.woff') format('woff'),
-         url('DSEG7Classic-Bold.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
+        .brightness-control {
+            display: none;
+        }
 
-        html, body {
+        @font-face {
+            font-family: 'DSEG7Classic';
+            src: url('DSEG7Classic-Bold.woff2') format('woff2'),
+                url('DSEG7Classic-Bold.woff') format('woff'),
+                url('DSEG7Classic-Bold.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        html,
+        body {
             overflow: hidden;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -111,11 +114,25 @@
             min-width: 48px;
         }
 
-        .btn:hover { background: #555; }
-        .btn-primary { background: #2563eb; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-success { background: #16a34a; }
-        .btn-danger { background: #dc2626; }
+        .btn:hover {
+            background: #555;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
 
         .btn-group {
             display: flex;
@@ -135,8 +152,13 @@
             transition: color 0.3s ease;
         }
 
-        .ble-indicator.disconnected { color: #666; }
-        .ble-indicator.connected { color: #0051ff; }
+        .ble-indicator.disconnected {
+            color: #666;
+        }
+
+        .ble-indicator.connected {
+            color: #0051ff;
+        }
 
         .status-grid {
             display: grid;
@@ -166,25 +188,87 @@
             text-align: center;
         }
 
-        .status-card.ready { border-color: #16a34a; background: #0f2f1f; }
-        .status-card.heating { border-color: #333; background: #1a1a1a; }
-
-.central-panel {
-        /* Removed background, border, border-radius, and padding */
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;   /* Center the two panels horizontally */
-        gap: 3rem;                  /* Space between the two separate panels */
-    }
-
-        @media (max-width: 768px) {
-        .central-panel {
-            flex-direction: column;
-            gap: 2rem;              /* Slightly larger gap when stacked */
-            text-align: center;
+        .status-card.ready {
+            border-color: #16a34a;
+            background: #0f2f1f;
         }
-    }
+
+        .status-card.heating {
+            border-color: #333;
+            background: #1a1a1a;
+        }
+
+        .status-card {
+            position: relative;
+            /* required for absolute label positioning */
+        }
+
+
+        /* LABELS: Brew / Steam / Group */
+        .status-label {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            font-size: 1.00rem;
+            font-family: monospace;
+            font-weight: 300;
+            color: #9a9a9a;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        /* Keep temp values centered as-is */
+        .status-temp {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 300;
+            line-height: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.15em;
+        }
+
+        /* Numeric value */
+        .temp-value {
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+
+        .temp-unit {
+            font-family: Arial, sans-serif;
+            font-size: 0.5em;
+            opacity: 0.8;
+            margin-top: 0.15em;
+            color: #9a9a9a;
+            transition: color 0.3s ease;
+        }
+
+
+        .central-panel {
+            /* Removed background, border, border-radius, and padding */
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        .left-readings,
+        .shot-timer-section {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            position: relative;
+        }
+
         .left-readings {
             display: flex;
             flex-direction: column;
@@ -205,44 +289,74 @@
         }
 
         .reading-value {
-            font-size: clamp(1rem, 7vw, 3.3rem);
-            font-family: monospace;
-            color: #283a8d;
+            font-size: clamp(2rem, 9vw, 4.2rem);
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            transition: color 0.3s ease;
         }
 
         .reading-unit {
             font-size: clamp(1.5rem, 6vw, 2.5rem);
-            color: #283a8d;
-            font-family: monospace;
-        }
-
-.left-readings,
-    .shot-timer-section {
-        background: #1a1a1a;
-        border: 2px solid #444;
-        border-radius: 16px;
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-    }
-
-.shot-time {
-            font-size: clamp(2rem, 8vw, 4rem);  /* slightly larger for better segment visibility */
-            font-family: 'DSEG7Classic', monospace;
+            color: #575859;
+            font-family: Arial, sans-serif;
             line-height: 1;
         }
 
-        .shot-time.running { color: #fff; }
-        .shot-time.stopped { color: #666; }
+        .status-temp {
+            font-family: 'DSEG7Classic', monospace;
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+        .left-readings,
+        .shot-timer-section {
+            background: #1a1a1a;
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .shot-time {
+            font-size: clamp(2rem, 9vw, 4.2rem);
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .container.ble-disconnected .temp-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .temp-unit {
+            color: #777 !important;
+        }
+
+        .container.ble-disconnected .status-label {
+            color: #777 !important;
+        }
+
+        .container.ble-disconnected #shotTime {
+            color: #666 !important;
+        }
+
+        .shot-time.running {
+            color: #fff;
+        }
+
+        .shot-time.stopped {
+            color: #666;
+        }
 
         .panel-label {
-        font-size: 1.6rem;
-        margin-top: 1rem;
-        color: #ccc;
-    }
+            font-size: 1.6rem;
+            margin-top: 1rem;
+            color: #ccc;
+        }
 
         .graph-container {
             background: #1a1a1a;
@@ -291,7 +405,7 @@
             border-radius: 8px;
             pointer-events: none;
             font: 14px monospace;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
             z-index: 10;
             display: none;
             min-width: 120px;
@@ -356,13 +470,17 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
             .settings-controls {
                 display: flex;
                 justify-content: space-around;
             }
         }
 
-        .settings-label { font-size: 1.6rem; }
+        .settings-label {
+            font-size: 1.6rem;
+        }
+
         .settings-value {
             font-size: 2rem;
             font-family: monospace;
@@ -403,9 +521,18 @@
             gap: 1.5rem;
         }
 
-        .pid-column h4 { margin-bottom: 10px; font-size: 16px; }
-        .pid-column h4.aggressive { color: #fb923c; }
-        .pid-column h4.conservative { color: #06b6d4; }
+        .pid-column h4 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .pid-column h4.aggressive {
+            color: #fb923c;
+        }
+
+        .pid-column h4.conservative {
+            color: #06b6d4;
+        }
 
         .pid-row {
             display: flex;
@@ -450,7 +577,11 @@
             font-size: 18px;
         }
 
-        .full-graph { flex: 1; display: flex; flex-direction: column; }
+        .full-graph {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
         .graph-stats {
             margin-top: 15px;
@@ -460,8 +591,16 @@
             font-size: 14px;
         }
 
-        .stat-item { display: flex; align-items: center; gap: 8px; }
-        .stat-value { color: #06b6d4; font-family: monospace; }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            color: #06b6d4;
+            font-family: monospace;
+        }
 
         .disabled-nav {
             opacity: 0.4;
@@ -470,41 +609,57 @@
         }
 
         /* === FIX MINI GRAPH INITIAL SIZE === */
-#mainPage .graph-container.nav-graph {
-    flex: none;        /* stop flex height guessing */
-    height: 90vh;      /* real height on first layout */
-    min-height: 140px;
-    max-height: 240px;
-}
-/* === FIX MINI GRAPH CANVAS SIZE === */
-#mainPage #miniGraph {
-    height: 90% !important;
-}
-.nav-settings {
-    font-size: 1.9rem;
-    line-height: 1;
-    padding: 0.6rem 0.8rem;
-}
-/* === Black background for settings (three-dot) button === */
-.nav-settings {
-    background: #000;
-}
+        #mainPage .graph-container.nav-graph {
+            flex: none;
+            /* stop flex height guessing */
+            height: 90vh;
+            /* real height on first layout */
+            min-height: 140px;
+            max-height: 240px;
+        }
 
-.nav-settings:hover {
-    background: #111;
-}
+        /* === FIX MINI GRAPH CANVAS SIZE === */
+        #mainPage #miniGraph {
+            height: 90% !important;
+        }
 
+        .nav-settings {
+            font-size: 1.9rem;
+            line-height: 1;
+            padding: 0.6rem 0.8rem;
+        }
 
+        /* === Black background for settings (three-dot) button === */
+        .nav-settings {
+            background: #000;
+        }
+
+        .nav-settings:hover {
+            background: #111;
+        }
+
+        .pressure-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.1em;
+        }
+
+        .pressure-unit {
+            font-family: Arial, sans-serif;
+            font-size: 1.5em;
+            /* same scale as temp unit */
+            color: #9a9a9a;
+            opacity: 0.8;
+        }
     </style>
 </head>
+
 <body>
 
     <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
-<button id="installButton"
-        style="display:none"
-        onclick="triggerInstall()">
+    <button id="installButton" style="display:none" onclick="triggerInstall()">
         Install App
-</button>
+    </button>
 
 
     <div class="container">
@@ -515,7 +670,8 @@
                     <button class="btn btn-primary ble-connect-btn" onclick="toggleBLE()">Connect BLE</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn nav-settings" onclick="showPage('settings')">⋮</button>
@@ -523,28 +679,39 @@
             </div>
 
             <div class="status-grid">
+                
                 <div class="status-card" id="brewStatus">
-                    <div class="status-temp" id="brewTempCard">0.0°</div>
+                    <div class="status-temp">
+                        <span class="temp-value" id="brewTempValue">0.0</span>
+                        <span class="temp-unit" id="brewTempUnit">°C</span>
+                    </div>
                     <div class="status-label">Brew</div>
                 </div>
 
                 <div class="status-card" id="steamStatus">
-                    <div class="status-temp" id="steamTempCard">0.0°</div>
+                    <div class="status-temp">
+                        <span class="temp-value" id="steamTempValue">0.0</span>
+                        <span class="temp-unit" id="steamTempUnit">°C</span>
+                    </div>
                     <div class="status-label">Steam</div>
                 </div>
 
                 <div class="status-card" id="groupStatus">
-                    <div class="status-temp" id="groupTempCard">0.0°</div>
+                    <div class="status-temp">
+                        <span class="temp-value" id="groupTempValue">0.0</span>
+                        <span class="temp-unit" id="groupTempUnit">°C</span>
+                    </div>
                     <div class="status-label">Group</div>
                 </div>
+
             </div>
 
             <div class="central-panel">
                 <div class="left-readings">
                     <div class="reading-item">
-                        <div class="reading-row">
-                            <div class="reading-value" id="pressureDisplay">0.0</div>
-                            <div class="reading-unit" id="pressureUnit">bar</div>
+                        <div class="reading-row pressure-display">
+                            <span class="reading-value" id="pressureDisplay">0.0</span>
+                            <span class="pressure-unit" id="pressureUnit">bar</span>
                         </div>
                     </div>
                 </div>
@@ -579,7 +746,8 @@
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('main')">← Back</button>
@@ -620,13 +788,15 @@
 
             <div class="brightness-control">
                 <label for="brightnessSlider">Display Brightness</label>
-                <input type="range" class="brightness-slider" id="brightnessSlider" 
-                       min="5" max="255" value="200" oninput="updateBrightness(this.value)">
+                <input type="range" class="brightness-slider" id="brightnessSlider" min="5" max="255" value="200"
+                    oninput="updateBrightness(this.value)">
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;" onclick="showPage('pid')">PID Settings</button>
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;" onclick="showPage('graph')">📈 Full Graph</button>
+                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
+                    onclick="showPage('pid')">PID Settings</button>
+                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
+                    onclick="showPage('graph')">📈 Full Graph</button>
             </div>
         </div>
 
@@ -636,7 +806,8 @@
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn btn-success" id="pauseBtn" onclick="togglePause()">Pause</button>
@@ -677,7 +848,8 @@
                     <button class="btn btn-danger" onclick="resetAllPID()">Reset Defaults</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('settings')">← Back</button>
@@ -688,50 +860,52 @@
     </div>
 
 
-    
+
     <script>
+        setInterval(() => {
+            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
+        }, 3000);
+
+        let deferredPrompt; // Stores the install event if it fires
+
+        // Capture the event if it does fire (for mobile/reliability)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('Install prompt ready'); // Check DevTools Console
+        });
+
+        // Main install function for the button
+        function triggerInstall() {
+            if (deferredPrompt) {
+                // Native prompt if available
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('App installed');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Fallback: Show instructions if no prompt (common on desktop)
+                alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
+            }
+        }
+
+        // Optional: Hide button if already installed (detect via standalone mode)
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            document.getElementById('installButton').style.display = 'none';
+        }
 
 
-let deferredPrompt; // Stores the install event if it fires
 
-// Capture the event if it does fire (for mobile/reliability)
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  console.log('Install prompt ready'); // Check DevTools Console
-});
+        let manualDisconnect = false;
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
 
-// Main install function for the button
-function triggerInstall() {
-  if (deferredPrompt) {
-    // Native prompt if available
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choice) => {
-      if (choice.outcome === 'accepted') {
-        console.log('App installed');
-      }
-      deferredPrompt = null;
-    });
-  } else {
-    // Fallback: Show instructions if no prompt (common on desktop)
-    alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
-  }
-}
-
-// Optional: Hide button if already installed (detect via standalone mode)
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-  document.getElementById('installButton').style.display = 'none';
-}
-
-
-
-let manualDisconnect = false;
-let reconnectAttempts = 0;
-let reconnectTimer = null;
-
-const RECONNECT_BASE_DELAY = 1000;   // 1s
-const RECONNECT_MAX_DELAY  = 30000;  // 30s cap
-const RECONNECT_MAX_TRIES  = Infinity; // or set to e.g. 10
+        const RECONNECT_BASE_DELAY = 1000;   // 1s
+        const RECONNECT_MAX_DELAY = 30000;  // 30s cap
+        const RECONNECT_MAX_TRIES = Infinity; // or set to e.g. 10
 
         let state = {
             bleDevice: null,
@@ -780,268 +954,268 @@ const RECONNECT_MAX_TRIES  = Infinity; // or set to e.g. 10
         }
 
         /////////////////////////
-function attemptReconnect() {
-    if (manualDisconnect) return;
-    if (!state.bleDevice) return;
-    if (state.bleConnected) return;
+        function attemptReconnect() {
+            if (manualDisconnect) return;
+            if (!state.bleDevice) return;
+            if (state.bleConnected) return;
 
-    const delay = Math.min(
-        RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts),
-        RECONNECT_MAX_DELAY
-    );
-
-    reconnectTimer = setTimeout(async () => {
-        reconnectAttempts++;
-        updateBLEUI(true); // "Reconnecting…"
-
-        try {
-            await connectBLE(true); 
-        } catch {
-            attemptReconnect(); // next backoff
-        }
-    }, delay);
-}
-
-function disconnectBLE() {
-    try {
-        if (state.characteristic) {
-            state.characteristic.removeEventListener(
-                'characteristicvaluechanged',
-                handleBLEData
+            const delay = Math.min(
+                RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts),
+                RECONNECT_MAX_DELAY
             );
+
+            reconnectTimer = setTimeout(async () => {
+                reconnectAttempts++;
+                updateBLEUI(true); // "Reconnecting…"
+
+                try {
+                    await connectBLE(true);
+                } catch {
+                    attemptReconnect(); // next backoff
+                }
+            }, delay);
         }
 
-        if (state.bleDevice?.gatt?.connected) {
-            state.bleDevice.gatt.disconnect();
-        }
-    } catch {}
+        function disconnectBLE() {
+            try {
+                if (state.characteristic) {
+                    state.characteristic.removeEventListener(
+                        'characteristicvaluechanged',
+                        handleBLEData
+                    );
+                }
 
-    state.characteristic = null;
-    state.bleConnected = false;
-}
+                if (state.bleDevice?.gatt?.connected) {
+                    state.bleDevice.gatt.disconnect();
+                }
+            } catch { }
+
+            state.characteristic = null;
+            state.bleConnected = false;
+        }
 
 
         /////////////////////////
 
-async function toggleBLE() {
-    if (state.bleConnected) {
-        manualDisconnect = true;
+        async function toggleBLE() {
+            if (state.bleConnected) {
+                manualDisconnect = true;
 
-        if (reconnectTimer) {
-            clearTimeout(reconnectTimer);
-            reconnectTimer = null;
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+
+                reconnectAttempts = 0;
+                disconnectBLE();
+                updateBLEUI();
+            } else {
+                manualDisconnect = false;
+                reconnectAttempts = 0;
+                await connectBLE();
+            }
         }
 
-        reconnectAttempts = 0;
-        disconnectBLE();
-        updateBLEUI();
-    } else {
-        manualDisconnect = false;
-        reconnectAttempts = 0;
-        await connectBLE();
-    }
-}
+        function resetLiveData() {
+            state.brewTemp = 0;
+            state.steamTemp = 0;
+            state.groupTemp = 0;
+            state.groupPressure = 0;
 
-function resetLiveData() {
-    state.brewTemp = 0;
-    state.steamTemp = 0;
-    state.groupTemp = 0;
-    state.groupPressure = 0;
+            state.brewReady = false;
+            state.steamReady = false;
+            state.groupReady = false;
 
-    state.brewReady = false;
-    state.steamReady = false;
-    state.groupReady = false;
+            state.brewFault = false;
+            state.steamFault = false;
+            state.groupFault = false;
 
-    state.brewFault = false;
-    state.steamFault = false;
-    state.groupFault = false;
+            state.shotRunning = false;
+            const shotElem = document.getElementById('shotTime');
+            if (shotElem) {
+                shotElem.textContent = '00';
+                shotElem.classList.add('stopped');
+                shotElem.classList.remove('running');
+            }
 
-    state.shotRunning = false;
-    const shotElem = document.getElementById('shotTime');
-    if (shotElem) {
-        shotElem.textContent = '00';
-        shotElem.classList.add('stopped');
-        shotElem.classList.remove('running');
-    }
+            state.tempHistory = [];
+            state.pressureHistory = [];
+            document.getElementById('sampleCount').textContent = '0';
 
-    state.tempHistory = [];
-    state.pressureHistory = [];
-    document.getElementById('sampleCount').textContent = '0';
+            drawMiniGraph();
+            drawFullGraph();
+            updateDisplay();  // or your existing UI refresh
+        }
+        async function connectBLE(isReconnect = false) {
+            if (!navigator.bluetooth) {
+                alert('Web Bluetooth not supported');
+                return;
+            }
 
-    drawMiniGraph();
-    drawFullGraph();
-    updateDisplay();  // or your existing UI refresh
-}
-async function connectBLE(isReconnect = false) {
-    if (!navigator.bluetooth) {
-        alert('Web Bluetooth not supported');
-        return;
-    }
+            try {
+                let device = state.bleDevice;
 
-    try {
-        let device = state.bleDevice;
+                // FIRST connection (user click only)
+                if (!device || !isReconnect) {
+                    device = await navigator.bluetooth.requestDevice({
+                        filters: [{ name: 'LVR-1' }],
+                        optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+                    });
 
-        // FIRST connection (user click only)
-        if (!device || !isReconnect) {
-            device = await navigator.bluetooth.requestDevice({
-                filters: [{ name: 'LVR-1' }],
-                optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+                    state.bleDevice = device;
+                    device.addEventListener('gattserverdisconnected', handleDisconnect);
+                }
+
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(
+                    '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
+                );
+                const characteristic = await service.getCharacteristic(
+                    'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+                );
+
+                await characteristic.startNotifications();
+                characteristic.addEventListener(
+                    'characteristicvaluechanged',
+                    handleBLEData
+                );
+
+                state.characteristic = characteristic;
+                state.bleConnected = true;
+
+                reconnectAttempts = 0;
+                updateBLEUI();
+
+                console.log('BLE connected');
+            } catch (err) {
+                console.warn('BLE connect failed:', err);
+                throw err;
+            }
+        }
+
+        function handleDisconnect() {
+            console.warn('BLE disconnected');
+
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+
+            state.bleConnected = false;
+            state.characteristic = null;
+
+            updateBLEUI();
+            resetLiveData();
+
+            // ❗ DO NOT wipe device on manual disconnect
+            if (manualDisconnect) {
+                manualDisconnect = false;
+                return;
+            }
+
+            // Auto reconnect only if unexpected
+            reconnectAttempts = 0;
+            attemptReconnect();
+        }
+
+        function updateBLEUI(reconnecting = false) {
+            const connected =
+                state.bleConnected === true &&
+                state.bleDevice !== null &&
+                state.characteristic !== null;
+
+            document.querySelectorAll('.ble-connect-btn').forEach(btn => {
+                if (connected) {
+                    btn.textContent = 'Disconnect';
+                    btn.classList.add('btn-danger');
+                    btn.classList.remove('btn-primary');
+                } else if (reconnecting) {
+                    btn.textContent = 'Reconnecting…';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-primary');
+                } else {
+                    btn.textContent = 'Connect BLE';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-primary');
+                }
             });
 
-            state.bleDevice = device;
-            device.addEventListener('gattserverdisconnected', handleDisconnect);
+            document.querySelectorAll('.ble-indicator').forEach(ind => {
+                ind.classList.toggle('connected', connected);
+                ind.classList.toggle('disconnected', !connected);
+            });
         }
 
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(
-            '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
-        );
-        const characteristic = await service.getCharacteristic(
-            'beb5483e-36e1-4688-b7f5-ea07361b26a8'
-        );
+        function handleBLEData(event) {
+            const text = new TextDecoder().decode(event.target.value);
+            console.log('Raw BLE data received:', text);
 
-        await characteristic.startNotifications();
-        characteristic.addEventListener(
-            'characteristicvaluechanged',
-            handleBLEData
-        );
+            let data;
 
-        state.characteristic = characteristic;
-        state.bleConnected = true;
+            try { data = JSON.parse(text); }
+            catch (e) { console.error('Parse error:', e); return; }
 
-        reconnectAttempts = 0;
-        updateBLEUI();
+            // Sync brightness slider with live BLE data
+            const slider = document.getElementById('brightnessSlider');
+            if (slider && slider.value != state.brightness) {
+                slider.value = Math.round(state.brightness);
+            }
 
-        console.log('BLE connected');
-    } catch (err) {
-        console.warn('BLE connect failed:', err);
-        throw err;
-    }
-}
+            // PID packet
+            if (data.pid) {
+                if (data.pid.brew) Object.assign(state.pidGains.brew, data.pid.brew);
+                if (data.pid.steam) Object.assign(state.pidGains.steam, data.pid.steam);
+                if (data.pid.group) Object.assign(state.pidGains.group, data.pid.group);
+                renderPIDSettings();
+                return;
+            }
 
-function handleDisconnect() {
-    console.warn('BLE disconnected');
+            // Live data
+            Object.assign(state, {
+                brewTemp: data.brewTemp ?? state.brewTemp,
+                steamTemp: data.steamTemp ?? state.steamTemp,
+                groupTemp: data.groupTemp ?? state.groupTemp,
+                groupPressure: data.groupPressure ?? state.groupPressure,
+                brewSetpoint: data.brewSetpoint ?? state.brewSetpoint,
+                steamSetpoint: data.steamSetpoint ?? state.steamSetpoint,
+                groupSetpoint: data.groupSetpoint ?? state.groupSetpoint,
+                brewReady: data.brewReady ?? state.brewReady,
+                steamReady: data.steamReady ?? state.steamReady,
+                groupReady: data.groupReady ?? state.groupReady,
+                brewFault: data.brewFault ?? state.brewFault,
+                steamFault: data.steamFault ?? state.steamFault,
+                groupFault: data.groupFault ?? state.groupFault,
+                brightness: data.brightness ?? state.brightness,
+                useFahrenheit: data.useFahrenheit ?? state.useFahrenheit,
+                pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
+            });
 
-    if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-    }
+            // Shot timer sync
+            if ('shotRunning' in data && 'shotSeconds' in data) {
+                state.shotRunning = data.shotRunning;
+                const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
+                const shotElem = document.getElementById('shotTime');
+                shotElem.textContent = String(secs).padStart(2, '0');
+                shotElem.classList.toggle('running', state.shotRunning);
+                shotElem.classList.toggle('stopped', !state.shotRunning);
+            }
 
-    state.bleConnected = false;
-    state.characteristic = null;
+            // Graph history (if not paused)
+            if (!state.dataCollectionPaused) {
+                state.tempHistory.push(state.brewTemp);
+                state.pressureHistory.push(state.groupPressure);
+                if (state.tempHistory.length > 600) {
+                    state.tempHistory.shift();
+                    state.pressureHistory.shift();
+                }
+                drawMiniGraph();
+                drawFullGraph();
+                document.getElementById('sampleCount').textContent = state.tempHistory.length;
+            }
 
-    updateBLEUI();
-    resetLiveData();
-
-    // ❗ DO NOT wipe device on manual disconnect
-    if (manualDisconnect) {
-        manualDisconnect = false;
-        return;
-    }
-
-    // Auto reconnect only if unexpected
-    reconnectAttempts = 0;
-    attemptReconnect();
-}
-
-function updateBLEUI(reconnecting = false) {
-    const connected =
-        state.bleConnected === true &&
-        state.bleDevice !== null &&
-        state.characteristic !== null;
-
-    document.querySelectorAll('.ble-connect-btn').forEach(btn => {
-        if (connected) {
-            btn.textContent = 'Disconnect';
-            btn.classList.add('btn-danger');
-            btn.classList.remove('btn-primary');
-        } else if (reconnecting) {
-            btn.textContent = 'Reconnecting…';
-            btn.classList.remove('btn-danger');
-            btn.classList.add('btn-primary');
-        } else {
-            btn.textContent = 'Connect BLE';
-            btn.classList.remove('btn-danger');
-            btn.classList.add('btn-primary');
+            // Quick UI refresh (add your existing update calls here)
+            updateDisplay();  // or call your individual element updates
         }
-    });
-
-    document.querySelectorAll('.ble-indicator').forEach(ind => {
-        ind.classList.toggle('connected', connected);
-        ind.classList.toggle('disconnected', !connected);
-    });
-}
-
-function handleBLEData(event) {
-    const text = new TextDecoder().decode(event.target.value);
-    console.log('Raw BLE data received:', text);
-
-    let data;
-
-    try { data = JSON.parse(text); }
-    catch (e) { console.error('Parse error:', e); return; }
-
-    // Sync brightness slider with live BLE data
-const slider = document.getElementById('brightnessSlider');
-if (slider && slider.value != state.brightness) {
-    slider.value = Math.round(state.brightness);
-}
-
-    // PID packet
-    if (data.pid) {
-        if (data.pid.brew)   Object.assign(state.pidGains.brew,   data.pid.brew);
-        if (data.pid.steam)  Object.assign(state.pidGains.steam,  data.pid.steam);
-        if (data.pid.group)  Object.assign(state.pidGains.group,  data.pid.group);
-        renderPIDSettings();
-        return;
-    }
-
-    // Live data
-    Object.assign(state, {
-        brewTemp:       data.brewTemp       ?? state.brewTemp,
-        steamTemp:      data.steamTemp      ?? state.steamTemp,
-        groupTemp:      data.groupTemp      ?? state.groupTemp,
-        groupPressure:  data.groupPressure  ?? state.groupPressure,
-        brewSetpoint:   data.brewSetpoint   ?? state.brewSetpoint,
-        steamSetpoint:  data.steamSetpoint  ?? state.steamSetpoint,
-        groupSetpoint:  data.groupSetpoint  ?? state.groupSetpoint,
-        brewReady:      data.brewReady      ?? state.brewReady,
-        steamReady:     data.steamReady     ?? state.steamReady,
-        groupReady:     data.groupReady     ?? state.groupReady,
-        brewFault:      data.brewFault      ?? state.brewFault,
-        steamFault:     data.steamFault     ?? state.steamFault,
-        groupFault:     data.groupFault     ?? state.groupFault,
-        brightness:     data.brightness     ?? state.brightness,
-        useFahrenheit:  data.useFahrenheit  ?? state.useFahrenheit,
-        pressureIsBar:  data.pressureIsBar  ?? state.pressureIsBar,
-    });
-
-    // Shot timer sync
-    if ('shotRunning' in data && 'shotSeconds' in data) {
-        state.shotRunning = data.shotRunning;
-        const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
-        const shotElem = document.getElementById('shotTime');
-        shotElem.textContent = String(secs).padStart(2, '0');
-        shotElem.classList.toggle('running', state.shotRunning);
-        shotElem.classList.toggle('stopped', !state.shotRunning);
-    }
-
-    // Graph history (if not paused)
-    if (!state.dataCollectionPaused) {
-        state.tempHistory.push(state.brewTemp);
-        state.pressureHistory.push(state.groupPressure);
-        if (state.tempHistory.length > 600) {
-            state.tempHistory.shift();
-            state.pressureHistory.shift();
-        }
-        drawMiniGraph();
-        drawFullGraph();
-        document.getElementById('sampleCount').textContent = state.tempHistory.length;
-    }
-
-    // Quick UI refresh (add your existing update calls here)
-    updateDisplay();  // or call your individual element updates
-}
         async function sendBLECommand(command) {
             if (!state.characteristic) return;
 
@@ -1055,36 +1229,36 @@ if (slider && slider.value != state.brightness) {
         }
 
         function showPage(pageName) {
-    if (pageName !== 'main' && !state.bleConnected) {
-        alert('Please connect to the device via BLE to access this page.');
-        return;
-    }
+            if (pageName !== 'main' && !state.bleConnected) {
+                alert('Please connect to the device via BLE to access this page.');
+                return;
+            }
 
-    document.querySelectorAll('.page').forEach(page =>
-        page.classList.remove('active')
-    );
+            document.querySelectorAll('.page').forEach(page =>
+                page.classList.remove('active')
+            );
 
-    const pageEl = document.getElementById(pageName + 'Page');
-    pageEl.classList.add('active');
+            const pageEl = document.getElementById(pageName + 'Page');
+            pageEl.classList.add('active');
 
-    // 🔥 FORCE mini graph resize AFTER layout resolves
-    if (pageName === 'main') {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                drawMiniGraph();
-            });
-        });
-    }
+            // 🔥 FORCE mini graph resize AFTER layout resolves
+            if (pageName === 'main') {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        drawMiniGraph();
+                    });
+                });
+            }
 
-    if (pageName === 'pid') {
-        document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
-        sendBLECommand({ type: 'get_pid' });
-    }
+            if (pageName === 'pid') {
+                document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
+                sendBLECommand({ type: 'get_pid' });
+            }
 
-    if (pageName === 'graph') {
-        drawFullGraph();
-    }
-}
+            if (pageName === 'graph') {
+                drawFullGraph();
+            }
+        }
 
 
         function cToF(c) { return c * 9 / 5 + 32; }
@@ -1118,11 +1292,18 @@ if (slider && slider.value != state.brightness) {
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-            document.getElementById('brewTempCard').textContent  = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
-            document.getElementById('steamTempCard').textContent = (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1) + tempUnit;
-            document.getElementById('groupTempCard').textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
+            document.getElementById('brewTempValue').textContent =
+                (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1);
+            document.getElementById('brewTempUnit').textContent = tempUnit;
 
-            document.getElementById('brewStatus').className  = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
+            document.getElementById('steamTempValue').textContent =
+                (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1);
+            document.getElementById('steamTempUnit').textContent = tempUnit;
+
+            document.getElementById('groupTempValue').textContent =
+                (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1);
+            document.getElementById('groupTempUnit').textContent = tempUnit;
+            document.getElementById('brewStatus').className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
             document.getElementById('steamStatus').className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
             document.getElementById('groupStatus').className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
 
@@ -1160,7 +1341,7 @@ if (slider && slider.value != state.brightness) {
         function setupHiDPICanvas(canvas) {
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
-            canvas.width  = Math.round(rect.width * dpr);
+            canvas.width = Math.round(rect.width * dpr);
             canvas.height = Math.round(rect.height * dpr);
             const ctx = canvas.getContext('2d');
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1171,16 +1352,16 @@ if (slider && slider.value != state.brightness) {
         let lastPressure = null;
 
         setInterval(() => {
-  if (state.bleConnected && state.characteristic) {
-    sendBLECommand({ type: "ping" });
-  }
-}, 3000);
+            if (state.bleConnected && state.characteristic) {
+                sendBLECommand({ type: "ping" });
+            }
+        }, 3000);
 
-setInterval(() => {
-    if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) {
-        handleDisconnect();
-    }
-}, 1000);
+        setInterval(() => {
+            if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) {
+                handleDisconnect();
+            }
+        }, 1000);
 
         setInterval(() => {
             if (!state.bleConnected || !state.hasReceivedFirstData) return;
@@ -1334,7 +1515,7 @@ setInterval(() => {
             );
 
             tooltip.style.left = Math.round(tooltipX) + 'px';
-            tooltip.style.top  = Math.round(tooltipY) + 'px';
+            tooltip.style.top = Math.round(tooltipY) + 'px';
 
             if (isMini) drawMiniGraph();
             else drawFullGraph();
@@ -1371,8 +1552,8 @@ setInterval(() => {
                 ctx.font = '16px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const message = state.bleConnected 
-                    ? 'Collecting data...' 
+                const message = state.bleConnected
+                    ? 'Collecting data...'
                     : 'Connect to view live graph';
                 ctx.fillText(message, width / 2, height / 2);
                 return;
@@ -1705,7 +1886,7 @@ setInterval(() => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `lvr1-graph-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
+            a.download = `lvr1-graph-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -1727,12 +1908,12 @@ setInterval(() => {
             document.getElementById('sampleCount').textContent = '0';
         }
 
-        document.getElementById('loadFileInput').addEventListener('change', function(e) {
+        document.getElementById('loadFileInput').addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(ev) {
+            reader.onload = function (ev) {
                 try {
                     const data = JSON.parse(ev.target.result);
 
@@ -1953,22 +2134,23 @@ setInterval(() => {
         updateDisplay();
         updateBLEUI();
         drawMiniGraph();
-        
+
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
-          window.addEventListener('load', function() {
-            navigator.serviceWorker.register('sw.js')
-              .then(function(registration) {
-                console.log('Service Worker registered with scope:', registration.scope);
-              })
-              .catch(function(error) {
-                console.log('Service Worker registration failed:', error);
-              });
-          });
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(function (error) {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
         }
 
     </script>
 
 
 </body>
+
 </html>
