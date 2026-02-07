@@ -177,15 +177,22 @@
         .status-card {
             background: #1a1a1a;
             padding: 1.2rem;
+            padding-top: 2.6rem;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
+            width: 100%;
             gap: 0.4rem;
             border: 2px solid #333;
             font-size: 1.1rem;
             text-align: center;
+        }
+
+        .temp-bar-fill {
+            min-width: 2px;
         }
 
         .status-card.ready {
@@ -196,11 +203,6 @@
         .status-card.heating {
             border-color: #333;
             background: #1a1a1a;
-        }
-
-        .status-card {
-            position: relative;
-            /* required for absolute label positioning */
         }
 
 
@@ -226,6 +228,9 @@
             display: flex;
             align-items: flex-start;
             gap: 0.15em;
+            font-family: 'DSEG7Classic', monospace;
+            font-size: 1.8rem;
+            line-height: 1;
         }
 
         /* Numeric value */
@@ -245,6 +250,43 @@
             transition: color 0.3s ease;
         }
 
+        .status-temp-wrap {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            /* 👈 critical */
+        }
+
+        .temp-bar {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            margin-top: 6px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .temp-bar-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            transition: width 0.25s ease;
+        }
+
+        .temp-bar-set {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: #ffffff;
+            opacity: 0.9;
+            pointer-events: none;
+        }
 
         .central-panel {
             /* Removed background, border, border-radius, and padding */
@@ -267,6 +309,7 @@
             justify-content: center;
             flex: 1;
             position: relative;
+            padding-top: 2.4rem;
         }
 
         .left-readings {
@@ -299,12 +342,6 @@
             font-size: clamp(1.5rem, 6vw, 2.5rem);
             color: #575859;
             font-family: Arial, sans-serif;
-            line-height: 1;
-        }
-
-        .status-temp {
-            font-family: 'DSEG7Classic', monospace;
-            font-size: 1.8rem;
             line-height: 1;
         }
 
@@ -679,27 +716,45 @@
             </div>
 
             <div class="status-grid">
-                
+
                 <div class="status-card" id="brewStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="brewTempValue">0.0</span>
-                        <span class="temp-unit" id="brewTempUnit">°C</span>
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="brewTempValue">0.0</span>
+                            <span class="temp-unit" id="brewTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="brewTempBar"></div>
+                            <div class="temp-bar-set" id="brewTempSet"></div>
+                        </div>
                     </div>
                     <div class="status-label">Brew</div>
                 </div>
 
                 <div class="status-card" id="steamStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="steamTempValue">0.0</span>
-                        <span class="temp-unit" id="steamTempUnit">°C</span>
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="steamTempValue">0.0</span>
+                            <span class="temp-unit" id="steamTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="steamTempBar"></div>
+                            <div class="temp-bar-set" id="steamTempSet"></div>
+                        </div>
                     </div>
                     <div class="status-label">Steam</div>
                 </div>
 
                 <div class="status-card" id="groupStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="groupTempValue">0.0</span>
-                        <span class="temp-unit" id="groupTempUnit">°C</span>
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="groupTempValue">0.0</span>
+                            <span class="temp-unit" id="groupTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="groupTempBar"></div>
+                            <div class="temp-bar-set" id="groupTempSet"></div>
+                        </div>
                     </div>
                     <div class="status-label">Group</div>
                 </div>
@@ -708,6 +763,7 @@
 
             <div class="central-panel">
                 <div class="left-readings">
+                    <div class="status-label">Pressure</div>
                     <div class="reading-item">
                         <div class="reading-row pressure-display">
                             <span class="reading-value" id="pressureDisplay">0.0</span>
@@ -717,6 +773,7 @@
                 </div>
 
                 <div class="shot-timer-section">
+                    <div class="status-label">Shot</div>
                     <div class="shot-time stopped" id="shotTime">00</div>
                 </div>
             </div>
@@ -862,9 +919,6 @@
 
 
     <script>
-        setInterval(() => {
-            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
-        }, 3000);
 
         let deferredPrompt; // Stores the install event if it fires
 
@@ -896,8 +950,6 @@
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
             document.getElementById('installButton').style.display = 'none';
         }
-
-
 
         let manualDisconnect = false;
         let reconnectAttempts = 0;
@@ -1289,6 +1341,8 @@
             }
         }
 
+
+
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
@@ -1317,6 +1371,37 @@
                 (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
             document.getElementById('groupSetpointDisplay').textContent =
                 (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+
+            // Brew: 0–110
+            updateTempBar(
+                state.brewTemp,
+                state.brewSetpoint,
+                0,
+                110,
+                'brewTempBar',
+                'brewTempSet'
+            );
+
+            // Steam: 0–125
+            updateTempBar(
+                state.steamTemp,
+                state.steamSetpoint,
+                0,
+                125,
+                'steamTempBar',
+                'steamTempSet'
+            );
+
+            // Group: 0–100
+            updateTempBar(
+                state.groupTemp,
+                state.groupSetpoint,
+                0,
+                100,
+                'groupTempBar',
+                'groupTempSet'
+            );
+
         }
 
         function updateBrightness(value) {
@@ -1352,16 +1437,8 @@
         let lastPressure = null;
 
         setInterval(() => {
-            if (state.bleConnected && state.characteristic) {
-                sendBLECommand({ type: "ping" });
-            }
+            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
         }, 3000);
-
-        setInterval(() => {
-            if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) {
-                handleDisconnect();
-            }
-        }, 1000);
 
         setInterval(() => {
             if (!state.bleConnected || !state.hasReceivedFirstData) return;
@@ -2148,8 +2225,18 @@
             });
         }
 
-    </script>
+        function updateTempBar(value, setpoint, min, max, barId, setId) {
+            const clampedValue = Math.max(min, Math.min(max, value));
+            const clampedSet = Math.max(min, Math.min(max, setpoint));
 
+            const valuePct = ((clampedValue - min) / (max - min)) * 100;
+            const setPct = ((clampedSet - min) / (max - min)) * 100;
+
+            document.getElementById(barId).style.width = valuePct + '%';
+            document.getElementById(setId).style.left = setPct + '%';
+        }
+
+    </script>
 
 </body>
 
