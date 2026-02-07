@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LVR-1</title>
+    <!-- Add link to manifest for PWA -->
     <link rel="manifest" href="manifest.json">
+    <!-- Add meta tags for iOS support (optional but recommended) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="LVR-1">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png"> <!-- Assume icons are created -->
     <meta name="mobile-web-app-capable" content="yes">
     <style>
         * {
@@ -19,18 +19,20 @@
             box-sizing: border-box;
         }
 
-        @font-face {
-            font-family: 'DSEG7Classic';
-            src: url('DSEG7Classic-Bold.woff2') format('woff2'),
-                url('DSEG7Classic-Bold.woff') format('woff'),
-                url('DSEG7Classic-Bold.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
+.brightness-control {
+    display: none;
+}
+@font-face {
+    font-family: 'DSEG7Classic';
+    src: url('DSEG7Classic-Bold.woff2') format('woff2'),
+         url('DSEG7Classic-Bold.woff') format('woff'),
+         url('DSEG7Classic-Bold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
 
-        html,
-        body {
+        html, body {
             overflow: hidden;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -53,7 +55,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            max-width: 98vw;
+            max-width: 90vw;
             margin: 0 auto;
         }
 
@@ -93,8 +95,7 @@
             gap: 1rem;
         }
 
-        h2,
-        h3 {
+        h2 {
             font-size: 1.8rem;
         }
 
@@ -102,33 +103,19 @@
             background: #444;
             border: none;
             color: #fff;
-            padding: 0.5rem 0.8rem;
+            padding: .9rem 1.3rem;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
-            min-height: 40px;
-            min-width: 40px;
+            font-size: 1rem;
+            min-height: 48px;
+            min-width: 48px;
         }
 
-        .btn:hover {
-            background: #555;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-success {
-            background: #16a34a;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-        }
+        .btn:hover { background: #555; }
+        .btn-primary { background: #2563eb; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; }
+        .btn-danger { background: #dc2626; }
 
         .btn-group {
             display: flex;
@@ -148,13 +135,8 @@
             transition: color 0.3s ease;
         }
 
-        .ble-indicator.disconnected {
-            color: #666;
-        }
-
-        .ble-indicator.connected {
-            color: #0051ff;
-        }
+        .ble-indicator.disconnected { color: #666; }
+        .ble-indicator.connected { color: #0051ff; }
 
         .status-grid {
             display: grid;
@@ -184,84 +166,25 @@
             text-align: center;
         }
 
-        .status-card.ready {
-            border-color: #16a34a;
-            background: #0f2f1f;
-        }
+        .status-card.ready { border-color: #16a34a; background: #0f2f1f; }
+        .status-card.heating { border-color: #333; background: #1a1a1a; }
 
-        .status-card.heating {
-            border-color: #333;
-            background: #1a1a1a;
-        }
+.central-panel {
+        /* Removed background, border, border-radius, and padding */
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;   /* Center the two panels horizontally */
+        gap: 3rem;                  /* Space between the two separate panels */
+    }
 
-        .status-card {
-            position: relative;
-            /* required for absolute label positioning */
-        }
-
-        /* LABELS: Brew / Steam / Group */
-        .status-label {
-            position: absolute;
-            top: 8px;
-            left: 10px;
-            font-size: 1.00rem;
-            font-family: monospace;
-            font-weight: 300;
-            color: #9a9a9a;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            transition: color 0.3s ease;
-        }
-
-        /* Keep temp values centered as-is */
-        .status-temp {
-            font-size: clamp(1.8rem, 4vw, 2.6rem);
-            font-weight: 300;
-            line-height: 1;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.15em;
-        }
-
-        /* Numeric value */
-        .temp-value {
-            font-family: 'DSEG7Classic', monospace;
-            line-height: 1;
-            color: #fff;
-            transition: color 0.3s ease;
-        }
-
-        /* Unit label */
-        .temp-unit {
-            font-size: 0.5em;
-            opacity: 0.8;
-            margin-top: 0.15em;
-            color: #9a9a9a;
-            transition: color 0.3s ease;
-        }
-
+        @media (max-width: 768px) {
         .central-panel {
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3rem;
-        }
-
-        .left-readings,
-        .shot-timer-section {
-            background: #1a1a1a;
-            border: 2px solid #444;
-            border-radius: 16px;
-            padding: 2rem;
-            display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            position: relative;
+            gap: 2rem;              /* Slightly larger gap when stacked */
+            text-align: center;
         }
-
+    }
         .left-readings {
             display: flex;
             flex-direction: column;
@@ -293,49 +216,33 @@
             font-family: monospace;
         }
 
-        .left-readings,
-        .shot-timer-section {
-            background: #1a1a1a;
-            border: 2px solid #444;
-            border-radius: 16px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-        }
+.left-readings,
+    .shot-timer-section {
+        background: #1a1a1a;
+        border: 2px solid #444;
+        border-radius: 16px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+    }
 
-        .shot-time {
-            font-size: clamp(2rem, 9vw, 4.2rem);
+.shot-time {
+            font-size: clamp(2rem, 8vw, 4rem);  /* slightly larger for better segment visibility */
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
-            transition: color 0.3s ease;
         }
 
-        .container.ble-disconnected .temp-value {
-            color: #666 !important;
-        }
+        .shot-time.running { color: #fff; }
+        .shot-time.stopped { color: #666; }
 
-        .container.ble-disconnected .temp-unit {
-            color: #777 !important;
-        }
-
-        .container.ble-disconnected .status-label {
-            color: #777 !important;
-        }
-
-        .container.ble-disconnected #shotTime {
-            color: #666 !important;
-        }
-
-        .shot-time.running {
-            color: #fff;
-        }
-
-        .shot-time.stopped {
-            color: #666;
-        }
+        .panel-label {
+        font-size: 1.6rem;
+        margin-top: 1rem;
+        color: #ccc;
+    }
 
         .graph-container {
             background: #1a1a1a;
@@ -384,7 +291,7 @@
             border-radius: 8px;
             pointer-events: none;
             font: 14px monospace;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             z-index: 10;
             display: none;
             min-width: 120px;
@@ -449,17 +356,13 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-
             .settings-controls {
                 display: flex;
                 justify-content: space-around;
             }
         }
 
-        .settings-label {
-            font-size: 1.6rem;
-        }
-
+        .settings-label { font-size: 1.6rem; }
         .settings-value {
             font-size: 2rem;
             font-family: monospace;
@@ -496,37 +399,19 @@
 
         .pid-grid {
             display: grid;
-            grid-template-columns: auto 1fr 1fr;
-            gap: 1.2rem;
-            align-items: center;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
         }
 
-        .pid-header {
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.4rem;
-            padding: 0.5rem 0;
-        }
+        .pid-column h4 { margin-bottom: 10px; font-size: 16px; }
+        .pid-column h4.aggressive { color: #fb923c; }
+        .pid-column h4.conservative { color: #06b6d4; }
 
-        .pid-header.aggressive {
-            color: #fb923c;
-            grid-column: 2;
-        }
-
-        .pid-header.conservative {
-            color: #06b6d4;
-            grid-column: 3;
-        }
-
-        .pid-label {
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .pid-cell {
+        .pid-row {
             display: flex;
-            justify-content: center;
-            gap: 0.8rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
         .pid-input {
@@ -548,6 +433,7 @@
             background: #333;
         }
 
+        /* Remove spinner arrows */
         .pid-input::-webkit-inner-spin-button,
         .pid-input::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -564,109 +450,72 @@
             font-size: 18px;
         }
 
-        .full-graph {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .full-graph { flex: 1; display: flex; flex-direction: column; }
+
+        .graph-stats {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 14px;
         }
 
-        .axis-controls {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: #1a1a1a;
-            border-radius: 12px;
+        .stat-item { display: flex; align-items: center; gap: 8px; }
+        .stat-value { color: #06b6d4; font-family: monospace; }
+
+        .disabled-nav {
+            opacity: 0.4;
+            pointer-events: none;
+            cursor: default;
         }
 
-        .axis-controls .settings-row {
-            justify-content: center;
-            background: transparent;
-            padding: 0.3rem 0;
-            margin-bottom: 0.3rem;
-        }
+        /* === FIX MINI GRAPH INITIAL SIZE === */
+#mainPage .graph-container.nav-graph {
+    flex: none;        /* stop flex height guessing */
+    height: 90vh;      /* real height on first layout */
+    min-height: 140px;
+    max-height: 240px;
+}
+/* === FIX MINI GRAPH CANVAS SIZE === */
+#mainPage #miniGraph {
+    height: 90% !important;
+}
+.nav-settings {
+    font-size: 1.9rem;
+    line-height: 1;
+    padding: 0.6rem 0.8rem;
+}
+/* === Black background for settings (three-dot) button === */
+.nav-settings {
+    background: #000;
+}
 
-        .axis-controls .settings-label {
-            font-size: 1.3rem;
-        }
+.nav-settings:hover {
+    background: #111;
+}
 
-        .axis-controls input[type="number"] {
-            width: 70px;
-            padding: 0.4rem;
-            font-size: 1rem;
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 4px;
-            color: #fff;
-            text-align: center;
-        }
 
-        .axis-controls strong {
-            font-size: 1.3rem;
-        }
-
-        .pressure-display {
-            font-size: clamp(2rem, 9vw, 4.2rem);
-        }
-
-        #mainPage .graph-container.nav-graph {
-            flex: none;
-            height: 90vh;
-            min-height: 140px;
-            max-height: 240px;
-        }
-
-        #mainPage #miniGraph {
-            height: 90% !important;
-        }
-
-        .nav-settings {
-            font-size: 1.9rem;
-            line-height: 1;
-            padding: 0.6rem 0.8rem;
-            background: #000;
-        }
-
-        .nav-settings:hover {
-            background: #111;
-        }
-
-        .pressure-display {
-            font-size: clamp(2rem, 9vw, 4.2rem);
-            align-items: baseline;
-            /* ← Aligns text baselines (unit sits on bottom line of large number) */
-            gap: 0.1em;
-            /* ← Slightly tighter gap for baseline alignment */
-        }
-
-        /* New dedicated class for pressure unit */
-        .pressure-unit {
-            font-size: 0.5em;
-            /* same as temp-unit */
-            opacity: 0.8;
-            /* same as temp-unit */
-            color: #9a9a9a;
-            /* same as temp-unit */
-            /* no margin-top → stays bottom-aligned via baseline */
-        }
     </style>
 </head>
-
 <body>
-    <button id="installButton"
-        style="position:fixed; bottom:20px; right:20px; z-index:100; background:#2563eb; color:#fff; padding:12px 20px; border-radius:50px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:16px;"
+
+    <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
+<button id="installButton"
+        style="display:none"
         onclick="triggerInstall()">
         Install App
-    </button>
+</button>
+
 
     <div class="container">
         <div class="page active" id="mainPage">
             <div class="header">
                 <h2>LVR-1</h2>
                 <div class="btn-group">
-                    <button class="btn btn-primary ble-connect-btn" onclick="toggleBLE()">Connect LVR-1</button>
+                    <button class="btn btn-primary ble-connect-btn" onclick="toggleBLE()">Connect BLE</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
                         </svg>
                     </div>
                     <button class="btn nav-settings" onclick="showPage('settings')">⋮</button>
@@ -675,44 +524,32 @@
 
             <div class="status-grid">
                 <div class="status-card" id="brewStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="brewTempValue">0.0</span>
-                        <span class="temp-unit" id="brewTempUnit">°C</span>
-                    </div>
+                    <div class="status-temp" id="brewTempCard">0.0°</div>
                     <div class="status-label">Brew</div>
                 </div>
 
-                <div class="status-card" id="groupStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="groupTempValue">0.0</span>
-                        <span class="temp-unit" id="groupTempUnit">°C</span>
-                    </div>
-                    <div class="status-label">Group</div>
+                <div class="status-card" id="steamStatus">
+                    <div class="status-temp" id="steamTempCard">0.0°</div>
+                    <div class="status-label">Steam</div>
                 </div>
 
-                <div class="status-card" id="steamStatus">
-                    <div class="status-temp">
-                        <span class="temp-value" id="steamTempValue">0.0</span>
-                        <span class="temp-unit" id="steamTempUnit">°C</span>
-                    </div>
-                    <div class="status-label">Steam</div>
+                <div class="status-card" id="groupStatus">
+                    <div class="status-temp" id="groupTempCard">0.0°</div>
+                    <div class="status-label">Group</div>
                 </div>
             </div>
 
             <div class="central-panel">
                 <div class="left-readings">
-                    <div class="status-label">Pressure</div>
                     <div class="reading-item">
-                        <!-- Updated to use dedicated pressure-unit class and baseline alignment -->
-                        <div class="status-temp pressure-display">
-                            <span class="temp-value" id="pressureDisplay">0.0</span>
-                            <span class="pressure-unit" id="pressureUnit">bar</span>
+                        <div class="reading-row">
+                            <div class="reading-value" id="pressureDisplay">0.0</div>
+                            <div class="reading-unit" id="pressureUnit">bar</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="shot-timer-section">
-                    <div class="status-label">Shot</div>
                     <div class="shot-time stopped" id="shotTime">00</div>
                 </div>
             </div>
@@ -733,6 +570,7 @@
             </div>
 
             <div style="flex: 0.3;"></div>
+
         </div>
 
         <div class="page" id="settingsPage">
@@ -741,8 +579,7 @@
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('main')">← Back</button>
@@ -783,25 +620,23 @@
 
             <div class="brightness-control">
                 <label for="brightnessSlider">Display Brightness</label>
-                <input type="range" class="brightness-slider" id="brightnessSlider" min="5" max="255" value="200"
-                    oninput="updateBrightness(this.value)">
+                <input type="range" class="brightness-slider" id="brightnessSlider" 
+                       min="5" max="255" value="200" oninput="updateBrightness(this.value)">
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
-                    onclick="showPage('pid')">PID Settings</button>
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
-                    onclick="showPage('graph')">📈 Full Graph</button>
+                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;" onclick="showPage('pid')">PID Settings</button>
+                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;" onclick="showPage('graph')">📈 Full Graph</button>
             </div>
         </div>
 
         <div class="page" id="graphPage">
             <div class="header">
+                <h2>Temperature History</h2>
                 <div class="btn-group">
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
                         </svg>
                     </div>
                     <button class="btn btn-success" id="pauseBtn" onclick="togglePause()">Pause</button>
@@ -811,45 +646,25 @@
                     <button class="btn" onclick="showPage('main')">← Back</button>
                 </div>
             </div>
-
             <div class="graph-container full-graph">
                 <canvas id="fullGraph"></canvas>
                 <div class="graph-legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background: #f00;"></div>
                         <span>Brew Temperature</span>
-                        <span id="fullLegendTemp" style="margin-left: auto; font-weight: bold; color: #ff8888;"></span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #00f;"></div>
                         <span>Group Pressure</span>
-                        <span id="fullLegendPressure"
-                            style="margin-left: auto; font-weight: bold; color: #8888ff;"></span>
+                    </div>
+                </div>
+                <div class="graph-stats">
+                    <div class="stat-item">
+                        <span>Samples:</span>
+                        <span class="stat-value" id="sampleCount">0</span>
                     </div>
                 </div>
                 <div class="graph-tooltip"></div>
-            </div>
-
-            <div class="axis-controls">
-                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; align-items: center;">
-                    <div class="settings-row">
-                        <div class="settings-label">Temp</div>
-                        <div class="settings-controls">
-                            <input type="number" id="tempGraphMinInput" step="1" min="0">
-                            <span style="font-size: 1.4rem; padding: 0 0.8rem;">–</span>
-                            <input type="number" id="tempGraphMaxInput" step="1" min="0">
-                        </div>
-                    </div>
-                    <div class="settings-row">
-                        <div class="settings-label">Press</div>
-                        <div class="settings-controls">
-                            <input type="number" id="pressGraphMinInput" step="0.5" min="0">
-                            <span style="font-size: 1.4rem; padding: 0 0.8rem;">–</span>
-                            <input type="number" id="pressGraphMaxInput" step="0.5" min="0">
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="resetGraphScales()">Reset</button>
-                </div>
             </div>
 
             <input type="file" id="loadFileInput" accept="application/json,.json" style="display:none;">
@@ -862,8 +677,7 @@
                     <button class="btn btn-danger" onclick="resetAllPID()">Reset Defaults</button>
                     <div class="ble-indicator disconnected" title="Bluetooth Status">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                            <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/>
                         </svg>
                     </div>
                     <button class="btn" onclick="showPage('settings')">← Back</button>
@@ -873,68 +687,51 @@
         </div>
     </div>
 
+
+    
     <script>
-        const installButton = document.getElementById('installButton');
-        let deferredPrompt = null;
-        let chooserOpen = false;
 
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            if (isAppInstalled()) {
-                installButton.style.display = 'none';
-                return;
-            }
-            e.preventDefault();
-            deferredPrompt = e;
-            installButton.style.display = 'block';
-        });
+let deferredPrompt; // Stores the install event if it fires
 
-        window.addEventListener('appinstalled', () => {
-            document.getElementById('installButton').style.display = 'none';
-            deferredPrompt = null;
-        });
+// Capture the event if it does fire (for mobile/reliability)
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('Install prompt ready'); // Check DevTools Console
+});
 
-        function triggerInstall() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choice) => {
-                    deferredPrompt = null;
-                });
-            } else {
-                alert('To install this app:\n\n• On iPhone/iPad (Safari): Tap Share → Add to Home Screen\n• On Android/Chrome: Tap menu → Install app');
-            }
-        }
+// Main install function for the button
+function triggerInstall() {
+  if (deferredPrompt) {
+    // Native prompt if available
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') {
+        console.log('App installed');
+      }
+      deferredPrompt = null;
+    });
+  } else {
+    // Fallback: Show instructions if no prompt (common on desktop)
+    alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
+  }
+}
 
-        function resetLiveData() {
-            state.brewTemp = 0.0;
-            state.steamTemp = 0.0;
-            state.groupTemp = 0.0;
-            state.groupPressure = 0.0;
-            state.brewReady = false;
-            state.steamReady = false;
-            state.groupReady = false;
-            state.shotRunning = false;
+// Optional: Hide button if already installed (detect via standalone mode)
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.getElementById('installButton').style.display = 'none';
+}
 
-            // Directly reset shot timer display (in case no data was received yet)
-            const shotElem = document.getElementById('shotTime');
-            if (shotElem) {
-                shotElem.textContent = '00';
-                shotElem.classList.remove('running');
-                shotElem.classList.add('stopped');
-            }
 
-            updateDisplay();
-            drawMiniGraph();
-            drawFullGraph();
-        }
 
-        window.addEventListener('load', () => {
-            if (isAppInstalled()) {
-                installButton.style.display = 'none';
-            } else {
-                installButton.style.display = 'none';
-            }
-        });
+let manualDisconnect = false;
+let reconnectAttempts = 0;
+let reconnectTimer = null;
+
+const RECONNECT_BASE_DELAY = 1000;   // 1s
+const RECONNECT_MAX_DELAY  = 30000;  // 30s cap
+const RECONNECT_MAX_TRIES  = Infinity; // or set to e.g. 10
 
         let state = {
             bleDevice: null,
@@ -955,305 +752,342 @@
             brightness: 200,
             shotRunning: false,
             shotTime: 0,
+            shotStartTime: null,
+            shotInterval: null,
             tempHistory: [],
             pressureHistory: [],
             hasReceivedFirstData: false,
             dataCollectionPaused: false,
-            tempGraphMin: 40,
-            tempGraphMax: 120,
-            pressGraphMin: 0,
-            pressGraphMax: 12,
             pidGains: {
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
                 group: { consKp: 1.40, consKi: 0.03, consKd: 0.80, aggKp: 5.00, aggKi: 0.12, aggKd: 2.00 }
-            },
-            lastDataTime: 0
+            }
         };
 
         let miniHoveredIndex = -1;
         let fullHoveredIndex = -1;
 
-        let reconnectTimer = null;
-        let reconnectAttempts = 0;
-        const MAX_RECONNECT_ATTEMPTS = 0; // 0 = unlimited
-
-
         const miniTooltip = document.querySelector('.nav-graph .graph-tooltip');
         const fullTooltip = document.querySelector('.full-graph .graph-tooltip');
 
-        function cToF(c) { return c * 9 / 5 + 32; }
-        function fToC(f) { return (f - 32) * 5 / 9; }
+        function snap(v) {
+            return Math.round(v) + 0.5;
+        }
 
         function smooth(prev, next, alpha = 0.2) {
             return prev == null ? next : prev + alpha * (next - prev);
         }
 
-        async function toggleBLE() {
-            if (state.bleConnected) {
-                disconnectBLE();
-                updateBLEUI();
-                return;
-            }
+        /////////////////////////
+function attemptReconnect() {
+    if (manualDisconnect) return;
+    if (!state.bleDevice) return;
+    if (state.bleConnected) return;
 
-            let success = false;
+    const delay = Math.min(
+        RECONNECT_BASE_DELAY * Math.pow(2, reconnectAttempts),
+        RECONNECT_MAX_DELAY
+    );
 
-            // If we have a previous device, try direct reconnect first (often no dialog)
-            if (state.bleDevice) {
-                try {
-                    await connectBLE(true);
-                    success = true;
-                } catch (err) {
-                    console.warn('Direct reconnect failed, falling back to device selection', err);
-                }
-            }
+    reconnectTimer = setTimeout(async () => {
+        reconnectAttempts++;
+        updateBLEUI(true); // "Reconnecting…"
 
-            // If direct failed or no previous device, use the full requestDevice flow
-            if (!success) {
-                state.bleDevice = null;  // clear stale reference
-                try {
-                    await connectBLE(false);  // this shows the Bluetooth chooser
-                } catch (err) {
-                    console.error('Connection failed:', err);
-                    alert('Failed to connect to LVR-1. Check that it is powered on and in range.');
-                }
-            }
+        try {
+            await connectBLE(true); 
+        } catch {
+            attemptReconnect(); // next backoff
+        }
+    }, delay);
+}
+
+function disconnectBLE() {
+    try {
+        if (state.characteristic) {
+            state.characteristic.removeEventListener(
+                'characteristicvaluechanged',
+                handleBLEData
+            );
         }
 
-        function disconnectBLE() {
-            try {
-                if (state.characteristic) {
-                    state.characteristic.removeEventListener('characteristicvaluechanged', handleBLEData);
-                }
-                if (state.bleDevice?.gatt?.connected) {
-                    state.bleDevice.gatt.disconnect();
-                }
-            } catch { }
-            state.characteristic = null;
-            state.bleConnected = false;
+        if (state.bleDevice?.gatt?.connected) {
+            state.bleDevice.gatt.disconnect();
+        }
+    } catch {}
+
+    state.characteristic = null;
+    state.bleConnected = false;
+}
+
+
+        /////////////////////////
+
+async function toggleBLE() {
+    if (state.bleConnected) {
+        manualDisconnect = true;
+
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
         }
 
-        async function connectBLE(isReconnect = false) {
-            if (!navigator.bluetooth) {
-                alert('Web Bluetooth not supported');
-                return;
-            }
+        reconnectAttempts = 0;
+        disconnectBLE();
+        updateBLEUI();
+    } else {
+        manualDisconnect = false;
+        reconnectAttempts = 0;
+        await connectBLE();
+    }
+}
 
-            if (!isReconnect && chooserOpen) {
-                console.warn('Bluetooth chooser already open');
-                return;
-            }
+function resetLiveData() {
+    state.brewTemp = 0;
+    state.steamTemp = 0;
+    state.groupTemp = 0;
+    state.groupPressure = 0;
 
-            try {
-                let device = state.bleDevice;
-                if (!device || !isReconnect) {
-                    device = await navigator.bluetooth.requestDevice({
-                        filters: [{ name: 'LVR-1' }],
-                        optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
-                    });
-                    state.bleDevice = device;
-                    device.addEventListener('gattserverdisconnected', handleDisconnect);
-                }
-                const server = await device.gatt.connect();
-                const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
-                const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
-                await characteristic.startNotifications();
-                characteristic.addEventListener('characteristicvaluechanged', handleBLEData);
-                state.characteristic = characteristic;
-                state.bleConnected = true;
-                state.lastDataTime = Date.now();
-                reconnectAttempts = 0;
+    state.brewReady = false;
+    state.steamReady = false;
+    state.groupReady = false;
 
-                if (reconnectTimer) {
-                    clearInterval(reconnectTimer);
-                    reconnectTimer = null;
-                }
+    state.brewFault = false;
+    state.steamFault = false;
+    state.groupFault = false;
 
-                updateBLEUI();
-            } catch (err) {
-                console.warn('LVR-1 connection failed:', err);
-                throw err;
-            }
-        }
+    state.shotRunning = false;
+    const shotElem = document.getElementById('shotTime');
+    if (shotElem) {
+        shotElem.textContent = '00';
+        shotElem.classList.add('stopped');
+        shotElem.classList.remove('running');
+    }
 
-        // ==================== AUTO-CONNECT ADDITION ====================
-        async function autoConnect() {
-            if (!navigator.bluetooth || state.bleConnected) return;
+    state.tempHistory = [];
+    state.pressureHistory = [];
+    document.getElementById('sampleCount').textContent = '0';
 
-            try {
-                const devices = await navigator.bluetooth.getDevices();
+    drawMiniGraph();
+    drawFullGraph();
+    updateDisplay();  // or your existing UI refresh
+}
+async function connectBLE(isReconnect = false) {
+    if (!navigator.bluetooth) {
+        alert('Web Bluetooth not supported');
+        return;
+    }
 
-                for (const device of devices) {
-                    if (device.name !== 'LVR-1') continue;
+    try {
+        let device = state.bleDevice;
 
-                    state.bleDevice = device;
-                    device.addEventListener('gattserverdisconnected', handleDisconnect);
-
-                    // Try immediate connection first
-                    try {
-                        await connectBLE(true);
-                        console.log('Auto-connected immediately to LVR-1');
-                        return;
-                    } catch (err) {
-                        console.log('Immediate auto-connect failed – watching for advertisements');
-                    }
-
-                    // If immediate fails, watch for advertisements
-                    const abortController = new AbortController();
-
-                    device.addEventListener('advertisementreceived', async () => {
-                        abortController.abort();
-                        console.log('LVR-1 advertisement received – attempting connection');
-                        try {
-                            await connectBLE(true);
-                            console.log('Auto-connected after advertisement');
-                        } catch (err) {
-                            console.error('Auto-connect after advertisement failed:', err);
-                        }
-                    }, { once: true });
-
-                    try {
-                        await device.watchAdvertisements({ signal: abortController.signal });
-                    } catch (err) {
-                        console.warn('watchAdvertisements error:', err);
-                    }
-                }
-            } catch (err) {
-                console.error('autoConnect error:', err);
-            }
-        }
-        // ==============================================================
-
-        function handleDisconnect() {
-            if (!state.bleConnected && isReconnecting) return;
-
-            console.warn('BLE disconnected');
-
-            state.bleConnected = false;
-            state.characteristic = null;
-            isReconnecting = true;
-
-            updateBLEUI();
-            resetLiveData();
-
-            scheduleAutoReconnect();
-        }
-
-        function updateBLEUI() {
-            const connected = state.bleConnected;
-            document.querySelectorAll('.ble-connect-btn').forEach(btn => {
-                btn.textContent = connected ? 'Disconnect LVR-1' : 'Connect LVR-1';
-                btn.classList.toggle('btn-primary', !connected);
-                btn.classList.toggle('btn-danger', connected);
-            });
-            document.querySelectorAll('.ble-indicator').forEach(ind => {
-                ind.classList.toggle('connected', connected);
-                ind.classList.toggle('disconnected', !connected);
-            });
-            document.querySelector('.container').classList.toggle('ble-disconnected', !connected);
-        }
-
-        function handleBLEData(event) {
-            const text = new TextDecoder().decode(event.target.value);
-            let data;
-            try { data = JSON.parse(text); } catch { return; }
-
-            if (data.pid) {
-                if (data.pid.brew) Object.assign(state.pidGains.brew, data.pid.brew);
-                if (data.pid.steam) Object.assign(state.pidGains.steam, data.pid.steam);
-                if (data.pid.group) Object.assign(state.pidGains.group, data.pid.group);
-                renderPIDSettings();
-                return;
-            }
-
-            state.lastDataTime = Date.now();
-
-            Object.assign(state, {
-                brewTemp: data.brewTemp ?? state.brewTemp,
-                steamTemp: data.steamTemp ?? state.steamTemp,
-                groupTemp: data.groupTemp ?? state.groupTemp,
-                groupPressure: data.groupPressure ?? state.groupPressure,
-                brewSetpoint: data.brewSetpoint ?? state.brewSetpoint,
-                steamSetpoint: data.steamSetpoint ?? state.steamSetpoint,
-                groupSetpoint: data.groupSetpoint ?? state.groupSetpoint,
-                brewReady: data.brewReady ?? state.brewReady,
-                steamReady: data.steamReady ?? state.steamReady,
-                groupReady: data.groupReady ?? state.groupReady,
-                brightness: data.brightness ?? state.brightness,
-                useFahrenheit: data.useFahrenheit ?? state.useFahrenheit,
-                pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
+        // FIRST connection (user click only)
+        if (!device || !isReconnect) {
+            device = await navigator.bluetooth.requestDevice({
+                filters: [{ name: 'LVR-1' }],
+                optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
             });
 
-            updateUnitButtons();
-
-            if ('shotRunning' in data && 'shotSeconds' in data) {
-                state.shotRunning = data.shotRunning;
-                const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
-                const shotElem = document.getElementById('shotTime');
-                shotElem.textContent = String(secs).padStart(2, '0');
-                shotElem.classList.toggle('running', state.shotRunning);
-                shotElem.classList.toggle('stopped', !state.shotRunning);
-            }
-
-            if (!state.dataCollectionPaused) {
-                state.tempHistory.push(state.brewTemp);
-                state.pressureHistory.push(state.groupPressure);
-                if (state.tempHistory.length > 600) {
-                    state.tempHistory.shift();
-                    state.pressureHistory.shift();
-                }
-                drawMiniGraph();
-                drawFullGraph();
-            }
-
-            updateDisplay();
+            state.bleDevice = device;
+            device.addEventListener('gattserverdisconnected', handleDisconnect);
         }
 
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(
+            '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
+        );
+        const characteristic = await service.getCharacteristic(
+            'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+        );
+
+        await characteristic.startNotifications();
+        characteristic.addEventListener(
+            'characteristicvaluechanged',
+            handleBLEData
+        );
+
+        state.characteristic = characteristic;
+        state.bleConnected = true;
+
+        reconnectAttempts = 0;
+        updateBLEUI();
+
+        console.log('BLE connected');
+    } catch (err) {
+        console.warn('BLE connect failed:', err);
+        throw err;
+    }
+}
+
+function handleDisconnect() {
+    console.warn('BLE disconnected');
+
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+
+    state.bleConnected = false;
+    state.characteristic = null;
+
+    updateBLEUI();
+    resetLiveData();
+
+    // ❗ DO NOT wipe device on manual disconnect
+    if (manualDisconnect) {
+        manualDisconnect = false;
+        return;
+    }
+
+    // Auto reconnect only if unexpected
+    reconnectAttempts = 0;
+    attemptReconnect();
+}
+
+function updateBLEUI(reconnecting = false) {
+    const connected =
+        state.bleConnected === true &&
+        state.bleDevice !== null &&
+        state.characteristic !== null;
+
+    document.querySelectorAll('.ble-connect-btn').forEach(btn => {
+        if (connected) {
+            btn.textContent = 'Disconnect';
+            btn.classList.add('btn-danger');
+            btn.classList.remove('btn-primary');
+        } else if (reconnecting) {
+            btn.textContent = 'Reconnecting…';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.textContent = 'Connect BLE';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-primary');
+        }
+    });
+
+    document.querySelectorAll('.ble-indicator').forEach(ind => {
+        ind.classList.toggle('connected', connected);
+        ind.classList.toggle('disconnected', !connected);
+    });
+}
+
+function handleBLEData(event) {
+    const text = new TextDecoder().decode(event.target.value);
+    console.log('Raw BLE data received:', text);
+
+    let data;
+
+    try { data = JSON.parse(text); }
+    catch (e) { console.error('Parse error:', e); return; }
+
+    // Sync brightness slider with live BLE data
+const slider = document.getElementById('brightnessSlider');
+if (slider && slider.value != state.brightness) {
+    slider.value = Math.round(state.brightness);
+}
+
+    // PID packet
+    if (data.pid) {
+        if (data.pid.brew)   Object.assign(state.pidGains.brew,   data.pid.brew);
+        if (data.pid.steam)  Object.assign(state.pidGains.steam,  data.pid.steam);
+        if (data.pid.group)  Object.assign(state.pidGains.group,  data.pid.group);
+        renderPIDSettings();
+        return;
+    }
+
+    // Live data
+    Object.assign(state, {
+        brewTemp:       data.brewTemp       ?? state.brewTemp,
+        steamTemp:      data.steamTemp      ?? state.steamTemp,
+        groupTemp:      data.groupTemp      ?? state.groupTemp,
+        groupPressure:  data.groupPressure  ?? state.groupPressure,
+        brewSetpoint:   data.brewSetpoint   ?? state.brewSetpoint,
+        steamSetpoint:  data.steamSetpoint  ?? state.steamSetpoint,
+        groupSetpoint:  data.groupSetpoint  ?? state.groupSetpoint,
+        brewReady:      data.brewReady      ?? state.brewReady,
+        steamReady:     data.steamReady     ?? state.steamReady,
+        groupReady:     data.groupReady     ?? state.groupReady,
+        brewFault:      data.brewFault      ?? state.brewFault,
+        steamFault:     data.steamFault     ?? state.steamFault,
+        groupFault:     data.groupFault     ?? state.groupFault,
+        brightness:     data.brightness     ?? state.brightness,
+        useFahrenheit:  data.useFahrenheit  ?? state.useFahrenheit,
+        pressureIsBar:  data.pressureIsBar  ?? state.pressureIsBar,
+    });
+
+    // Shot timer sync
+    if ('shotRunning' in data && 'shotSeconds' in data) {
+        state.shotRunning = data.shotRunning;
+        const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
+        const shotElem = document.getElementById('shotTime');
+        shotElem.textContent = String(secs).padStart(2, '0');
+        shotElem.classList.toggle('running', state.shotRunning);
+        shotElem.classList.toggle('stopped', !state.shotRunning);
+    }
+
+    // Graph history (if not paused)
+    if (!state.dataCollectionPaused) {
+        state.tempHistory.push(state.brewTemp);
+        state.pressureHistory.push(state.groupPressure);
+        if (state.tempHistory.length > 600) {
+            state.tempHistory.shift();
+            state.pressureHistory.shift();
+        }
+        drawMiniGraph();
+        drawFullGraph();
+        document.getElementById('sampleCount').textContent = state.tempHistory.length;
+    }
+
+    // Quick UI refresh (add your existing update calls here)
+    updateDisplay();  // or call your individual element updates
+}
         async function sendBLECommand(command) {
             if (!state.characteristic) return;
+
             try {
                 const encoder = new TextEncoder();
-                const data = encoder.encode(JSON.stringify(command));
-                await state.characteristic.writeValueWithResponse(data);
+                await state.characteristic.writeValue(encoder.encode(JSON.stringify(command)));
+                console.log('Sent command:', command);
             } catch (error) {
-                console.error('BLE write failed – forcing disconnect:', error);
-                // Any write failure means the link is dead
-                handleDisconnect();
-                // Optional: give user feedback (uncomment if desired)
-                alert('Connection lost to LVR-1');
+                console.error('BLE write failed:', error);
             }
         }
 
         function showPage(pageName) {
-            if (pageName !== 'main' && !state.bleConnected) {
-                alert('Please connect to LVR-1 via BLE to access this page.');
-                return;
-            }
+    if (pageName !== 'main' && !state.bleConnected) {
+        alert('Please connect to the device via BLE to access this page.');
+        return;
+    }
 
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(pageName + 'Page').classList.add('active');
+    document.querySelectorAll('.page').forEach(page =>
+        page.classList.remove('active')
+    );
 
-            if (pageName === 'main') {
-                requestAnimationFrame(() => requestAnimationFrame(() => drawMiniGraph()));
-            }
+    const pageEl = document.getElementById(pageName + 'Page');
+    pageEl.classList.add('active');
 
-            if (pageName === 'pid') {
-                document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
-                sendBLECommand({ type: 'get_pid' });
-            }
+    // 🔥 FORCE mini graph resize AFTER layout resolves
+    if (pageName === 'main') {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                drawMiniGraph();
+            });
+        });
+    }
 
-            if (pageName === 'graph') {
-                drawFullGraph();
-                syncAxisInputs();
-                updateFullLegend();
-            }
+    if (pageName === 'pid') {
+        document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
+        sendBLECommand({ type: 'get_pid' });
+    }
 
-            if (pageName === 'settings') {
-                updateUnitButtons();
-                const slider = document.getElementById('brightnessSlider');
-                if (slider) slider.value = state.brightness;
-            }
-        }
+    if (pageName === 'graph') {
+        drawFullGraph();
+    }
+}
+
+
+        function cToF(c) { return c * 9 / 5 + 32; }
 
         function toggleTempUnit() {
             state.useFahrenheit = !state.useFahrenheit;
@@ -1264,7 +1098,6 @@
             updateDisplay();
             drawMiniGraph();
             if (document.getElementById('graphPage').classList.contains('active')) {
-                syncAxisInputs();
                 drawFullGraph();
             }
         }
@@ -1278,66 +1111,31 @@
             updateDisplay();
             drawMiniGraph();
             if (document.getElementById('graphPage').classList.contains('active')) {
-                syncAxisInputs();
                 drawFullGraph();
             }
-        }
-
-        function syncAxisInputs() {
-            const tempMinDisp = state.useFahrenheit
-                ? Math.round(cToF(state.tempGraphMin))
-                : Math.round(state.tempGraphMin);
-            const tempMaxDisp = state.useFahrenheit
-                ? Math.round(cToF(state.tempGraphMax))
-                : Math.round(state.tempGraphMax);
-
-            document.getElementById('tempGraphMinInput').value = tempMinDisp;
-            document.getElementById('tempGraphMaxInput').value = tempMaxDisp;
-
-            const conv = state.pressureIsBar ? 1 : 14.5038;
-            const decimals = state.pressureIsBar ? 1 : 0;
-            const pressMinDisp = (state.pressGraphMin * conv).toFixed(decimals);
-            const pressMaxDisp = (state.pressGraphMax * conv).toFixed(decimals);
-
-            document.getElementById('pressGraphMinInput').value = pressMinDisp;
-            document.getElementById('pressGraphMaxInput').value = pressMaxDisp;
         }
 
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-            // Fixed: update the actual value and unit spans (previous code targeted non-existent IDs like brewTempCard)
-            const formatTemp = (val) => state.useFahrenheit ? cToF(val).toFixed(1) : val.toFixed(1);
+            document.getElementById('brewTempCard').textContent  = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1) + tempUnit;
+            document.getElementById('steamTempCard').textContent = (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1) + tempUnit;
+            document.getElementById('groupTempCard').textContent = (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1) + tempUnit;
 
-            document.getElementById('brewTempValue').textContent = formatTemp(state.brewTemp);
-            document.getElementById('brewTempUnit').textContent = tempUnit;
+            document.getElementById('brewStatus').className  = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
+            document.getElementById('steamStatus').className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
+            document.getElementById('groupStatus').className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
 
-            document.getElementById('steamTempValue').textContent = formatTemp(state.steamTemp);
-            document.getElementById('steamTempUnit').textContent = tempUnit;
-
-            document.getElementById('groupTempValue').textContent = formatTemp(state.groupTemp);
-            document.getElementById('groupTempUnit').textContent = tempUnit;
-
-            // Status card ready/heating classes
-            document.getElementById('brewStatus').className = 'status-card ' +
-                (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected ? 'heating' : '');
-            document.getElementById('steamStatus').className = 'status-card ' +
-                (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected ? 'heating' : '');
-            document.getElementById('groupStatus').className = 'status-card ' +
-                (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected ? 'heating' : '');
-
-            // Pressure (already correct, kept as-is)
             const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
             document.getElementById('pressureDisplay').textContent = pressureValue.toFixed(1);
             document.getElementById('pressureUnit').textContent = state.pressureIsBar ? 'bar' : 'psi';
 
-            // Setpoints
-            document.getElementById('brewSetpointDisplay').textContent = formatTemp(state.brewSetpoint) + ' ' + tempUnit;
-            document.getElementById('steamSetpointDisplay').textContent = formatTemp(state.steamSetpoint) + ' ' + tempUnit;
-            document.getElementById('groupSetpointDisplay').textContent = formatTemp(state.groupSetpoint) + ' ' + tempUnit;
-
-            updateUnitButtons();
-            updateFullLegend();
+            document.getElementById('brewSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
+            document.getElementById('steamSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
+            document.getElementById('groupSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
         }
 
         function updateBrightness(value) {
@@ -1362,7 +1160,7 @@
         function setupHiDPICanvas(canvas) {
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.round(rect.width * dpr);
+            canvas.width  = Math.round(rect.width * dpr);
             canvas.height = Math.round(rect.height * dpr);
             const ctx = canvas.getContext('2d');
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1371,38 +1169,189 @@
 
         let lastTemp = null;
         let lastPressure = null;
-        let isReconnecting = false;
 
         setInterval(() => {
-            if (state.bleConnected && Date.now() - state.lastDataTime > 5000) {  // 10s no data
-                console.warn('No data received for 10s – forcing disconnect');
-                handleDisconnect();
-            }
-        }, 5000);
+  if (state.bleConnected && state.characteristic) {
+    sendBLECommand({ type: "ping" });
+  }
+}, 3000);
 
-        setInterval(() => {
-            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
-        }, 3000);
-
-        setInterval(() => {
-            if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) handleDisconnect();
-        }, 1000);
+setInterval(() => {
+    if (state.bleConnected && (!state.bleDevice || !state.bleDevice.gatt.connected)) {
+        handleDisconnect();
+    }
+}, 1000);
 
         setInterval(() => {
             if (!state.bleConnected || !state.hasReceivedFirstData) return;
+
             if (!state.dataCollectionPaused) {
                 lastTemp = smooth(lastTemp, state.brewTemp);
                 lastPressure = smooth(lastPressure, state.groupPressure);
+
                 state.tempHistory.push(lastTemp);
                 state.pressureHistory.push(lastPressure);
+
                 if (state.tempHistory.length > 600) {
                     state.tempHistory.shift();
                     state.pressureHistory.shift();
                 }
             }
+
             drawMiniGraph();
-            if (document.getElementById('graphPage').classList.contains('active')) drawFullGraph();
+
+            const graphPage = document.getElementById('graphPage');
+            if (graphPage && graphPage.classList.contains('active')) {
+                drawFullGraph();
+            }
         }, 1000);
+
+        function handleGraphHover(event, canvasId) {
+            event.preventDefault();
+            const canvas = document.getElementById(canvasId);
+            const rect = canvas.getBoundingClientRect();
+            const isTouch = event.touches !== undefined;
+            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
+            const relX = clientX - rect.left;
+
+            if (relX < 0 || relX > rect.width) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const isMini = canvasId === 'miniGraph';
+
+            let paddingLeft, paddingRight, paddingTop, paddingBottom;
+            if (isMini) {
+                paddingLeft = 40;
+                paddingRight = 40;
+                paddingTop = 40;
+                paddingBottom = 40;
+            } else {
+                paddingLeft = 65;
+                paddingRight = 65;
+                paddingTop = 30;
+                paddingBottom = 30;
+            }
+
+            const plotStart = paddingLeft;
+            const plotEnd = rect.width - paddingRight;
+            if (relX < plotStart || relX > plotEnd) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const fraction = (relX - plotStart) / (plotEnd - plotStart);
+            const maxIndex = state.tempHistory.length - 1;
+            if (maxIndex < 0) return;
+
+            const index = Math.round(fraction * maxIndex);
+            if (isMini) miniHoveredIndex = index;
+            else fullHoveredIndex = index;
+
+            const tempValues = state.tempHistory;
+            const pressValues = state.pressureHistory;
+
+            const tempMinRaw = Math.min(...tempValues);
+            const tempMaxRaw = Math.max(...tempValues);
+            const defaultTempRange = isMini ? 10 : 20;
+            let tempRange = (tempMaxRaw - tempMinRaw) || defaultTempRange;
+            const tempPad = tempRange * 0.05;
+            let tempMin = tempMinRaw - tempPad;
+            let tempMax = tempMaxRaw + tempPad;
+
+            const pressMinRaw = Math.min(...pressValues);
+            const pressMaxRaw = Math.max(...pressValues);
+            const defaultPressRange = isMini ? 3 : 5;
+            let pressRange = (pressMaxRaw - pressMinRaw) || defaultPressRange;
+            const pressPad = pressRange * 0.1;
+            let pressMin = pressMinRaw - pressPad;
+            if (isMini) pressMin = Math.max(0, pressMin);
+            let pressMax = pressMaxRaw + pressPad;
+
+            const plotWidth = rect.width - paddingLeft - paddingRight;
+            const plotHeight = rect.height - paddingTop - paddingBottom;
+
+            const x_canvas = paddingLeft + fraction * plotWidth;
+
+            const fractionTemp = (tempValues[index] - tempMin) / (tempMax - tempMin);
+            const y_temp_canvas = isMini
+                ? rect.height - paddingBottom - fractionTemp * plotHeight
+                : paddingTop + (1 - fractionTemp) * plotHeight;
+
+            const fractionPress = (pressValues[index] - pressMin) / (pressMax - pressMin);
+            const y_press_canvas = isMini
+                ? rect.height - paddingBottom - fractionPress * plotHeight
+                : paddingTop + (1 - fractionPress) * plotHeight;
+
+            const container = canvas.parentElement.getBoundingClientRect();
+
+            const pointX = rect.left - container.left + x_canvas;
+            const pointYTemp = rect.top - container.top + y_temp_canvas;
+            const pointYPress = rect.top - container.top + y_press_canvas;
+
+            const centerY = (pointYTemp + pointYPress) / 2;
+
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
+            const tempVal = state.useFahrenheit ? cToF(tempValues[index]) : tempValues[index];
+            const pressVal = pressValues[index] * pressureConv;
+            const timeSec = index;
+
+            const html = `
+                <strong>Time: ${timeSec}s</strong><br>
+                Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
+                Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
+            `;
+
+            const tooltip = isMini ? miniTooltip : fullTooltip;
+            tooltip.innerHTML = html;
+
+            tooltip.style.left = '-9999px';
+            tooltip.style.top = '-9999px';
+            tooltip.style.display = 'block';
+
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+
+            let tooltipX = pointX + 14;
+            let tooltipY = centerY - tooltipHeight / 2;
+
+            const containerRect = canvas.parentElement.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height;
+
+            if (tooltipX + tooltipWidth > containerWidth - 8) {
+                tooltipX = pointX - tooltipWidth - 14;
+            }
+
+            tooltipY = Math.max(
+                8,
+                Math.min(containerHeight - tooltipHeight - 8, tooltipY)
+            );
+
+            tooltip.style.left = Math.round(tooltipX) + 'px';
+            tooltip.style.top  = Math.round(tooltipY) + 'px';
+
+            if (isMini) drawMiniGraph();
+            else drawFullGraph();
+        }
+
+        function handleGraphLeave(canvasId) {
+            const isMini = canvasId === 'miniGraph';
+            if (isMini) {
+                miniHoveredIndex = -1;
+                miniTooltip.style.display = 'none';
+                drawMiniGraph();
+            } else {
+                fullHoveredIndex = -1;
+                fullTooltip.style.display = 'none';
+                drawFullGraph();
+            }
+        }
 
         function drawMiniGraph() {
             const canvas = document.getElementById('miniGraph');
@@ -1417,24 +1366,45 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, width, height);
 
+            if (state.tempHistory.length < 2) {
+                ctx.fillStyle = '#888';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const message = state.bleConnected 
+                    ? 'Collecting data...' 
+                    : 'Connect to view live graph';
+                ctx.fillText(message, width / 2, height / 2);
+                return;
+            }
+
             const padding = 40;
 
-            const tempMin = 40;
-            const tempMax = 120;
-            const tempRange = tempMax - tempMin;
+            let tempMin = Math.min(...state.tempHistory);
+            let tempMax = Math.max(...state.tempHistory);
+            let tempRange = tempMax - tempMin || 10;
+            let tempPad = tempRange * 0.05;
+            tempMin -= tempPad;
+            tempMax += tempPad;
+            tempRange = tempMax - tempMin;
 
-            const pressureMin = 0;
-            const pressureMax = 12;
-            const pressureRange = pressureMax - pressureMin;
+            let pressureMin = Math.min(...state.pressureHistory);
+            let pressureMax = Math.max(...state.pressureHistory);
+            let pressureRange = pressureMax - pressureMin || 3;
+            let pressurePad = pressureRange * 0.1;
+            pressureMin = Math.max(0, pressureMin - pressurePad);
+            pressureMax += pressurePad;
+            pressureRange = pressureMax - pressureMin;
 
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
             const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
             const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
             const dispTempRange = dispTempMax - dispTempMin;
 
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
             const dispPressureMin = pressureMin * pressureConv;
             const dispPressureMax = pressureMax * pressureConv;
             const dispPressureRange = dispPressureMax - dispPressureMin;
@@ -1486,28 +1456,13 @@
             }
             ctx.fillText(pressureUnit, width - padding + 8, padding + 10);
 
-            ctx.fillStyle = '#888';
-            ctx.font = '11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('Time →', width / 2, height - 6);
-
-            if (state.tempHistory.length === 0) {
-                ctx.fillStyle = '#888';
-                ctx.font = '16px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(state.bleConnected ? 'Collecting data...' : 'Connect to view live graph', width / 2, height / 2);
-                return;
-            }
-
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 data.forEach((v, i) => {
                     const x = padding + (i / (data.length - 1)) * (width - padding * 2);
-                    let fraction = (v - minV) / rangeV;
-                    fraction = Math.max(0, Math.min(1, fraction));
+                    const fraction = (v - minV) / rangeV;
                     const y = height - padding - fraction * (height - padding * 2);
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -1531,8 +1486,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
-                fractionTemp = Math.max(0, Math.min(1, fractionTemp));
+                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
                 const yTemp = height - padding - fractionTemp * (height - padding * 2);
                 ctx.fillStyle = '#f00';
                 ctx.beginPath();
@@ -1542,8 +1496,7 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
-                fractionPress = Math.max(0, Math.min(1, fractionPress));
+                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
                 const yPress = height - padding - fractionPress * (height - padding * 2);
                 ctx.fillStyle = '#00f';
                 ctx.beginPath();
@@ -1553,20 +1506,11 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
-        }
 
-        function updateFullLegend() {
-            const tempEl = document.getElementById('fullLegendTemp');
-            const pressEl = document.getElementById('fullLegendPressure');
-            if (!tempEl || !pressEl) return;
-
-            const tempVal = (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1);
-            const tempUnit = state.useFahrenheit ? '°F' : '°C';
-            tempEl.textContent = `${tempVal} ${tempUnit}`;
-
-            const pressVal = (state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038).toFixed(1);
-            const pressUnit = state.pressureIsBar ? 'bar' : 'psi';
-            pressEl.textContent = `${pressVal} ${pressUnit}`;
+            ctx.fillStyle = '#888';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Time →', width / 2, height - 6);
         }
 
         function drawFullGraph() {
@@ -1581,6 +1525,14 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, width, height);
 
+            if (state.tempHistory.length < 2) {
+                ctx.fillStyle = '#666';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Collecting temperature data...', width / 2, height / 2);
+                return;
+            }
+
             const paddingTop = 30;
             const paddingBottom = 30;
             const paddingLeft = 65;
@@ -1588,30 +1540,31 @@
             const plotWidth = width - paddingLeft - paddingRight;
             const plotHeight = height - paddingTop - paddingBottom;
 
-            let tempMin = state.tempGraphMin;
-            let tempMax = state.tempGraphMax;
-            let tempRange = tempMax - tempMin;
-            if (tempRange <= 0) {
-                tempRange = 80;
-                tempMin = tempMax - tempRange;
-            }
+            let tempMin = Math.min(...state.tempHistory);
+            let tempMax = Math.max(...state.tempHistory);
+            let tempRange = tempMax - tempMin || 20;
+            let tempPad = tempRange * 0.05;
+            tempMin -= tempPad;
+            tempMax += tempPad;
+            tempRange = tempMax - tempMin;
 
-            let pressureMin = state.pressGraphMin;
-            let pressureMax = state.pressGraphMax;
-            let pressureRange = pressureMax - pressureMin;
-            if (pressureRange <= 0) {
-                pressureRange = 12;
-                pressureMin = pressureMax - pressureRange;
-            }
+            let pressureMin = Math.min(...state.pressureHistory);
+            let pressureMax = Math.max(...state.pressureHistory);
+            let pressureRange = pressureMax - pressureMin || 5;
+            let pressurePad = pressureRange * 0.1;
+            pressureMin = Math.max(0, pressureMin - pressurePad);
+            pressureMax += pressurePad;
+            pressureRange = pressureMax - pressureMin;
 
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
             const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
             const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
             const dispTempRange = dispTempMax - dispTempMin;
 
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
             const dispPressureMin = pressureMin * pressureConv;
             const dispPressureMax = pressureMax * pressureConv;
             const dispPressureRange = dispPressureMax - dispPressureMin;
@@ -1624,6 +1577,7 @@
                 ctx.moveTo(paddingLeft, y);
                 ctx.lineTo(width - paddingRight, y);
                 ctx.stroke();
+
                 const x = paddingLeft + (i / 5) * plotWidth;
                 ctx.beginPath();
                 ctx.moveTo(x, paddingTop);
@@ -1672,23 +1626,13 @@
             }
             ctx.fillText(pressureUnit, width - paddingRight + 10, paddingTop + 15);
 
-            if (state.tempHistory.length === 0) {
-                ctx.fillStyle = '#666';
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('No data collected yet', width / 2, height / 2);
-                return;
-            }
-
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 data.forEach((v, i) => {
                     const x = paddingLeft + (i / (data.length - 1)) * plotWidth;
-                    let fraction = (v - minV) / rangeV;
-                    fraction = Math.max(0, Math.min(1, fraction));
+                    const fraction = (v - minV) / rangeV;
                     const y = paddingTop + (1 - fraction) * plotHeight;
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
@@ -1712,8 +1656,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
-                fractionTemp = Math.max(0, Math.min(1, fractionTemp));
+                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
                 const yTemp = paddingTop + (1 - fractionTemp) * plotHeight;
                 ctx.fillStyle = '#f00';
                 ctx.beginPath();
@@ -1723,8 +1666,7 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
-                fractionPress = Math.max(0, Math.min(1, fractionPress));
+                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
                 const yPress = paddingTop + (1 - fractionPress) * plotHeight;
                 ctx.fillStyle = '#00f';
                 ctx.beginPath();
@@ -1734,138 +1676,9 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
             }
+
+            document.getElementById('sampleCount').textContent = state.tempHistory.length;
         }
-
-        function handleGraphHover(event, canvasId) {
-            event.preventDefault();
-            const canvas = document.getElementById(canvasId);
-            const rect = canvas.getBoundingClientRect();
-            const isTouch = event.touches !== undefined;
-            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
-            const relX = clientX - rect.left;
-
-            if (relX < 0 || relX > rect.width) {
-                handleGraphLeave(canvasId);
-                return;
-            }
-
-            const isMini = canvasId === 'miniGraph';
-
-            const paddingLeft = isMini ? 40 : 65;
-            const paddingRight = isMini ? 40 : 65;
-            const paddingTop = isMini ? 40 : 30;
-            const paddingBottom = isMini ? 40 : 30;
-
-            const plotStart = paddingLeft;
-            const plotEnd = rect.width - paddingRight;
-            if (relX < plotStart || relX > plotEnd) {
-                handleGraphLeave(canvasId);
-                return;
-            }
-
-            const fraction = (relX - plotStart) / (plotEnd - plotStart);
-            const maxIndex = state.tempHistory.length - 1;
-            if (maxIndex < 0) return;
-
-            const index = Math.round(fraction * maxIndex);
-            if (isMini) miniHoveredIndex = index;
-            else fullHoveredIndex = index;
-
-            const tempMin = isMini ? 40 : state.tempGraphMin;
-            const tempMax = isMini ? 120 : state.tempGraphMax;
-            let tempRange = tempMax - tempMin;
-            if (tempRange <= 0) tempRange = 80;
-
-            const pressureMin = isMini ? 0 : state.pressGraphMin;
-            const pressureMax = isMini ? 12 : state.pressGraphMax;
-            let pressureRange = pressureMax - pressureMin;
-            if (pressureRange <= 0) pressureRange = 12;
-
-            const plotWidth = rect.width - paddingLeft - paddingRight;
-            const plotHeight = rect.height - paddingTop - paddingBottom;
-
-            const x_canvas = paddingLeft + fraction * plotWidth;
-
-            let fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
-            fractionTemp = Math.max(0, Math.min(1, fractionTemp));
-            const y_temp_canvas = isMini
-                ? rect.height - paddingBottom - fractionTemp * plotHeight
-                : paddingTop + (1 - fractionTemp) * plotHeight;
-
-            let fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
-            fractionPress = Math.max(0, Math.min(1, fractionPress));
-            const y_press_canvas = isMini
-                ? rect.height - paddingBottom - fractionPress * plotHeight
-                : paddingTop + (1 - fractionPress) * plotHeight;
-
-            const container = canvas.parentElement.getBoundingClientRect();
-
-            const pointX = rect.left - container.left + x_canvas;
-            const pointYTemp = rect.top - container.top + y_temp_canvas;
-            const pointYPress = rect.top - container.top + y_press_canvas;
-
-            const centerY = (pointYTemp + pointYPress) / 2;
-
-            const tempUnit = state.useFahrenheit ? '°F' : '°C';
-            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
-            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
-            const pressureDecimals = state.pressureIsBar ? 1 : 0;
-
-            const tempVal = state.useFahrenheit ? cToF(state.tempHistory[index]) : state.tempHistory[index];
-            const pressVal = state.pressureHistory[index] * pressureConv;
-            const timeSec = index;
-
-            const html = `
-                <strong>Time: ${timeSec}s</strong><br>
-                Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
-                Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
-            `;
-
-            const tooltip = isMini ? miniTooltip : fullTooltip;
-            tooltip.innerHTML = html;
-            tooltip.style.display = 'block';
-
-            let tooltipX = pointX + 14;
-            let tooltipY = centerY - tooltip.offsetHeight / 2;
-
-            const containerRect = canvas.parentElement.getBoundingClientRect();
-            if (tooltipX + tooltip.offsetWidth > containerRect.width - 8) {
-                tooltipX = pointX - tooltip.offsetWidth - 14;
-            }
-
-            tooltipY = Math.max(8, Math.min(containerRect.height - tooltip.offsetHeight - 8, tooltipY));
-
-            tooltip.style.left = Math.round(tooltipX) + 'px';
-            tooltip.style.top = Math.round(tooltipY) + 'px';
-
-            if (isMini) drawMiniGraph();
-            else drawFullGraph();
-        }
-
-        function handleGraphLeave(canvasId) {
-            if (canvasId === 'miniGraph') {
-                miniHoveredIndex = -1;
-                miniTooltip.style.display = 'none';
-                drawMiniGraph();
-            } else {
-                fullHoveredIndex = -1;
-                fullTooltip.style.display = 'none';
-                drawFullGraph();
-            }
-        }
-
-        const miniCanvas = document.getElementById('miniGraph');
-        const fullCanvas = document.getElementById('fullGraph');
-
-        miniCanvas.addEventListener('mousemove', e => handleGraphHover(e, 'miniGraph'));
-        miniCanvas.addEventListener('touchmove', e => handleGraphHover(e, 'miniGraph'), { passive: false });
-        miniCanvas.addEventListener('mouseleave', () => handleGraphLeave('miniGraph'));
-        miniCanvas.addEventListener('touchend', () => handleGraphLeave('miniGraph'));
-
-        fullCanvas.addEventListener('mousemove', e => handleGraphHover(e, 'fullGraph'));
-        fullCanvas.addEventListener('touchmove', e => handleGraphHover(e, 'fullGraph'), { passive: false });
-        fullCanvas.addEventListener('mouseleave', () => handleGraphLeave('fullGraph'));
-        fullCanvas.addEventListener('touchend', () => handleGraphLeave('fullGraph'));
 
         function togglePause() {
             state.dataCollectionPaused = !state.dataCollectionPaused;
@@ -1880,23 +1693,26 @@
                 alert('No data to save yet.');
                 return;
             }
+
             const data = {
                 tempHistory: state.tempHistory,
                 pressureHistory: state.pressureHistory,
                 savedAt: new Date().toISOString(),
                 note: 'LVR-1 graph data (brew temperature and group pressure)'
             };
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `lvr1-graph-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            a.download = `lvr1-graph-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
 
         function clearData() {
             if (!confirm('Clear all recorded graph data? This cannot be undone.')) return;
+
             state.tempHistory = [];
             state.pressureHistory = [];
             lastTemp = null;
@@ -1905,56 +1721,83 @@
             fullHoveredIndex = -1;
             miniTooltip.style.display = 'none';
             fullTooltip.style.display = 'none';
+
             drawMiniGraph();
             drawFullGraph();
+            document.getElementById('sampleCount').textContent = '0';
         }
 
-        document.getElementById('loadFileInput').addEventListener('change', e => {
+        document.getElementById('loadFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = ev => {
+            reader.onload = function(ev) {
                 try {
                     const data = JSON.parse(ev.target.result);
-                    if (!Array.isArray(data.tempHistory) || !Array.isArray(data.pressureHistory)) throw new Error('Invalid format');
+
+                    if (!Array.isArray(data.tempHistory) || !Array.isArray(data.pressureHistory)) {
+                        throw new Error('Invalid format');
+                    }
+
                     const len = Math.min(data.tempHistory.length, data.pressureHistory.length);
                     state.tempHistory = data.tempHistory.slice(-len).map(Number);
                     state.pressureHistory = data.pressureHistory.slice(-len).map(Number);
+
                     lastTemp = state.tempHistory.length > 0 ? state.tempHistory[state.tempHistory.length - 1] : null;
                     lastPressure = state.pressureHistory.length > 0 ? state.pressureHistory[state.pressureHistory.length - 1] : null;
-                    if (state.tempHistory.length > 0) {
-                        state.brewTemp = state.tempHistory[state.tempHistory.length - 1];
-                        state.groupPressure = state.pressureHistory[state.pressureHistory.length - 1];
-                    }
-                    updateDisplay();  // this will also call updateFullLegend()
+
+                    miniHoveredIndex = -1;
+                    fullHoveredIndex = -1;
+                    miniTooltip.style.display = 'none';
+                    fullTooltip.style.display = 'none';
+
                     drawMiniGraph();
                     drawFullGraph();
+                    document.getElementById('sampleCount').textContent = state.tempHistory.length;
+
                     alert('Data loaded successfully (' + state.tempHistory.length + ' samples).');
                 } catch (err) {
                     alert('Failed to load file: ' + err.message);
                 }
             };
             reader.readAsText(file);
+
             e.target.value = '';
         });
 
         function updatePIDFromInput(input, zone, param) {
             let val = parseFloat(input.value);
             if (isNaN(val) || val < 0) val = 0;
-            if (param.includes('Ki')) val = Math.round(val * 100) / 100;
-            else val = Math.round(val * 10) / 10;
+
+            if (param.includes('Ki')) {
+                val = Math.round(val * 100) / 100;
+            } else {
+                val = Math.round(val * 10) / 10;
+            }
+
             state.pidGains[zone][param] = val;
             input.value = val.toFixed(2);
+
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
         }
 
         function adjustPID(zone, param, delta) {
             let newVal = Math.max(0, state.pidGains[zone][param] + delta);
-            if (param.includes('Ki')) newVal = Math.round(newVal * 100) / 100;
-            else newVal = Math.round(newVal * 10) / 10;
+
+            if (param.includes('Ki')) {
+                newVal = Math.round(newVal * 100) / 100;
+            } else {
+                newVal = Math.round(newVal * 10) / 10;
+            }
+
             state.pidGains[zone][param] = newVal;
+
             const input = document.getElementById(`${zone}-${param}`);
-            if (input) input.value = newVal.toFixed(2);
+            if (input) {
+                input.value = newVal.toFixed(2);
+            }
+
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
         }
 
@@ -1969,173 +1812,163 @@
                 let html = `
                     <h3>${zone.charAt(0).toUpperCase() + zone.slice(1)} Boiler</h3>
                     <div class="pid-grid">
-                        <div class="pid-header aggressive">Aggressive</div>
-                        <div class="pid-header conservative">Conservative</div>
+                        <div class="pid-column">
+                            <h4 class="aggressive">Aggressive</h4>
+                            <div class="pid-row">
+                                <span>Kp:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKp', -0.1)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKp" 
+                                       value="${state.pidGains[zone].aggKp.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKp')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKp', 0.1)">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Ki:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKi', -0.01)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKi" 
+                                       value="${state.pidGains[zone].aggKi.toFixed(2)}" 
+                                       step="0.01" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKi')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKi', 0.01)">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Kd:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKd', -0.1)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKd" 
+                                       value="${state.pidGains[zone].aggKd.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKd')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKd', 0.1)">+</button>
+                            </div>
+                        </div>
+                        <div class="pid-column">
+                            <h4 class="conservative">Conservative</h4>
+                            <div class="pid-row">
+                                <span>Kp:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKp', -0.1)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKp" 
+                                       value="${state.pidGains[zone].consKp.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKp')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKp', 0.1)">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Ki:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKi', -0.01)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKi" 
+                                       value="${state.pidGains[zone].consKi.toFixed(2)}" 
+                                       step="0.01" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKi')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKi', 0.01)">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Kd:</span>
+                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKd', -0.1)">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKd" 
+                                       value="${state.pidGains[zone].consKd.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKd')">
+                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKd', 0.1)">+</button>
+                            </div>
+                        </div>
+                    </div>
                 `;
 
-                const params = [
-                    { key: 'Kp', delta: 0.1, step: '0.1' },
-                    { key: 'Ki', delta: 0.01, step: '0.01' },
-                    { key: 'Kd', delta: 0.1, step: '0.1' }
-                ];
-
-                params.forEach(p => {
-                    const aggKey = 'agg' + p.key;
-                    const consKey = 'cons' + p.key;
-
-                    html += `
-                        <div class="pid-label">${p.key}:</div>
-                        <div class="pid-cell">
-                            <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', '${aggKey}', -${p.delta})">−</button>
-                            <input type="number" class="pid-input" id="${zone}-${aggKey}"
-                                   value="${state.pidGains[zone][aggKey].toFixed(2)}"
-                                   step="${p.step}" min="0"
-                                   onchange="updatePIDFromInput(this, '${zone}', '${aggKey}')">
-                            <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', '${aggKey}', ${p.delta})">+</button>
-                        </div>
-                        <div class="pid-cell">
-                            <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', '${consKey}', -${p.delta})">−</button>
-                            <input type="number" class="pid-input" id="${zone}-${consKey}"
-                                   value="${state.pidGains[zone][consKey].toFixed(2)}"
-                                   step="${p.step}" min="0"
-                                   onchange="updatePIDFromInput(this, '${zone}', '${consKey}')">
-                            <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', '${consKey}', ${p.delta})">+</button>
-                        </div>
-                    `;
-                });
-
-                html += `</div>`;
                 div.innerHTML = html;
                 container.appendChild(div);
             });
         }
 
         function resetAllPID() {
-            if (!confirm("Reset ALL PID gains to factory defaults? This cannot be undone.")) return;
-            const defaults = { consKp: 1.00, consKi: 0.05, consKd: 0.25, aggKp: 4.00, aggKi: 0.20, aggKd: 1.00 };
+            if (!confirm("Are you sure you want to reset ALL PID gains to factory defaults?\n\nThis will overwrite the current settings on the webpage and (if connected) on the device.\n\nThis action cannot be undone.")) {
+                return;
+            }
+
+            const defaults = {
+                consKp: 1.00,
+                consKi: 0.05,
+                consKd: 0.25,
+                aggKp: 4.00,
+                aggKi: 0.20,
+                aggKd: 1.00
+            };
+
             ['brew', 'steam', 'group'].forEach(zone => {
                 state.pidGains[zone] = { ...defaults };
-                if (state.bleConnected) sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
+
+                if (state.bleConnected) {
+                    sendBLECommand({
+                        type: 'pid',
+                        zone: zone,
+                        gains: state.pidGains[zone]
+                    });
+                }
             });
+
             renderPIDSettings();
         }
 
-        function updateGraphScales() {
-            let dispMinT = parseFloat(document.getElementById('tempGraphMinInput').value);
-            let dispMaxT = parseFloat(document.getElementById('tempGraphMaxInput').value);
-            let dispMinP = parseFloat(document.getElementById('pressGraphMinInput').value);
-            let dispMaxP = parseFloat(document.getElementById('pressGraphMaxInput').value);
-
-            const minT = state.useFahrenheit ? fToC(dispMinT) : dispMinT;
-            const maxT = state.useFahrenheit ? fToC(dispMaxT) : dispMaxT;
-            const minP = state.pressureIsBar ? dispMinP : dispMinP / 14.5038;
-            const maxP = state.pressureIsBar ? dispMaxP : dispMaxP / 14.5038;
-
-            // Clamp to safe ranges (base units: °C and bar)
-            let finalMinT = isNaN(minT) ? state.tempGraphMin : Math.max(0, minT);
-            let finalMaxT = isNaN(maxT) ? state.tempGraphMax : Math.min(120, maxT);
-            let finalMinP = isNaN(minP) ? state.pressGraphMin : Math.max(0, minP);
-            let finalMaxP = isNaN(maxP) ? state.pressGraphMax : Math.min(16, maxP);
-
-            // Enforce min < max with reasonable separation
-            if (finalMinT >= finalMaxT) {
-                finalMaxT = finalMinT + 40;  // give a decent visible range
-                if (finalMaxT > 120) {
-                    finalMaxT = 120;
-                    finalMinT = 80;  // fallback safe range
-                }
-            }
-            if (finalMinP >= finalMaxP) {
-                finalMaxP = finalMinP + 4;
-                if (finalMaxP > 16) {
-                    finalMaxP = 16;
-                    finalMinP = 12;
-                }
-            }
-
-            // Round and store
-            state.tempGraphMin = Math.round(finalMinT);
-            state.tempGraphMax = Math.round(finalMaxT);
-            state.pressGraphMin = finalMinP.toFixed(2);  // keep some precision
-            state.pressGraphMax = finalMaxP.toFixed(2);
-
-            syncAxisInputs();
-            drawFullGraph();
-        }
-
-        function resetGraphScales() {
-            state.tempGraphMin = 40;
-            state.tempGraphMax = 120;
-            state.pressGraphMin = 0;
-            state.pressGraphMax = 12;
-            syncAxisInputs();
-            drawFullGraph();
-        }
-
         function setupGraphObservers() {
-            const miniContainer = document.querySelector('.nav-graph');
-            if (miniContainer) new ResizeObserver(() => drawMiniGraph()).observe(miniContainer);
-            const fullContainer = document.querySelector('.full-graph');
-            if (fullContainer) new ResizeObserver(() => drawFullGraph()).observe(fullContainer);
+            const miniContainer = document.querySelector('.graph-container.nav-graph');
+            if (miniContainer) {
+                new ResizeObserver(() => {
+                    drawMiniGraph();
+                }).observe(miniContainer);
+            }
+
+            const fullContainer = document.querySelector('.graph-container.full-graph');
+            if (fullContainer) {
+                new ResizeObserver(() => {
+                    drawFullGraph();
+                }).observe(fullContainer);
+            }
         }
+
+        const miniCanvas = document.getElementById('miniGraph');
+        const fullCanvas = document.getElementById('fullGraph');
+
+        miniCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'miniGraph'));
+        miniCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'miniGraph'), { passive: false });
+        miniCanvas.addEventListener('mouseleave', () => handleGraphLeave('miniGraph'));
+        miniCanvas.addEventListener('touchend', () => handleGraphLeave('miniGraph'));
+        miniCanvas.addEventListener('touchcancel', () => handleGraphLeave('miniGraph'));
+
+        fullCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'fullGraph'));
+        fullCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'fullGraph'), { passive: false });
+        fullCanvas.addEventListener('mouseleave', () => handleGraphLeave('fullGraph'));
+        fullCanvas.addEventListener('touchend', () => handleGraphLeave('fullGraph'));
+        fullCanvas.addEventListener('touchcancel', () => handleGraphLeave('fullGraph'));
 
         setupGraphObservers();
 
         window.addEventListener('load', () => {
             drawMiniGraph();
             updateDisplay();
-            syncAxisInputs();
-            updateBLEUI(); // Ensure initial disconnected state is applied
-            ['tempGraphMinInput', 'tempGraphMaxInput', 'pressGraphMinInput', 'pressGraphMaxInput'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('input', updateGraphScales);
-                    el.addEventListener('change', updateGraphScales);
-                }
-            });
-            autoConnect();
         });
 
-        function updateUnitButtons() {
-            const tempBtn = document.getElementById('tempUnitBtn');
-            const pressureBtn = document.getElementById('pressureUnitBtn');
-            if (tempBtn) tempBtn.textContent = state.useFahrenheit ? '°F' : '°C';
-            if (pressureBtn) pressureBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
-        }
+        document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
+        document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
 
-        function isAppInstalled() {
-            return window.matchMedia('(display-mode: standalone)').matches ||
-                window.matchMedia('(display-mode: window-controls-overlay)').matches ||
-                window.navigator.standalone === true;
-        }
-
+        updateDisplay();
+        updateBLEUI();
+        drawMiniGraph();
+        
+        // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js')
+              .then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+              })
+              .catch(function(error) {
+                console.log('Service Worker registration failed:', error);
+              });
+          });
         }
-
-        function scheduleAutoReconnect() {
-            if (reconnectTimer) return;
-            if (!state.bleDevice) return;
-
-            reconnectTimer = setInterval(async () => {
-                if (state.bleConnected) {
-                    clearInterval(reconnectTimer);
-                    reconnectTimer = null;
-                    isReconnecting = false;
-                    return;
-                }
-
-                try {
-                    console.log('Auto-reconnect attempt…');
-                    await connectBLE(true);
-                } catch {
-                    // stay quiet, keep retrying
-                }
-            }, 3000);
-        }
-
 
     </script>
-</body>
 
+
+</body>
 </html>
