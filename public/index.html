@@ -91,7 +91,7 @@
 
         .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between;36px
             align-items: center;
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
@@ -110,8 +110,8 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
-            min-height: 48px;
-            min-width: 48px;
+            min-height: 36px;
+            min-width: 36px;
         }
 
         .btn:hover {
@@ -845,16 +845,11 @@
 
         .ble-connected-label {
             display: none;
-            /* hidden by default */
             color: #2ac54c;
             font-weight: bold;
             font-size: 1.1rem;
             align-self: center;
             white-space: nowrap;
-        }
-
-        .ble-indicator.connected {
-            /* cursor: pointer; */
         }
 
         @keyframes pulse-glow {
@@ -883,7 +878,6 @@
             box-shadow: 0 0 8px #16a34a;
             animation: pulse-glow 2s ease-in-out infinite;
             transform: translateY(-2px);
-            /* moves the circle up slightly */
         }
     </style>
 </head>
@@ -1008,7 +1002,7 @@
                                 d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
-                    <button class="btn" onclick="showPage('main')">← Back</button>
+                    <button class="btn" onclick="showPage('main')">Back</button>
                 </div>
             </div>
 
@@ -1068,11 +1062,11 @@
                                 d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
-                    <button class="btn btn-success" id="pauseBtn" onclick="togglePause()">Pause</button>
+                    <button class="btn" id="pauseBtn" onclick="togglePause()">Pause</button>
                     <button class="btn" onclick="saveData()">Save</button>
                     <button class="btn" onclick="document.getElementById('loadFileInput').click()">Load</button>
-                    <button class="btn btn-danger" onclick="clearData()">Clear</button>
-                    <button class="btn" onclick="showPage('main')">← Back</button>
+                    <button class="btn" onclick="clearData()">Clear</button>
+                    <button class="btn" onclick="showPage('main')">Back</button>
                 </div>
             </div>
             <div class="graph-container full-graph">
@@ -1110,17 +1104,14 @@
                                 d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                         </svg>
                     </div>
-                    <button class="btn" onclick="showPage('settings')">← Back</button>
+                    <button class="btn" onclick="showPage('settings')">Back</button>
                 </div>
             </div>
             <div id="pidZones"></div>
         </div>
     </div>
 
-
-
     <script>
-
         let deferredPrompt; // Stores the install event if it fires
 
         // Capture the event if it does fire (for mobile/reliability)
@@ -2196,8 +2187,6 @@
             state.dataCollectionPaused = !state.dataCollectionPaused;
             const btn = document.getElementById('pauseBtn');
             btn.textContent = state.dataCollectionPaused ? 'Resume' : 'Pause';
-            btn.classList.toggle('btn-danger', state.dataCollectionPaused);
-            btn.classList.toggle('btn-success', !state.dataCollectionPaused);
         }
 
         function saveData() {
