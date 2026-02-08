@@ -196,8 +196,10 @@
         }
 
         .status-card.ready {
-            border-color: #16a34a;
-            background: #0f2f1f;
+            /* border-color: #16a34a;
+            background: #0f2f1f; */
+            border-color: #333;
+            background: #1a1a1a;
         }
 
         .status-card.heating {
@@ -261,11 +263,15 @@
         .temp-bar {
             position: relative;
             width: 100%;
-            height: 6px;
-            margin-top: 6px;
+            height: var(--temp-bar-h);
+            margin-top: 18px;
             background: #2a2a2a;
             border-radius: 3px;
-            overflow: hidden;
+            overflow: visible;
+        }
+
+        :root {
+            --temp-bar-h: 4px;
         }
 
         .temp-bar-fill {
@@ -274,22 +280,23 @@
             top: 0;
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            background: linear-gradient(90deg, #31127e, #3e70ba);
             transition: width 0.25s ease;
         }
 
         .temp-bar-set {
             position: absolute;
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: #ffffff;
-            opacity: 0.9;
-            pointer-events: none;
+            left: 0;
+            top: 50%;
+            width: 10px;
+            height: calc(var(--temp-bar-h) * 3);
+            transform: translateY(-50%);
+            background: #0aab0d;
+            box-shadow: 0 0 12px rgba(167, 198, 10, 0.9);
+            z-index: 3;
         }
 
         .central-panel {
-            /* Removed background, border, border-radius, and padding */
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
@@ -315,8 +322,15 @@
         .left-readings {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
             flex: 1;
+        }
+
+        .pressure-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4em;
+            line-height: 1;
         }
 
         .reading-item {
@@ -370,14 +384,26 @@
         }
 
         .container.ble-disconnected .temp-unit {
-            color: #777 !important;
+            color: #666 !important;
         }
 
         .container.ble-disconnected .status-label {
-            color: #777 !important;
+            color: #666 !important;
         }
 
         .container.ble-disconnected #shotTime {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .reading-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .pressure-unit {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .shot-time {
             color: #666 !important;
         }
 
@@ -677,16 +703,144 @@
 
         .pressure-display {
             display: flex;
-            align-items: baseline;
-            gap: 0.1em;
+            align-items: flex-end;
+            gap: 0.5em;
+            line-height: 1;
         }
 
         .pressure-unit {
             font-family: Arial, sans-serif;
-            font-size: 1.5em;
-            /* same scale as temp unit */
+            font-size: clamp(1.8rem, 5vw, 2.2rem);
             color: #9a9a9a;
             opacity: 0.8;
+            margin-bottom: 0.0em;
+        }
+
+        /* Add these CSS rules to the <style> block (anywhere after existing rules) */
+
+        #toastContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10000;
+            gap: 12px;
+        }
+
+        .toast {
+            background: #333;
+            color: #fff;
+            padding: 16px 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+            max-width: 90%;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: auto;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-info {
+            background: #1c4aae;
+        }
+
+        .toast-success {
+            background: #16a34a;
+        }
+
+        .toast-error {
+            background: #dc2626;
+        }
+
+        /* Add this rule to the <style> block (anywhere after the existing .temp-bar-set rule) */
+
+        .temp-bar-set.off-target {
+            background: #dc2626 !important;
+            box-shadow: 0 0 12px rgba(220, 38, 38, 0.9) !important;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Add this rule to the <style> block (anywhere after .status-label) */
+
+        .setpoint-display {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 1rem;
+            /* Small but readable */
+            font-family: monospace;
+            color: #9a9a9a;
+            letter-spacing: 0.6px;
+            opacity: 0.9;
+            pointer-events: none;
+            /* Doesn't block clicks/taps */
+            transition: color 0.3s ease;
+        }
+
+        /* Dim when disconnected (matches labels/units) */
+        .container.ble-disconnected .setpoint-display {
+            color: #777 !important;
+        }
+
+        /* Replace the previous .setpoint-display rule with these new rules */
+
+        .setpoint-input {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 82px;
+            /* Fixed width for stable layout */
+            font-size: 1rem;
+            font-family: monospace;
+            color: #9a9a9a;
+            background: transparent;
+            border: none;
+            text-align: right;
+            opacity: 0.9;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        /* Normal state: looks like static text */
+        .setpoint-input {
+            -moz-appearance: textfield;
+            /* Remove spinner arrows on Firefox */
+        }
+
+        /* Remove spinner arrows on Chrome/Safari/Edge */
+        .setpoint-input::-webkit-inner-spin-button,
+        .setpoint-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Focused/editing state: obvious input field */
+        .setpoint-input:focus {
+            outline: none;
+            color: #fff;
+            background: #333;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+        }
+
+        /* Disconnected: disabled look */
+        .container.ble-disconnected .setpoint-input {
+            color: #777 !important;
+            opacity: 0.6;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -718,6 +872,7 @@
             <div class="status-grid">
 
                 <div class="status-card" id="brewStatus">
+                    <input type="number" class="setpoint-input" id="brewSetpointInput" step="0.1" min="0" max="100">
                     <div class="status-temp-wrap">
                         <div class="status-temp">
                             <span class="temp-value" id="brewTempValue">0.0</span>
@@ -731,21 +886,8 @@
                     <div class="status-label">Brew</div>
                 </div>
 
-                <div class="status-card" id="steamStatus">
-                    <div class="status-temp-wrap">
-                        <div class="status-temp">
-                            <span class="temp-value" id="steamTempValue">0.0</span>
-                            <span class="temp-unit" id="steamTempUnit">°C</span>
-                        </div>
-                        <div class="temp-bar">
-                            <div class="temp-bar-fill" id="steamTempBar"></div>
-                            <div class="temp-bar-set" id="steamTempSet"></div>
-                        </div>
-                    </div>
-                    <div class="status-label">Steam</div>
-                </div>
-
                 <div class="status-card" id="groupStatus">
+                    <input type="number" class="setpoint-input" id="groupSetpointInput" step="0.1" min="0" max="98">
                     <div class="status-temp-wrap">
                         <div class="status-temp">
                             <span class="temp-value" id="groupTempValue">0.0</span>
@@ -757,6 +899,21 @@
                         </div>
                     </div>
                     <div class="status-label">Group</div>
+                </div>
+
+                <div class="status-card" id="steamStatus">
+                    <input type="number" class="setpoint-input" id="steamSetpointInput" step="0.1" min="0" max="140">
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="steamTempValue">0.0</span>
+                            <span class="temp-unit" id="steamTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="steamTempBar"></div>
+                            <div class="temp-bar-set" id="steamTempSet"></div>
+                        </div>
+                    </div>
+                    <div class="status-label">Steam</div>
                 </div>
 
             </div>
@@ -929,10 +1086,8 @@
             console.log('Install prompt ready'); // Check DevTools Console
         });
 
-        // Main install function for the button
         function triggerInstall() {
             if (deferredPrompt) {
-                // Native prompt if available
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choice) => {
                     if (choice.outcome === 'accepted') {
@@ -941,12 +1096,10 @@
                     deferredPrompt = null;
                 });
             } else {
-                // Fallback: Show instructions if no prompt (common on desktop)
-                alert('To install:\n\nOn desktop Chrome: Click the three dots menu (⋮) → Save and share → Install page as app\n\nOn mobile: Tap Share → Add to Home Screen');
+                showToast('To install the app:<br><br>• On desktop Chrome/Edge: Click the menu (⋮) → "Install page as app"<br><br>• On mobile: Tap Share → "Add to Home Screen"', 15000, 'info');
             }
         }
 
-        // Optional: Hide button if already installed (detect via standalone mode)
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
             document.getElementById('installButton').style.display = 'none';
         }
@@ -1100,7 +1253,7 @@
         }
         async function connectBLE(isReconnect = false) {
             if (!navigator.bluetooth) {
-                alert('Web Bluetooth not supported');
+                showToast('Web Bluetooth is not supported in this browser.', 8000, 'error');
                 return;
             }
 
@@ -1145,6 +1298,8 @@
             }
         }
 
+        // Replace the entire handleDisconnect function with this updated version
+
         function handleDisconnect() {
             console.warn('BLE disconnected');
 
@@ -1159,15 +1314,13 @@
             updateBLEUI();
             resetLiveData();
 
-            // ❗ DO NOT wipe device on manual disconnect
             if (manualDisconnect) {
                 manualDisconnect = false;
                 return;
             }
 
-            // Auto reconnect only if unexpected
             reconnectAttempts = 0;
-            attemptReconnect();
+            reconnectTimer = setTimeout(attemptReconnect, 10000); // ← 10-second cooldown before first reconnect attempt
         }
 
         function updateBLEUI(reconnecting = false) {
@@ -1182,7 +1335,7 @@
                     btn.classList.add('btn-danger');
                     btn.classList.remove('btn-primary');
                 } else if (reconnecting) {
-                    btn.textContent = 'Reconnecting…';
+                    btn.textContent = 'Connecting…';
                     btn.classList.remove('btn-danger');
                     btn.classList.add('btn-primary');
                 } else {
@@ -1196,6 +1349,9 @@
                 ind.classList.toggle('connected', connected);
                 ind.classList.toggle('disconnected', !connected);
             });
+
+            const container = document.querySelector('.container');
+            container.classList.toggle('ble-disconnected', !connected);
         }
 
         function handleBLEData(event) {
@@ -1268,12 +1424,13 @@
             // Quick UI refresh (add your existing update calls here)
             updateDisplay();  // or call your individual element updates
         }
+
         async function sendBLECommand(command) {
             if (!state.characteristic) return;
 
             try {
                 const encoder = new TextEncoder();
-                await state.characteristic.writeValue(encoder.encode(JSON.stringify(command)));
+                await state.characteristic.writeValueWithoutResponse(encoder.encode(JSON.stringify(command)));
                 console.log('Sent command:', command);
             } catch (error) {
                 console.error('BLE write failed:', error);
@@ -1282,7 +1439,7 @@
 
         function showPage(pageName) {
             if (pageName !== 'main' && !state.bleConnected) {
-                alert('Please connect to the device via BLE to access this page.');
+                showToast('Please connect to the device via BLE to access this page.', 5000, 'info');
                 return;
             }
 
@@ -1366,13 +1523,33 @@
             document.getElementById('pressureUnit').textContent = state.pressureIsBar ? 'bar' : 'psi';
 
             document.getElementById('brewSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1) + ' ' + tempUnit;
+                (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1);
             document.getElementById('steamSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1) + ' ' + tempUnit;
+                (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1);
             document.getElementById('groupSetpointDisplay').textContent =
-                (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1) + ' ' + tempUnit;
+                (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1);
 
-            // Brew: 0–110
+            const displayPrecision = 1;
+
+            const inputs = {
+                brew: document.getElementById('brewSetpointInput'),
+                steam: document.getElementById('steamSetpointInput'),
+                group: document.getElementById('groupSetpointInput')
+            };
+
+            Object.keys(inputs).forEach(zone => {
+                const el = inputs[zone];
+                if (!el) return;
+
+                const rawSetpoint = state[zone + 'Setpoint'];
+                const displayedValue = (state.useFahrenheit ? cToF(rawSetpoint) : rawSetpoint)
+                    .toFixed(displayPrecision);
+
+                if (document.activeElement !== el) {
+                    el.value = displayedValue;
+                }
+            });
+
             updateTempBar(
                 state.brewTemp,
                 state.brewSetpoint,
@@ -1382,25 +1559,36 @@
                 'brewTempSet'
             );
 
-            // Steam: 0–125
             updateTempBar(
                 state.steamTemp,
                 state.steamSetpoint,
                 0,
-                125,
+                150,
                 'steamTempBar',
                 'steamTempSet'
             );
 
-            // Group: 0–100
             updateTempBar(
                 state.groupTemp,
                 state.groupSetpoint,
                 0,
-                100,
+                110,
                 'groupTempBar',
                 'groupTempSet'
             );
+
+            const zones = ['brew', 'steam', 'group'];
+
+            zones.forEach(zone => {
+                const currentTemp = state[zone + 'Temp'];
+                const setpoint = state[zone + 'Setpoint'];
+                const diff = Math.abs(currentTemp - setpoint);
+
+                const setEl = document.getElementById(zone + 'TempSet');
+                if (setEl) {
+                    setEl.classList.toggle('off-target', diff > 3);
+                }
+            });
 
         }
 
@@ -1436,9 +1624,9 @@
         let lastTemp = null;
         let lastPressure = null;
 
-        setInterval(() => {
-            if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
-        }, 3000);
+        // setInterval(() => {
+        //     if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
+        // }, 2000);
 
         setInterval(() => {
             if (!state.bleConnected || !state.hasReceivedFirstData) return;
@@ -1948,8 +2136,7 @@
 
         function saveData() {
             if (state.tempHistory.length === 0) {
-                alert('No data to save yet.');
-                return;
+                showToast('No data to save yet.', 4000, 'info'); return;
             }
 
             const data = {
@@ -1982,6 +2169,7 @@
 
             drawMiniGraph();
             drawFullGraph();
+            showToast('Graph data cleared.', 4000, 'success');
             document.getElementById('sampleCount').textContent = '0';
         }
 
@@ -2014,9 +2202,9 @@
                     drawFullGraph();
                     document.getElementById('sampleCount').textContent = state.tempHistory.length;
 
-                    alert('Data loaded successfully (' + state.tempHistory.length + ' samples).');
+                    showToast('Data loaded successfully!<br>' + state.tempHistory.length + ' samples', 5000, 'success');
                 } catch (err) {
-                    alert('Failed to load file: ' + err.message);
+                    showToast('Failed to load file:<br>' + err.message, 8000, 'error');
                 }
             };
             reader.readAsText(file);
@@ -2165,6 +2353,7 @@
             });
 
             renderPIDSettings();
+            showToast('All PID gains reset to factory defaults.', 5000, 'success');
         }
 
         function setupGraphObservers() {
@@ -2236,7 +2425,81 @@
             document.getElementById(setId).style.left = setPct + '%';
         }
 
+        function showToast(message, duration = 5000, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = message.replace(/\n/g, '<br>');
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 400);
+            }, duration);
+        }
+
+        function initSetpointInputs() {
+            const zones = {
+                brew: { el: document.getElementById('brewSetpointInput'), min: 80, max: 100 },
+                steam: { el: document.getElementById('steamSetpointInput'), min: 110, max: 140 },
+                group: { el: document.getElementById('groupSetpointInput'), min: 80, max: 98 }
+            };
+
+            Object.keys(zones).forEach(zone => {
+                const { el, min, max } = zones[zone];
+                if (!el) return;
+
+                // Shared handler for change/blur (triggers on enter, tab, or click away)
+                const handler = () => {
+                    if (!state.bleConnected) return;
+
+                    let rawValue = parseFloat(el.value);
+                    if (isNaN(rawValue)) {
+                        updateSmallSetpoints(); // Reset to current if invalid
+                        return;
+                    }
+
+                    // Convert back to °C if currently in °F
+                    let valueInC = state.useFahrenheit ? (rawValue - 32) * 5 / 9 : rawValue;
+
+                    // Clamp to allowed range
+                    valueInC = Math.max(min, Math.min(max, valueInC));
+                    valueInC = Math.round(valueInC * 10) / 10; // 0.1 precision
+
+                    // Update state and send to device
+                    state[zone + 'Setpoint'] = valueInC;
+                    sendBLECommand({ type: 'setpoint', zone: zone, value: valueInC });
+
+                    // Refresh UI (updates input with clamped/converted value + unit changes)
+                    updateDisplay();
+                };
+
+                el.addEventListener('change', handler);
+                el.addEventListener('blur', handler);
+
+                // Optional: allow Enter key to confirm (change already fires on Enter)
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        el.blur(); // Trigger blur handler
+                    }
+                });
+            });
+        }
+        initSetpointInputs();
+
     </script>
+
+    <div id="toastContainer"></div>
 
 </body>
 
