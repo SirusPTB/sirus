@@ -153,11 +153,11 @@
         }
 
         .ble-indicator.disconnected {
-            color: #666;
+            color: #000000;
         }
 
         .ble-indicator.connected {
-            color: #0051ff;
+            color: #000000;
         }
 
         .status-grid {
@@ -846,7 +846,7 @@
         .ble-connected-label {
             display: none;
             /* hidden by default */
-            color: #16a34a;
+            color: #2ac54c;
             font-weight: bold;
             font-size: 1.1rem;
             align-self: center;
@@ -854,7 +854,7 @@
         }
 
         .ble-indicator.connected {
-            cursor: pointer;
+            /* cursor: pointer; */
         }
 
         @keyframes pulse-glow {
@@ -1401,13 +1401,13 @@
                 ind.classList.toggle('connected', connected);
                 ind.classList.toggle('disconnected', !connected);
 
-                if (connected) {
-                    ind.title = 'Connected – Click to disconnect';
-                    ind.onclick = toggleBLE;  // Click icon to disconnect
-                } else {
-                    ind.title = 'Bluetooth Status';
-                    ind.onclick = null;
-                }
+                // if (connected) {
+                //     ind.title = 'Connected – Click to disconnect';
+                //     ind.onclick = toggleBLE;  // Click icon to disconnect
+                // } else {
+                //     ind.title = 'Bluetooth Status';
+                //     ind.onclick = null;
+                // }
             });
 
             // Grey overlay for values when disconnected
