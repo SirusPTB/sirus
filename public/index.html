@@ -767,8 +767,8 @@
         /* Add this rule to the <style> block (anywhere after the existing .temp-bar-set rule) */
 
         .temp-bar-set.off-target {
-            background: #dc2626 !important;
-            box-shadow: 0 0 12px rgba(220, 38, 38, 0.9) !important;
+            background: #dc7226 !important;
+            box-shadow: 0 0 12px rgba(252, 148, 45, 0.9) !important;
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
 
@@ -877,12 +877,13 @@
             width: 10px;
             height: 10px;
             margin-right: 10px;
-            /* space between circle and text */
             background-color: #16a34a;
-            border-radius: 60%;
+            border-radius: 50%;
             vertical-align: middle;
-            box-shadow: 0 0 10px #16a34a;
+            box-shadow: 0 0 8px #16a34a;
             animation: pulse-glow 2s ease-in-out infinite;
+            transform: translateY(-2px);
+            /* moves the circle up slightly */
         }
     </style>
 </head>
@@ -1053,7 +1054,7 @@
                 <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
                     onclick="showPage('pid')">PID Settings</button>
                 <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
-                    onclick="showPage('graph')">📈 Full Graph</button>
+                    onclick="showPage('graph')">Full Graph</button>
             </div>
         </div>
 
@@ -1068,9 +1069,9 @@
                         </svg>
                     </div>
                     <button class="btn btn-success" id="pauseBtn" onclick="togglePause()">Pause</button>
-                    <button class="btn" onclick="saveData()">💾 Save</button>
-                    <button class="btn" onclick="document.getElementById('loadFileInput').click()">📁 Load</button>
-                    <button class="btn btn-danger" onclick="clearData()">🗑️ Clear</button>
+                    <button class="btn" onclick="saveData()">Save</button>
+                    <button class="btn" onclick="document.getElementById('loadFileInput').click()">Load</button>
+                    <button class="btn btn-danger" onclick="clearData()">Clear</button>
                     <button class="btn" onclick="showPage('main')">← Back</button>
                 </div>
             </div>
