@@ -1158,7 +1158,6 @@
             return prev == null ? next : prev + alpha * (next - prev);
         }
 
-        /////////////////////////
         function attemptReconnect() {
             if (manualDisconnect) return;
             if (!state.bleDevice) return;
@@ -1171,12 +1170,15 @@
 
             reconnectTimer = setTimeout(async () => {
                 reconnectAttempts++;
-                updateBLEUI(true); // "Reconnecting…"
+                updateBLEUI(true); // Show "Reconnecting…"
 
                 try {
-                    await connectBLE(true);
-                } catch {
-                    attemptReconnect(); // next backoff
+                    await connectBLE();
+                } catch (e) {
+                    // Auto-reconnect failed (likely permanent loss)
+                    state.bleDevice = null;
+                    showToast('Auto-reconnect failed.<br>Click "Connect BLE" to pair the device again.', 12000, 'error');
+                    updateBLEUI(); // Back to normal "Connect BLE" button
                 }
             }, delay);
         }
@@ -1199,9 +1201,6 @@
             state.bleConnected = false;
         }
 
-
-        /////////////////////////
-
         async function toggleBLE() {
             if (state.bleConnected) {
                 manualDisconnect = true;
@@ -1217,7 +1216,32 @@
             } else {
                 manualDisconnect = false;
                 reconnectAttempts = 0;
-                await connectBLE();
+
+                let connected = false;
+
+                // Try silent reconnect if we have a previous device
+                if (state.bleDevice) {
+                    try {
+                        await connectBLE();
+                        connected = true;
+                    } catch (e) {
+                        console.log('Silent reconnect failed – forgetting old device');
+                        state.bleDevice = null; // Clear so next attempt prompts
+                    }
+                }
+
+                // If silent failed or no device → prompt for new pairing (user gesture exists here)
+                if (!connected) {
+                    try {
+                        await connectBLE();
+                    } catch (e) {
+                        if (e.name === 'NotFoundError') { // User cancelled pairing dialog
+                            showToast('Pairing cancelled.', 5000, 'info');
+                        } else {
+                            showToast('Failed to connect. Check device power and range, then try again.', 8000, 'error');
+                        }
+                    }
+                }
             }
         }
 
@@ -1251,50 +1275,60 @@
             drawFullGraph();
             updateDisplay();  // or your existing UI refresh
         }
-        async function connectBLE(isReconnect = false) {
+
+        async function connectBLE() {
             if (!navigator.bluetooth) {
-                showToast('Web Bluetooth is not supported in this browser.', 8000, 'error');
+                showToast('Web Bluetooth not supported in this browser.', 8000, 'error');
                 return;
             }
 
             try {
                 let device = state.bleDevice;
 
-                // FIRST connection (user click only)
-                if (!device || !isReconnect) {
+                // If no device stored → must prompt (only happens on manual connect, since auto checks !device and skips)
+                if (!device) {
                     device = await navigator.bluetooth.requestDevice({
                         filters: [{ name: 'LVR-1' }],
                         optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
                     });
 
+                    // Clean up old listener if switching devices
+                    if (state.bleDevice) {
+                        state.bleDevice.removeEventListener('gattserverdisconnected', handleDisconnect);
+                    }
+
                     state.bleDevice = device;
                     device.addEventListener('gattserverdisconnected', handleDisconnect);
                 }
 
+                // Re/connect the GATT server
                 const server = await device.gatt.connect();
-                const service = await server.getPrimaryService(
-                    '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
-                );
-                const characteristic = await service.getCharacteristic(
-                    'beb5483e-36e1-4688-b7f5-ea07361b26a8'
-                );
+
+                // Safety check: some browsers resolve connect() but connected remains false
+                if (!device.gatt.connected) {
+                    throw new Error('GATT connection not established');
+                }
+
+                const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+                const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
 
                 await characteristic.startNotifications();
-                characteristic.addEventListener(
-                    'characteristicvaluechanged',
-                    handleBLEData
-                );
+                characteristic.addEventListener('characteristicvaluechanged', handleBLEData);
 
                 state.characteristic = characteristic;
                 state.bleConnected = true;
-
                 reconnectAttempts = 0;
                 updateBLEUI();
+                state.lastDataTime = Date.now();
+                startWatchdog();
 
                 console.log('BLE connected');
             } catch (err) {
                 console.warn('BLE connect failed:', err);
-                throw err;
+                state.bleConnected = false;
+                state.characteristic = null;
+                updateBLEUI();
+                throw err; // Re-throw for callers to handle
             }
         }
 
