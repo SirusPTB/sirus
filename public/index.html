@@ -1361,7 +1361,7 @@
             state.tempHistory = [];
             state.pressureHistory = [];
             document.getElementById('sampleCount').textContent = '0';
-
+            miniHoveredIndex = -1;
             drawMiniGraph();
             drawFullGraph();
             updateDisplay();  // or your existing UI refresh
@@ -1463,31 +1463,44 @@
                 pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
             });
 
-            // Shot timer sync
+            // Shot timer sync + graph control
             if ('shotRunning' in data && 'shotSeconds' in data) {
+
+                const wasRunning = state.shotRunning;
                 state.shotRunning = data.shotRunning;
+
                 const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
                 const shotElem = document.getElementById('shotTime');
                 shotElem.textContent = String(secs).padStart(2, '0');
                 shotElem.classList.toggle('running', state.shotRunning);
                 shotElem.classList.toggle('stopped', !state.shotRunning);
+
+                if (!wasRunning && state.shotRunning) {
+                    state.tempHistory = [];
+                    state.pressureHistory = [];
+                    miniHoveredIndex = -1;
+                    drawMiniGraph();
+                }
+
             }
 
-            // Graph history (if not paused)
-            if (!state.dataCollectionPaused) {
+
+            // Graph history — ONLY during shot
+            if (!state.dataCollectionPaused && state.shotRunning) {
                 state.tempHistory.push(state.brewTemp);
                 state.pressureHistory.push(state.groupPressure);
+
                 if (state.tempHistory.length > 600) {
                     state.tempHistory.shift();
                     state.pressureHistory.shift();
                 }
+
                 drawMiniGraph();
                 drawFullGraph();
                 document.getElementById('sampleCount').textContent = state.tempHistory.length;
             }
 
-            // Quick UI refresh (add your existing update calls here)
-            updateDisplay();  // or call your individual element updates
+            updateDisplay();  
         }
 
         async function sendBLECommand(command) {
