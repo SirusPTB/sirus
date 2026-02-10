@@ -32,6 +32,34 @@
             display: none;
         }
 
+        #installButton {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #16a34a;
+            border: none;
+            color: #fff;
+            padding: 0.9rem 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #installButton:hover {
+            background: #15803d;
+        }
+
+        @media (max-width: 600px) {
+            #installButton {
+                bottom: 70px;
+                right: 15px;
+                padding: 0.8rem 1.1rem;
+                font-size: 0.9rem;
+            }
+        }
+
         @font-face {
             font-family: 'DSEG7Classic';
             src: url('DSEG7Classic-Bold.woff2') format('woff2'),
@@ -1244,6 +1272,9 @@
             e.preventDefault();
             deferredPrompt = e;
             console.log('Install prompt ready'); // Check DevTools Console
+            // Show the install button now that we can actually install
+            const installBtn = document.getElementById('installButton');
+            if (installBtn) installBtn.style.display = 'block';
         });
 
         function triggerInstall() {
@@ -1252,6 +1283,9 @@
                 deferredPrompt.userChoice.then((choice) => {
                     if (choice.outcome === 'accepted') {
                         console.log('App installed');
+                        // Hide the button after successful installation
+                        const installBtn = document.getElementById('installButton');
+                        if (installBtn) installBtn.style.display = 'none';
                     }
                     deferredPrompt = null;
                 });
