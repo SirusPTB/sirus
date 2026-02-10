@@ -1619,6 +1619,15 @@
                 pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
             });
 
+            // If units changed from device, update y-axis labels and redraw graphs
+            if ('useFahrenheit' in data || 'pressureIsBar' in data) {
+                updateYAxisScaleInputs();
+                drawMiniGraph();
+                if (document.getElementById('graphPage').classList.contains('active')) {
+                    drawFullGraph();
+                }
+            }
+
             // Shot timer sync + graph control
             if ('shotRunning' in data && 'shotSeconds' in data) {
 
@@ -1698,6 +1707,7 @@
             }
 
             if (pageName === 'graph') {
+                updateYAxisScaleInputs(); // Ensure unit labels and values are current
                 drawFullGraph();
             }
         }
@@ -2201,19 +2211,28 @@
         }
 
         function updateYAxisScaleInputs() {
-            // Update unit labels
+            // Update unit labels - do this FIRST, independent of input elements
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
             const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
             
+            // Always update all four unit labels immediately
             const tempScaleUnit = document.getElementById('tempScaleUnit');
             const tempScaleUnit2 = document.getElementById('tempScaleUnit2');
             const pressScaleUnit = document.getElementById('pressScaleUnit');
             const pressScaleUnit2 = document.getElementById('pressScaleUnit2');
             
-            if (tempScaleUnit) tempScaleUnit.textContent = tempUnit;
-            if (tempScaleUnit2) tempScaleUnit2.textContent = tempUnit;
-            if (pressScaleUnit) pressScaleUnit.textContent = pressureUnit;
-            if (pressScaleUnit2) pressScaleUnit2.textContent = pressureUnit;
+            if (tempScaleUnit) {
+                tempScaleUnit.textContent = tempUnit;
+            }
+            if (tempScaleUnit2) {
+                tempScaleUnit2.textContent = tempUnit;
+            }
+            if (pressScaleUnit) {
+                pressScaleUnit.textContent = pressureUnit;
+            }
+            if (pressScaleUnit2) {
+                pressScaleUnit2.textContent = pressureUnit;
+            }
             
             // Update input values to display in current units
             const tempMinInput = document.getElementById('tempMinInput');
