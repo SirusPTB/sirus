@@ -11,9 +11,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="LVR-1">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png"> <!-- Assume icons are created -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon.ico">
+
     <meta name="mobile-web-app-capable" content="yes">
     <style>
+        /* Match full graph panel frame to other panels */
+        .graph-container.full-graph {
+            border: 2px solid #444;
+            border-radius: 16px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -887,6 +895,95 @@
             margin-top: 0;
             /* match other panels */
         }
+
+        /* Y-axis scale controls */
+        .y-axis-controls {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border-top: 1px solid #333;
+        }
+
+        .axis-control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+
+        .axis-control-group label {
+            font-size: 0.9rem;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        .axis-control-group input[type="number"] {
+            width: 70px;
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+
+        /* Remove spinner arrows on Chrome/Safari/Edge */
+        .axis-control-group input[type="number"]::-webkit-inner-spin-button,
+        .axis-control-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .axis-control-group input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .axis-control-group .unit-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            min-width: 30px;
+        }
+
+        .axis-control-group.temp-control {
+            border-color: rgb(194, 58, 58);
+        }
+
+        .axis-control-group.temp-control label {
+            color: rgb(194, 58, 58);
+        }
+
+        .axis-control-group.pressure-control {
+            border-color: #445566;
+        }
+
+        .axis-control-group.pressure-control label {
+            color: #7799bb;
+        }
+
+        .reset-scale-btn {
+            background: #444;
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .reset-scale-btn:hover {
+            background: #555;
+        }
     </style>
 </head>
 
@@ -985,11 +1082,11 @@
                 <canvas id="miniGraph"></canvas>
                 <div class="graph-legend">
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #f00;"></div>
+                        <div class="legend-color" style="background: rgb(194, 58, 58);"></div>
                         <span>Brew Temp</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #00f;"></div>
+                        <div class="legend-color" style="background: #7799bb;"></div>
                         <span>Group Pressure</span>
                     </div>
                 </div>
@@ -1077,25 +1174,45 @@
                     <button class="btn" onclick="showPage('main')">Back</button>
                 </div>
             </div>
+
             <div class="graph-container full-graph">
                 <canvas id="fullGraph"></canvas>
                 <div class="graph-legend">
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #f00;"></div>
+                        <div class="legend-color" style="background: rgb(194, 58, 58)"></div>
                         <span>Brew Temperature</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background: #00f;"></div>
+                        <div class="legend-color" style="background: #5588aa;"></div>
                         <span>Group Pressure</span>
                     </div>
                 </div>
-                <div class="graph-stats">
-                    <div class="stat-item">
-                        <span>Samples:</span>
-                        <span class="stat-value" id="sampleCount">0</span>
-                    </div>
-                </div>
+
                 <div class="graph-tooltip"></div>
+
+                <div class="y-axis-controls">
+                    <div class="axis-control-group temp-control">
+                        <label>Temp Min:</label>
+                        <input type="number" id="tempMinInput" step="1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="tempScaleUnit">°C</span>
+                    </div>
+                    <div class="axis-control-group temp-control">
+                        <label>Temp Max:</label>
+                        <input type="number" id="tempMaxInput" step="1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="tempScaleUnit2">°C</span>
+                    </div>
+                    <div class="axis-control-group pressure-control">
+                        <label>Press Min:</label>
+                        <input type="number" id="pressMinInput" step="0.1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="pressScaleUnit">bar</span>
+                    </div>
+                    <div class="axis-control-group pressure-control">
+                        <label>Press Max:</label>
+                        <input type="number" id="pressMaxInput" step="0.1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="pressScaleUnit2">bar</span>
+                    </div>
+                    <button class="reset-scale-btn" onclick="resetYAxisScale()">Reset Scale</button>
+                </div>
             </div>
 
             <input type="file" id="loadFileInput" accept="application/json,.json" style="display:none;">
@@ -1178,7 +1295,12 @@
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
                 group: { consKp: 1.40, consKi: 0.03, consKd: 0.80, aggKp: 5.00, aggKi: 0.12, aggKd: 2.00 }
-            }
+            },
+            // Custom Y-axis scales (stored in Celsius and bar)
+            customTempMin: null,
+            customTempMax: null,
+            customPressMin: null,
+            customPressMax: null
         };
 
         let miniHoveredIndex = -1;
@@ -1497,10 +1619,9 @@
 
                 drawMiniGraph();
                 drawFullGraph();
-                document.getElementById('sampleCount').textContent = state.tempHistory.length;
             }
 
-            updateDisplay();  
+            updateDisplay();
         }
 
         async function sendBLECommand(command) {
@@ -1557,6 +1678,7 @@
                 sendBLECommand({ type: 'unit', unitType: 'temp', value: state.useFahrenheit });
             }
             updateDisplay();
+            updateYAxisScaleInputs();
             drawMiniGraph();
             if (document.getElementById('graphPage').classList.contains('active')) {
                 drawFullGraph();
@@ -1570,6 +1692,7 @@
                 sendBLECommand({ type: 'unit', unitType: 'pressure', value: state.pressureIsBar });
             }
             updateDisplay();
+            updateYAxisScaleInputs();
             drawMiniGraph();
             if (document.getElementById('graphPage').classList.contains('active')) {
                 drawFullGraph();
@@ -1950,7 +2073,7 @@
             ctx.lineTo(padding, height - padding);
             ctx.stroke();
 
-            ctx.strokeStyle = '#008';
+            ctx.strokeStyle = '#445566';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width - padding, padding);
@@ -1970,7 +2093,7 @@
             }
             ctx.fillText(tempUnit, padding - 8, padding + 10);
 
-            ctx.fillStyle = '#88f';
+            ctx.fillStyle = '#7799bb';
             ctx.textAlign = 'left';
             for (let i = 0; i <= miniTicks; i++) {
                 const fraction = i / miniTicks;
@@ -1994,8 +2117,8 @@
                 ctx.stroke();
             };
 
-            plot(state.tempHistory, '#f00', tempMin, tempRange);
-            plot(state.pressureHistory, '#00f', pressureMin, pressureRange);
+            plot(state.tempHistory, 'rgb(194, 58, 58)', tempMin, tempRange);
+            plot(state.pressureHistory, '#5588aa', pressureMin, pressureRange);
 
             if (miniHoveredIndex >= 0 && miniHoveredIndex < state.tempHistory.length) {
                 const index = miniHoveredIndex;
@@ -2012,7 +2135,7 @@
 
                 const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
                 const yTemp = height - padding - fractionTemp * (height - padding * 2);
-                ctx.fillStyle = '#f00';
+                ctx.fillStyle = 'rgb(194, 58, 58)';
                 ctx.beginPath();
                 ctx.arc(x, yTemp, 5, 0, Math.PI * 2);
                 ctx.fill();
@@ -2022,7 +2145,7 @@
 
                 const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
                 const yPress = height - padding - fractionPress * (height - padding * 2);
-                ctx.fillStyle = '#00f';
+                ctx.fillStyle = '#5588aa';
                 ctx.beginPath();
                 ctx.arc(x, yPress, 5, 0, Math.PI * 2);
                 ctx.fill();
@@ -2035,6 +2158,146 @@
             ctx.font = '11px monospace';
             ctx.textAlign = 'center';
             ctx.fillText('Time →', width / 2, height - 6);
+        }
+
+        function updateYAxisScaleInputs() {
+            // Update unit labels
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            
+            document.getElementById('tempScaleUnit').textContent = tempUnit;
+            document.getElementById('tempScaleUnit2').textContent = tempUnit;
+            document.getElementById('pressScaleUnit').textContent = pressureUnit;
+            document.getElementById('pressScaleUnit2').textContent = pressureUnit;
+            
+            // Update input values to display in current units
+            const tempMinInput = document.getElementById('tempMinInput');
+            const tempMaxInput = document.getElementById('tempMaxInput');
+            const pressMinInput = document.getElementById('pressMinInput');
+            const pressMaxInput = document.getElementById('pressMaxInput');
+            
+            // Don't update if user is currently editing
+            if (document.activeElement !== tempMinInput) {
+                if (state.customTempMin !== null) {
+                    tempMinInput.value = state.useFahrenheit ? 
+                        Math.round(cToF(state.customTempMin)) : 
+                        Math.round(state.customTempMin);
+                } else {
+                    tempMinInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== tempMaxInput) {
+                if (state.customTempMax !== null) {
+                    tempMaxInput.value = state.useFahrenheit ? 
+                        Math.round(cToF(state.customTempMax)) : 
+                        Math.round(state.customTempMax);
+                } else {
+                    tempMaxInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== pressMinInput) {
+                if (state.customPressMin !== null) {
+                    pressMinInput.value = state.pressureIsBar ? 
+                        state.customPressMin.toFixed(1) : 
+                        (state.customPressMin * 14.5038).toFixed(0);
+                } else {
+                    pressMinInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== pressMaxInput) {
+                if (state.customPressMax !== null) {
+                    pressMaxInput.value = state.pressureIsBar ? 
+                        state.customPressMax.toFixed(1) : 
+                        (state.customPressMax * 14.5038).toFixed(0);
+                } else {
+                    pressMaxInput.value = '';
+                }
+            }
+        }
+
+        function resetYAxisScale() {
+            state.customTempMin = null;
+            state.customTempMax = null;
+            state.customPressMin = null;
+            state.customPressMax = null;
+            
+            document.getElementById('tempMinInput').value = '';
+            document.getElementById('tempMaxInput').value = '';
+            document.getElementById('pressMinInput').value = '';
+            document.getElementById('pressMaxInput').value = '';
+            
+            drawFullGraph();
+        }
+
+        function setupYAxisScaleInputs() {
+            const tempMinInput = document.getElementById('tempMinInput');
+            const tempMaxInput = document.getElementById('tempMaxInput');
+            const pressMinInput = document.getElementById('pressMinInput');
+            const pressMaxInput = document.getElementById('pressMaxInput');
+            
+            const handleTempMin = () => {
+                const val = parseFloat(tempMinInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to Celsius for storage
+                    state.customTempMin = state.useFahrenheit ? (val - 32) * 5 / 9 : val;
+                } else {
+                    state.customTempMin = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handleTempMax = () => {
+                const val = parseFloat(tempMaxInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to Celsius for storage
+                    state.customTempMax = state.useFahrenheit ? (val - 32) * 5 / 9 : val;
+                } else {
+                    state.customTempMax = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handlePressMin = () => {
+                const val = parseFloat(pressMinInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to bar for storage
+                    state.customPressMin = state.pressureIsBar ? val : val / 14.5038;
+                } else {
+                    state.customPressMin = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handlePressMax = () => {
+                const val = parseFloat(pressMaxInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to bar for storage
+                    state.customPressMax = state.pressureIsBar ? val : val / 14.5038;
+                } else {
+                    state.customPressMax = null;
+                }
+                drawFullGraph();
+            };
+            
+            // Add 'input' event for real-time updates as user types
+            tempMinInput.addEventListener('input', handleTempMin);
+            tempMinInput.addEventListener('change', handleTempMin);
+            tempMinInput.addEventListener('blur', handleTempMin);
+            
+            tempMaxInput.addEventListener('input', handleTempMax);
+            tempMaxInput.addEventListener('change', handleTempMax);
+            tempMaxInput.addEventListener('blur', handleTempMax);
+            
+            pressMinInput.addEventListener('input', handlePressMin);
+            pressMinInput.addEventListener('change', handlePressMin);
+            pressMinInput.addEventListener('blur', handlePressMin);
+            
+            pressMaxInput.addEventListener('input', handlePressMax);
+            pressMaxInput.addEventListener('change', handlePressMax);
+            pressMaxInput.addEventListener('blur', handlePressMax);
         }
 
         function drawFullGraph() {
@@ -2064,20 +2327,36 @@
             const plotWidth = width - paddingLeft - paddingRight;
             const plotHeight = height - paddingTop - paddingBottom;
 
-            let tempMin = Math.min(...state.tempHistory);
-            let tempMax = Math.max(...state.tempHistory);
-            let tempRange = tempMax - tempMin || 20;
-            let tempPad = tempRange * 0.05;
-            tempMin -= tempPad;
-            tempMax += tempPad;
+            // Use custom scales if set, otherwise auto-calculate
+            // Support setting min, max, or both independently
+            let tempMin, tempMax, tempRange;
+            
+            // First calculate auto values
+            let autoTempMin = Math.min(...state.tempHistory);
+            let autoTempMax = Math.max(...state.tempHistory);
+            let autoTempRange = autoTempMax - autoTempMin || 20;
+            let tempPad = autoTempRange * 0.05;
+            autoTempMin -= tempPad;
+            autoTempMax += tempPad;
+            
+            // Use custom or auto for each
+            tempMin = state.customTempMin !== null ? state.customTempMin : autoTempMin;
+            tempMax = state.customTempMax !== null ? state.customTempMax : autoTempMax;
             tempRange = tempMax - tempMin;
 
-            let pressureMin = Math.min(...state.pressureHistory);
-            let pressureMax = Math.max(...state.pressureHistory);
-            let pressureRange = pressureMax - pressureMin || 5;
-            let pressurePad = pressureRange * 0.1;
-            pressureMin = Math.max(0, pressureMin - pressurePad);
-            pressureMax += pressurePad;
+            let pressureMin, pressureMax, pressureRange;
+            
+            // First calculate auto values
+            let autoPressMin = Math.min(...state.pressureHistory);
+            let autoPressMax = Math.max(...state.pressureHistory);
+            let autoPressRange = autoPressMax - autoPressMin || 5;
+            let pressPad = autoPressRange * 0.1;
+            autoPressMin = Math.max(0, autoPressMin - pressPad);
+            autoPressMax += pressPad;
+            
+            // Use custom or auto for each
+            pressureMin = state.customPressMin !== null ? state.customPressMin : autoPressMin;
+            pressureMax = state.customPressMax !== null ? state.customPressMax : autoPressMax;
             pressureRange = pressureMax - pressureMin;
 
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
@@ -2120,7 +2399,7 @@
             ctx.lineTo(paddingLeft, height - paddingBottom);
             ctx.stroke();
 
-            ctx.strokeStyle = '#008';
+            ctx.strokeStyle = '#445566';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width - paddingRight, paddingTop);
@@ -2140,7 +2419,7 @@
             }
             ctx.fillText(tempUnit, paddingLeft - 10, paddingTop + 15);
 
-            ctx.fillStyle = '#88f';
+            ctx.fillStyle = '#7799bb';
             ctx.textAlign = 'left';
             for (let i = 0; i <= fullTicks; i++) {
                 const fraction = i / fullTicks;
@@ -2164,8 +2443,8 @@
                 ctx.stroke();
             };
 
-            plot(state.tempHistory, '#f00', tempMin, tempRange);
-            plot(state.pressureHistory, '#00f', pressureMin, pressureRange);
+            plot(state.tempHistory, 'rgb(194, 58, 58)', tempMin, tempRange);
+            plot(state.pressureHistory, '#5588aa', pressureMin, pressureRange);
 
             if (fullHoveredIndex >= 0 && fullHoveredIndex < state.tempHistory.length) {
                 const index = fullHoveredIndex;
@@ -2182,7 +2461,7 @@
 
                 const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
                 const yTemp = paddingTop + (1 - fractionTemp) * plotHeight;
-                ctx.fillStyle = '#f00';
+                ctx.fillStyle = 'rgb(194, 58, 58)';
                 ctx.beginPath();
                 ctx.arc(x, yTemp, 7, 0, Math.PI * 2);
                 ctx.fill();
@@ -2192,7 +2471,7 @@
 
                 const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
                 const yPress = paddingTop + (1 - fractionPress) * plotHeight;
-                ctx.fillStyle = '#00f';
+                ctx.fillStyle = '#5588aa';
                 ctx.beginPath();
                 ctx.arc(x, yPress, 7, 0, Math.PI * 2);
                 ctx.fill();
@@ -2201,7 +2480,6 @@
                 ctx.stroke();
             }
 
-            document.getElementById('sampleCount').textContent = state.tempHistory.length;
         }
 
         function togglePause() {
@@ -2276,8 +2554,6 @@
 
                     drawMiniGraph();
                     drawFullGraph();
-                    document.getElementById('sampleCount').textContent = state.tempHistory.length;
-
                     showToast('Data loaded successfully!<br>' + state.tempHistory.length + ' samples', 5000, 'success');
                 } catch (err) {
                     showToast('Failed to load file:<br>' + err.message, 8000, 'error');
@@ -2572,6 +2848,8 @@
             });
         }
         initSetpointInputs();
+        setupYAxisScaleInputs();
+        updateYAxisScaleInputs();
 
     </script>
 
