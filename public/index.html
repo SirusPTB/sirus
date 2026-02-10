@@ -1791,6 +1791,12 @@
                 }
             });
 
+            // Update unit toggle buttons to reflect current state
+            const tempUnitBtn = document.getElementById('tempUnitBtn');
+            const pressureUnitBtn = document.getElementById('pressureUnitBtn');
+            if (tempUnitBtn) tempUnitBtn.textContent = state.useFahrenheit ? '°F' : '°C';
+            if (pressureUnitBtn) pressureUnitBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
+
         }
 
         function updateBrightness(value) {
@@ -2165,16 +2171,25 @@
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
             const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
             
-            document.getElementById('tempScaleUnit').textContent = tempUnit;
-            document.getElementById('tempScaleUnit2').textContent = tempUnit;
-            document.getElementById('pressScaleUnit').textContent = pressureUnit;
-            document.getElementById('pressScaleUnit2').textContent = pressureUnit;
+            const tempScaleUnit = document.getElementById('tempScaleUnit');
+            const tempScaleUnit2 = document.getElementById('tempScaleUnit2');
+            const pressScaleUnit = document.getElementById('pressScaleUnit');
+            const pressScaleUnit2 = document.getElementById('pressScaleUnit2');
+            
+            if (tempScaleUnit) tempScaleUnit.textContent = tempUnit;
+            if (tempScaleUnit2) tempScaleUnit2.textContent = tempUnit;
+            if (pressScaleUnit) pressScaleUnit.textContent = pressureUnit;
+            if (pressScaleUnit2) pressScaleUnit2.textContent = pressureUnit;
             
             // Update input values to display in current units
             const tempMinInput = document.getElementById('tempMinInput');
             const tempMaxInput = document.getElementById('tempMaxInput');
             const pressMinInput = document.getElementById('pressMinInput');
             const pressMaxInput = document.getElementById('pressMaxInput');
+            
+            if (!tempMinInput || !tempMaxInput || !pressMinInput || !pressMaxInput) {
+                return; // Elements not yet loaded
+            }
             
             // Don't update if user is currently editing
             if (document.activeElement !== tempMinInput) {
