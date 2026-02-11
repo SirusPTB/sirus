@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Time Tracker - Cloud Edition</title>
+    
+    <!-- ✅ SUPABASE CLIENT LIBRARY - NEW! -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #121212;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #1e1e1e;
+            border-bottom: 2px solid #2196f3;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #2196f3;
+        }
+
+        .header p {
+            color: #b0b0b0;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        button:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4caf50;
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .user-info {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #333;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #b0b0b0;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #2196f3;
+            border-bottom-color: #2196f3;
+        }
+
+        .tab:hover {
+            color: #2196f3;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .admin-tab-content {
+            display: block;
+        }
+
+        .admin-tab-content.hidden {
+            display: none;
+        }
+
+        .time-entry {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #333;
+        }
+
+        .holiday-request {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #ff9800;
+            color: #000;
+        }
+
+        .status-approved {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-rejected {
+            background: #f44336;
+            color: white;
+        }
+
+        .admin-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #333;
+        }
+
+        .user-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .user-item {
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #333;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #5a1f1f;
+            color: #ffcccc;
+            border: 1px solid #8b3a3a;
+        }
+
+        .alert-success {
+            background: #1f4d1f;
+            color: #ccffcc;
+            border: 1px solid #3a8b3a;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Loading spinner */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕐 Work Time Tracker</h1>
+            <p>Track your hours and manage holiday requests - Cloud Edition ☁️</p>
+        </div>
+
+        <div class="content">
+            <!-- Login Screen -->
+            <div id="loginScreen">
+                <h2 style="margin-bottom: 20px;">Login</h2>
+                <div id="loginAlert" class="alert alert-error hidden"></div>
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" onchange="checkAutoLogin()">
+                </div>
+                <div class="form-group">
+                    <label for="loginPin">PIN (4 digits)</label>
+                    <input type="password" id="loginPin" maxlength="4" placeholder="Enter your 4-digit PIN" oninput="this.value = this.value.replace(/[^0-9]/g, ''); checkAutoLogin();">
+                </div>
+                <button onclick="login()">Login</button>
+            </div>
+
+            <!-- User Dashboard -->
+            <div id="userDashboard" class="hidden">
+                <div class="user-info">
+                    <div>
+                        <strong>Logged in as: <span id="currentUserName"></span></strong>
+                        <span id="adminBadge" class="hidden" style="margin-left: 10px; color: #2196f3;">(Admin)</span>
+                    </div>
+                    <button onclick="logout()" class="btn-secondary">Logout</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('timeLog')">Time Log</button>
+                    <button class="tab" onclick="switchTab('holidays')">Holiday Requests</button>
+                    <button class="tab hidden" id="adminTabButton" onclick="switchTab('admin')">Admin Panel</button>
+                </div>
+
+                <!-- Time Log Tab -->
+                <div id="timeLogTab" class="tab-content active">
+                    <h3 style="margin-bottom: 20px;">Shift Tracking</h3>
+                    <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
+                        <div id="shiftStatus" style="text-align: center; margin-bottom: 15px;">
+                            <p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">No active shift</p>
+                        </div>
+                        <div id="shiftTimer" class="hidden" style="text-align: center; margin-bottom: 15px; padding: 15px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333;">
+                            <p style="font-size: 14px; color: #b0b0b0; margin-bottom: 5px;"><strong>Date:</strong> <span id="shiftDate"></span></p>
+                            <p style="font-size: 14px; color: #b0b0b0; margin-bottom: 5px;"><strong>Start Time:</strong> <span id="shiftStartDisplay"></span></p>
+                            <p style="font-size: 24px; font-weight: 700; color: #2196f3; margin-top: 10px;">
+                                <span id="elapsedTime">00:00:00</span>
+                            </p>
+                            <p style="font-size: 12px; color: #888;">Elapsed Time</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button id="startShiftBtn" onclick="startShift()" class="btn-success">Start Shift</button>
+                            <button id="endShiftBtn" onclick="endShift()" class="btn-danger" disabled style="opacity: 0.5;">End Shift</button>
+                        </div>
+                    </div>
+
+                    <div id="currentShiftSection" class="hidden" style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #2196f3;">
+                        <h4 style="margin-bottom: 10px; color: #2196f3;">Current Shift</h4>
+                        <div class="form-group">
+                            <label for="editShiftStart">Start Time</label>
+                            <input type="datetime-local" id="editShiftStart" style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label for="editShiftEnd">End Time</label>
+                            <input type="datetime-local" id="editShiftEnd" style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label for="editShiftHours">Hours (will auto-calculate from times above)</label>
+                            <input type="number" id="editShiftHours" step="0.01" min="0" placeholder="Auto-calculated" readonly style="background: #1e1e1e;">
+                        </div>
+                        <button onclick="submitShift()" class="btn-success" style="margin-top: 10px;">Submit Shift to Admin</button>
+                    </div>
+
+                    <h3 style="margin-bottom: 20px;">Manual Time Entry</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="workDate">Date</label>
+                            <input type="date" id="workDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="workHours">Hours Worked</label>
+                            <input type="number" id="workHours" min="0" max="24" step="0.5" placeholder="8.0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="workDescription">Description</label>
+                        <textarea id="workDescription" rows="3" placeholder="What did you work on?"></textarea>
+                    </div>
+                    <button onclick="logTime()">Log Time</button>
+
+                    <h3 style="margin: 30px 0 20px 0;">Your Time Entries</h3>
+                    <div id="timeEntries"></div>
+                </div>
+
+                <!-- Holiday Requests Tab -->
+                <div id="holidaysTab" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">Request Holiday</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="holidayStart">Start Date</label>
+                            <input type="date" id="holidayStart">
+                        </div>
+                        <div class="form-group">
+                            <label for="holidayEnd">End Date</label>
+                            <input type="date" id="holidayEnd">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="holidayReason">Reason</label>
+                        <textarea id="holidayReason" rows="3" placeholder="Optional"></textarea>
+                    </div>
+                    <button onclick="requestHoliday()">Submit Request</button>
+
+                    <h3 style="margin: 30px 0 20px 0;">Your Holiday Requests</h3>
+                    <div id="holidayRequests"></div>
+                </div>
+
+                <!-- Admin Panel Tab -->
+                <div id="adminTab" class="tab-content">
+                    <h2 style="margin-bottom: 20px;">Admin Panel</h2>
+
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchAdminTab('users')">Users</button>
+                        <button class="tab" onclick="switchAdminTab('shifts')">Shifts</button>
+                        <button class="tab" onclick="switchAdminTab('holidays')">Holidays</button>
+                        <button class="tab" onclick="switchAdminTab('timeEntries')">Time Entries</button>
+                    </div>
+
+                    <!-- Users Admin Tab -->
+                    <div id="adminUsersTab" class="admin-tab-content">
+                        <h3 style="margin-bottom: 20px;">Add New User</h3>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="newUsername">Username</label>
+                                <input type="text" id="newUsername" placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserPin">PIN (4 digits)</label>
+                                <input type="password" id="newUserPin" maxlength="4" placeholder="Enter 4-digit PIN" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isAdmin"> Make this user an admin
+                            </label>
+                        </div>
+                        <button onclick="addUser()">Add User</button>
+
+                        <h3 style="margin: 30px 0 20px 0;">All Users</h3>
+                        <div id="usersList" class="user-list"></div>
+                    </div>
+
+                    <!-- Shifts Admin Tab -->
+                    <div id="adminShiftsTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">Shifts by User</h3>
+                        <div id="shiftsUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="shiftsUserContent"></div>
+                    </div>
+
+                    <!-- Holidays Admin Tab -->
+                    <div id="adminHolidaysTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">Holidays by User</h3>
+                        <div id="holidaysUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="holidaysUserContent"></div>
+                    </div>
+
+                    <!-- Time Entries Admin Tab -->
+                    <div id="adminTimeEntriesTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">Time Entries by User</h3>
+                        <div id="timeEntriesUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="timeEntriesUserContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ✅ SUPABASE CONFIGURATION
+        // ============================================
+        const SUPABASE_URL = 'https://esxxucshahmyawlixzsc.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3djZhebUgSkBUgtuM7cpUw_ZFPKtcya';
+        
+        // Initialize Supabase client
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        console.log('✅ Supabase initialized');
+
+        // ============================================
+        // APP STATE
+        // ============================================
+        let appData = {
+            currentUser: null
+        };
+
+        // Track active shift
+        let activeShift = null;
+        let shiftTimerInterval = null;
+
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
+        
+        // Hash PIN for secure storage
+        async function hashPin(pin) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(pin);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Check if user exists
+        async function checkUserExists(username) {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+            
+            return !error && data;
+        }
+
+        // Get all users
+        async function getAllUsers() {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Error fetching users:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // Get user's time entries
+        async function getUserTimeEntries(username) {
+            const { data, error } = await supabaseClient
+                .from('shifts')
+                .select('*')
+                .eq('username', username)
+                .eq('status', 'approved')
+                .order('start_time', { ascending: false });
+            
+            if (error) {
+                console.error('Error fetching time entries:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // Get user's shifts
+        async function getUserShifts(username) {
+            const { data, error } = await supabaseClient
+                .from('shifts')
+                .select('*')
+                .eq('username', username)
+                .order('submitted_at', { ascending: false });
+            
+            if (error) {
+                console.error('Error fetching shifts:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // Get user's holidays
+        async function getUserHolidays(username) {
+            const { data, error } = await supabaseClient
+                .from('holidays')
+                .select('*')
+                .eq('username', username)
+                .order('submitted_at', { ascending: false });
+            
+            if (error) {
+                console.error('Error fetching holidays:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        // ============================================
+        // INITIALIZE APP
+        // ============================================
+        async function init() {
+            console.log('Initializing app...');
+            document.getElementById('workDate').valueAsDate = new Date();
+            document.getElementById('holidayStart').valueAsDate = new Date();
+            document.getElementById('holidayEnd').valueAsDate = new Date();
+            
+            // Check connection
+            const adminExists = await checkUserExists('admin');
+            if (!adminExists) {
+                console.log('⚠️ No admin user found. Create one in Supabase SQL Editor with:');
+                console.log("INSERT INTO users (username, pin_hash, role) VALUES ('admin', encode(digest('1234', 'sha256'), 'hex'), 'admin');");
+            } else {
+                console.log('✅ Admin user found');
+            }
+        }
+
+        // ============================================
+        // LOGIN
+        // ============================================
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            if (!username || !pin) {
+                showAlert('loginAlert', 'Please enter both username and PIN', 'error');
+                return;
+            }
+
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                showAlert('loginAlert', 'PIN must be exactly 4 digits', 'error');
+                return;
+            }
+
+            // Query Supabase for user
+            const { data: user, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (error || !user) {
+                showAlert('loginAlert', 'Invalid username or PIN', 'error');
+                return;
+            }
+
+            // Verify PIN
+            const pinHash = await hashPin(pin);
+            if (user.pin_hash !== pinHash) {
+                showAlert('loginAlert', 'Invalid username or PIN', 'error');
+                return;
+            }
+
+            // Login successful
+            appData.currentUser = {
+                id: user.id,
+                username: user.username,
+                isAdmin: user.role === 'admin'
+            };
+            
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('userDashboard').classList.remove('hidden');
+            document.getElementById('currentUserName').textContent = user.username;
+
+            document.getElementById('adminTabButton').classList.add('hidden');
+            document.getElementById('adminBadge').classList.add('hidden');
+
+            if (appData.currentUser.isAdmin) {
+                document.getElementById('adminBadge').classList.remove('hidden');
+                document.getElementById('adminTabButton').classList.remove('hidden');
+                switchTab('admin');
+                document.querySelector('.tab[onclick*="timeLog"]').style.display = 'none';
+                document.querySelector('.tab[onclick*="holidays"]').style.display = 'none';
+                await refreshUsersList();
+                await refreshShiftsByUser();
+                await refreshHolidaysByUser();
+                await refreshTimeEntriesByUser();
+            } else {
+                document.querySelector('.tab[onclick*="timeLog"]').style.display = 'block';
+                document.querySelector('.tab[onclick*="holidays"]').style.display = 'block';
+                switchTab('timeLog');
+                await refreshTimeEntries();
+                await refreshHolidayRequests();
+            }
+
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPin').value = '';
+        }
+
+        function logout() {
+            appData.currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('userDashboard').classList.add('hidden');
+            document.getElementById('adminBadge').classList.add('hidden');
+            document.getElementById('adminTabButton').classList.add('hidden');
+            document.querySelector('.tab[onclick*="timeLog"]').style.display = 'block';
+            document.querySelector('.tab[onclick*="holidays"]').style.display = 'block';
+            switchTab('timeLog');
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertBox = document.getElementById(elementId);
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => alertBox.classList.add('hidden'), 4000);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            const tabButton = document.querySelector(`.tab[onclick*="${tabName}"]`);
+            if (tabButton) tabButton.classList.add('active');
+            
+            const tabContent = document.getElementById(tabName + 'Tab');
+            if (tabContent) tabContent.classList.add('active');
+        }
+
+        function switchAdminTab(tabName) {
+            const adminTabs = document.querySelectorAll('#adminTab .tab');
+            adminTabs.forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+            
+            const clickedTab = Array.from(adminTabs).find(t => t.getAttribute('onclick').includes(tabName));
+            if (clickedTab) clickedTab.classList.add('active');
+            
+            const contentId = 'admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab';
+            const content = document.getElementById(contentId);
+            if (content) content.classList.remove('hidden');
+        }
+
+        // ============================================
+        // TIME LOGGING
+        // ============================================
+        async function logTime() {
+            const date = document.getElementById('workDate').value;
+            const hours = parseFloat(document.getElementById('workHours').value);
+            const description = document.getElementById('workDescription').value.trim();
+
+            if (!date || !hours || hours <= 0) {
+                alert('Please enter a valid date and hours');
+                return;
+            }
+
+            const startTime = new Date(date + 'T09:00:00');
+            const endTime = new Date(startTime.getTime() + hours * 60 * 60 * 1000);
+
+            const { error } = await supabaseClient
+                .from('shifts')
+                .insert([{
+                    user_id: appData.currentUser.id,
+                    username: appData.currentUser.username,
+                    start_time: startTime.toISOString(),
+                    end_time: endTime.toISOString(),
+                    start_time_display: startTime.toLocaleString(),
+                    end_time_display: endTime.toLocaleString(),
+                    duration: `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`,
+                    duration_hours: hours,
+                    status: 'approved',
+                    notes: description
+                }]);
+
+            if (error) {
+                console.error('Error logging time:', error);
+                alert('Failed to log time. Please try again.');
+                return;
+            }
+
+            document.getElementById('workHours').value = '';
+            document.getElementById('workDescription').value = '';
+            await refreshTimeEntries();
+            alert('Time logged successfully!');
+        }
+
+        async function refreshTimeEntries() {
+            const container = document.getElementById('timeEntries');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            
+            const entries = await getUserTimeEntries(appData.currentUser.username);
+
+            if (entries.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No time entries yet</p>';
+                return;
+            }
+
+            container.innerHTML = entries.map(entry => `
+                <div class="time-entry">
+                    <div>
+                        <strong>${new Date(entry.start_time).toLocaleDateString()}</strong> - ${entry.duration_hours} hours<br>
+                        <small style="color: #b0b0b0;">${entry.notes || entry.duration}</small>
+                    </div>
+                    <button onclick="deleteTimeEntry(${entry.id})" class="btn-danger btn-small">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteTimeEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                const { error } = await supabaseClient
+                    .from('shifts')
+                    .delete()
+                    .eq('id', id)
+                    .eq('username', appData.currentUser.username);
+
+                if (error) {
+                    alert('Failed to delete entry');
+                    return;
+                }
+                await refreshTimeEntries();
+            }
+        }
+
+        // ============================================
+        // HOLIDAY REQUESTS
+        // ============================================
+        async function requestHoliday() {
+            const startDate = document.getElementById('holidayStart').value;
+            const endDate = document.getElementById('holidayEnd').value;
+            const reason = document.getElementById('holidayReason').value.trim();
+
+            if (!startDate || !endDate) {
+                alert('Please select start and end dates');
+                return;
+            }
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('End date must be after start date');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('holidays')
+                .insert([{
+                    user_id: appData.currentUser.id,
+                    username: appData.currentUser.username,
+                    start_date: startDate,
+                    end_date: endDate,
+                    reason: reason,
+                    status: 'pending'
+                }]);
+
+            if (error) {
+                alert('Failed to submit holiday request');
+                return;
+            }
+
+            document.getElementById('holidayReason').value = '';
+            await refreshHolidayRequests();
+            alert('Holiday request submitted!');
+        }
+
+        async function refreshHolidayRequests() {
+            const container = document.getElementById('holidayRequests');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            
+            const requests = await getUserHolidays(appData.currentUser.username);
+
+            if (requests.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No holiday requests yet</p>';
+                return;
+            }
+
+            container.innerHTML = requests.map(request => `
+                <div class="holiday-request">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>${request.start_date} to ${request.end_date}</strong>
+                        <span class="status-badge status-${request.status}">${request.status.toUpperCase()}</span>
+                    </div>
+                    ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                    ${request.status === 'pending' ? `<button onclick="cancelHolidayRequest(${request.id})" class="btn-danger btn-small">Cancel Request</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function cancelHolidayRequest(id) {
+            if (confirm('Are you sure you want to cancel this request?')) {
+                await supabaseClient
+                    .from('holidays')
+                    .delete()
+                    .eq('id', id);
+                await refreshHolidayRequests();
+            }
+        }
+
+        // ============================================
+        // ADMIN FUNCTIONS
+        // ============================================
+        async function addUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const pin = document.getElementById('newUserPin').value.trim();
+            const isAdmin = document.getElementById('isAdmin').checked;
+
+            if (!username || !pin || pin.length !== 4) {
+                alert('Please enter valid username and 4-digit PIN');
+                return;
+            }
+
+            const exists = await checkUserExists(username);
+            if (exists) {
+                alert('Username already exists');
+                return;
+            }
+
+            const pinHash = await hashPin(pin);
+            const { error } = await supabaseClient
+                .from('users')
+                .insert([{
+                    username: username,
+                    pin_hash: pinHash,
+                    role: isAdmin ? 'admin' : 'user'
+                }]);
+
+            if (error) {
+                alert('Failed to add user');
+                return;
+            }
+
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newUserPin').value = '';
+            document.getElementById('isAdmin').checked = false;
+            await refreshUsersList();
+            alert('User added successfully!');
+        }
+
+        async function refreshUsersList() {
+            const container = document.getElementById('usersList');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            const users = await getAllUsers();
+
+            container.innerHTML = users.map(user => `
+                <div class="user-item">
+                    <div>
+                        <strong>${user.username}</strong>
+                        ${user.role === 'admin' ? '<span style="color: #2196f3; margin-left: 10px;">(Admin)</span>' : ''}
+                    </div>
+                    ${user.username !== 'admin' ? `<button onclick="deleteUser(${user.id})" class="btn-danger btn-small">Delete</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function deleteUser(userId) {
+            const users = await getAllUsers();
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            if (confirm(`Delete user "${user.username}"?`)) {
+                await supabaseClient.from('users').delete().eq('id', userId);
+                await refreshUsersList();
+                await refreshShiftsByUser();
+                await refreshHolidaysByUser();
+                await refreshTimeEntriesByUser();
+            }
+        }
+
+        async function refreshShiftsByUser() {
+            const users = await getAllUsers();
+            const regularUsers = users.filter(u => u.role !== 'admin');
+            const tabsContainer = document.getElementById('shiftsUserTabs');
+
+            if (regularUsers.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                document.getElementById('shiftsUserContent').innerHTML = '';
+                return;
+            }
+
+            tabsContainer.innerHTML = regularUsers.map((user, i) => 
+                `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showUserShifts('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            if (regularUsers.length > 0) await showUserShifts(regularUsers[0].username);
+        }
+
+        async function showUserShifts(username) {
+            document.querySelectorAll('#shiftsUserTabs .tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent === username);
+            });
+
+            const container = document.getElementById('shiftsUserContent');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            const shifts = await getUserShifts(username);
+
+            if (shifts.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No shifts yet</p>';
+                return;
+            }
+
+            container.innerHTML = `<h4 style="margin-bottom: 15px;">Shifts for ${username}</h4>` + 
+                shifts.map(s => `
+                    <div class="holiday-request">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div>
+                                <strong>${new Date(s.start_time).toLocaleDateString()}</strong><br>
+                                <span style="color: #b0b0b0;">Duration: ${s.duration} (${s.duration_hours} hours)</span>
+                            </div>
+                            <span class="status-badge status-${s.status}">${s.status.toUpperCase()}</span>
+                        </div>
+                        <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>Start:</strong> ${s.start_time_display}</p>
+                        <p style="color: #b0b0b0; margin-bottom: 10px;"><strong>End:</strong> ${s.end_time_display}</p>
+                        ${s.status === 'pending' ? `
+                            <div>
+                                <button onclick="approveShift(${s.id})" class="btn-success btn-small">Approve</button>
+                                <button onclick="rejectShift(${s.id})" class="btn-danger btn-small">Reject</button>
+                            </div>
+                        ` : ''}
+                        <button onclick="deleteShiftAdmin(${s.id})" class="btn-danger btn-small" style="margin-top: 5px;">Delete</button>
+                    </div>
+                `).join('');
+        }
+
+        async function approveShift(id) {
+            await supabaseClient.from('shifts').update({ status: 'approved' }).eq('id', id);
+            const { data: shift } = await supabaseClient.from('shifts').select('*').eq('id', id).single();
+            if (shift) {
+                await showUserShifts(shift.username);
+                alert('Shift approved!');
+            }
+        }
+
+        async function rejectShift(id) {
+            await supabaseClient.from('shifts').update({ status: 'rejected' }).eq('id', id);
+            const { data: shift } = await supabaseClient.from('shifts').select('*').eq('id', id).single();
+            if (shift) await showUserShifts(shift.username);
+        }
+
+        async function deleteShiftAdmin(id) {
+            if (confirm('Delete this shift?')) {
+                const { data: shift } = await supabaseClient.from('shifts').select('*').eq('id', id).single();
+                await supabaseClient.from('shifts').delete().eq('id', id);
+                if (shift) await showUserShifts(shift.username);
+            }
+        }
+
+        async function refreshHolidaysByUser() {
+            const users = await getAllUsers();
+            const regularUsers = users.filter(u => u.role !== 'admin');
+            const tabsContainer = document.getElementById('holidaysUserTabs');
+
+            if (regularUsers.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                document.getElementById('holidaysUserContent').innerHTML = '';
+                return;
+            }
+
+            tabsContainer.innerHTML = regularUsers.map((user, i) => 
+                `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showUserHolidays('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            if (regularUsers.length > 0) await showUserHolidays(regularUsers[0].username);
+        }
+
+        async function showUserHolidays(username) {
+            document.querySelectorAll('#holidaysUserTabs .tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent === username);
+            });
+
+            const container = document.getElementById('holidaysUserContent');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            const holidays = await getUserHolidays(username);
+
+            if (holidays.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No holiday requests yet</p>';
+                return;
+            }
+
+            container.innerHTML = `<h4 style="margin-bottom: 15px;">Holidays for ${username}</h4>` +
+                holidays.map(h => `
+                    <div class="holiday-request">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong>${h.start_date} to ${h.end_date}</strong>
+                            <span class="status-badge status-${h.status}">${h.status.toUpperCase()}</span>
+                        </div>
+                        ${h.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${h.reason}</p>` : ''}
+                        ${h.status === 'pending' ? `
+                            <div>
+                                <button onclick="approveHoliday(${h.id})" class="btn-success btn-small">Approve</button>
+                                <button onclick="rejectHoliday(${h.id})" class="btn-danger btn-small">Reject</button>
+                            </div>
+                        ` : ''}
+                        <button onclick="deleteHolidayAdmin(${h.id})" class="btn-danger btn-small" style="margin-top: 5px;">Delete</button>
+                    </div>
+                `).join('');
+        }
+
+        async function approveHoliday(id) {
+            await supabaseClient.from('holidays').update({ status: 'approved' }).eq('id', id);
+            const { data: h } = await supabaseClient.from('holidays').select('*').eq('id', id).single();
+            if (h) await showUserHolidays(h.username);
+        }
+
+        async function rejectHoliday(id) {
+            await supabaseClient.from('holidays').update({ status: 'rejected' }).eq('id', id);
+            const { data: h } = await supabaseClient.from('holidays').select('*').eq('id', id).single();
+            if (h) await showUserHolidays(h.username);
+        }
+
+        async function deleteHolidayAdmin(id) {
+            if (confirm('Delete this holiday?')) {
+                const { data: h } = await supabaseClient.from('holidays').select('*').eq('id', id).single();
+                await supabaseClient.from('holidays').delete().eq('id', id);
+                if (h) await showUserHolidays(h.username);
+            }
+        }
+
+        async function refreshTimeEntriesByUser() {
+            const users = await getAllUsers();
+            const regularUsers = users.filter(u => u.role !== 'admin');
+            const tabsContainer = document.getElementById('timeEntriesUserTabs');
+
+            if (regularUsers.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                document.getElementById('timeEntriesUserContent').innerHTML = '';
+                return;
+            }
+
+            tabsContainer.innerHTML = regularUsers.map((user, i) => 
+                `<button class="tab ${i === 0 ? 'active' : ''}" onclick="showUserTimeEntries('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            if (regularUsers.length > 0) await showUserTimeEntries(regularUsers[0].username);
+        }
+
+        async function showUserTimeEntries(username) {
+            document.querySelectorAll('#timeEntriesUserTabs .tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent === username);
+            });
+
+            const container = document.getElementById('timeEntriesUserContent');
+            container.innerHTML = '<div class="loading">Loading...</div>';
+            const entries = await getUserTimeEntries(username);
+
+            if (entries.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No time entries yet</p>';
+                return;
+            }
+
+            container.innerHTML = `<h4 style="margin-bottom: 15px;">Time Entries for ${username}</h4>` +
+                entries.map(e => `
+                    <div class="time-entry">
+                        <div>
+                            <strong>${new Date(e.start_time).toLocaleDateString()}</strong> - ${e.duration_hours} hours<br>
+                            <small style="color: #b0b0b0;">${e.notes || e.duration}</small>
+                        </div>
+                        <button onclick="deleteTimeEntryAdmin(${e.id})" class="btn-danger btn-small">Delete</button>
+                    </div>
+                `).join('');
+        }
+
+        async function deleteTimeEntryAdmin(id) {
+            if (confirm('Delete this entry?')) {
+                const { data: e } = await supabaseClient.from('shifts').select('*').eq('id', id).single();
+                await supabaseClient.from('shifts').delete().eq('id', id);
+                if (e) await showUserTimeEntries(e.username);
+            }
+        }
+
+        // ============================================
+        // SHIFT TRACKING
+        // ============================================
+        function checkAutoLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+            if (username && pin.length === 4 && /^\d{4}$/.test(pin)) {
+                setTimeout(() => login(), 100);
+            }
+        }
+
+        function startShift() {
+            const now = new Date();
+            activeShift = {
+                username: appData.currentUser.username,
+                startTime: now.toISOString(),
+                startTimeDisplay: now.toLocaleString()
+            };
+            
+            document.getElementById('startShiftBtn').disabled = true;
+            document.getElementById('startShiftBtn').style.opacity = '0.5';
+            document.getElementById('endShiftBtn').disabled = false;
+            document.getElementById('endShiftBtn').style.opacity = '1';
+            document.getElementById('shiftStatus').innerHTML = '<p style="font-size: 18px; font-weight: 600; color: #28a745;">Shift in progress...</p>';
+            document.getElementById('shiftTimer').classList.remove('hidden');
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('shiftDate').textContent = now.toLocaleDateString(undefined, options);
+            document.getElementById('shiftStartDisplay').textContent = now.toLocaleTimeString();
+            
+            updateElapsedTime();
+            shiftTimerInterval = setInterval(updateElapsedTime, 1000);
+            alert('Shift started!');
+        }
+
+        function updateElapsedTime() {
+            if (!activeShift) return;
+            const now = new Date();
+            const startDate = new Date(activeShift.startTime);
+            const diffMs = now - startDate;
+            
+            const h = Math.floor(diffMs / 3600000);
+            const m = Math.floor((diffMs % 3600000) / 60000);
+            const s = Math.floor((diffMs % 60000) / 1000);
+            
+            document.getElementById('elapsedTime').textContent = 
+                String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        function endShift() {
+            if (!activeShift) return;
+            if (shiftTimerInterval) {
+                clearInterval(shiftTimerInterval);
+                shiftTimerInterval = null;
+            }
+            
+            const now = new Date();
+            activeShift.endTime = now.toISOString();
+            activeShift.endTimeDisplay = now.toLocaleString();
+            
+            const startDate = new Date(activeShift.startTime);
+            const endDate = new Date(activeShift.endTime);
+            const durationMs = endDate - startDate;
+            const hours = Math.floor(durationMs / 3600000);
+            const minutes = Math.floor((durationMs % 3600000) / 60000);
+            
+            activeShift.duration = `${hours}h ${minutes}m`;
+            activeShift.durationHours = (durationMs / 3600000).toFixed(2);
+            
+            document.getElementById('startShiftBtn').disabled = false;
+            document.getElementById('startShiftBtn').style.opacity = '1';
+            document.getElementById('endShiftBtn').disabled = true;
+            document.getElementById('endShiftBtn').style.opacity = '0.5';
+            document.getElementById('shiftStatus').innerHTML = '<p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">Shift ended - Ready to submit</p>';
+            document.getElementById('shiftTimer').classList.add('hidden');
+            document.getElementById('currentShiftSection').classList.remove('hidden');
+            
+            const formatDT = (date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const h = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                return `${y}-${m}-${d}T${h}:${min}`;
+            };
+            
+            document.getElementById('editShiftStart').value = formatDT(startDate);
+            document.getElementById('editShiftEnd').value = formatDT(endDate);
+            document.getElementById('editShiftHours').value = activeShift.durationHours;
+            
+            document.getElementById('editShiftStart').addEventListener('change', recalculateShiftHours);
+            document.getElementById('editShiftEnd').addEventListener('change', recalculateShiftHours);
+            alert('Shift ended! Edit times if needed before submitting.');
+        }
+
+        function recalculateShiftHours() {
+            const start = document.getElementById('editShiftStart').value;
+            const end = document.getElementById('editShiftEnd').value;
+            
+            if (start && end) {
+                const startDate = new Date(start);
+                const endDate = new Date(end);
+                
+                if (endDate > startDate && activeShift) {
+                    const durationMs = endDate - startDate;
+                    const hours = (durationMs / 3600000).toFixed(2);
+                    document.getElementById('editShiftHours').value = hours;
+                    
+                    activeShift.startTime = startDate.toISOString();
+                    activeShift.endTime = endDate.toISOString();
+                    activeShift.durationHours = hours;
+                    
+                    const h = Math.floor(durationMs / 3600000);
+                    const m = Math.floor((durationMs % 3600000) / 60000);
+                    activeShift.duration = `${h}h ${m}m`;
+                    activeShift.startTimeDisplay = startDate.toLocaleString();
+                    activeShift.endTimeDisplay = endDate.toLocaleString();
+                }
+            }
+        }
+
+        async function submitShift() {
+            if (!activeShift || !activeShift.endTime) {
+                alert('Please end your shift before submitting');
+                return;
+            }
+            
+            if (shiftTimerInterval) {
+                clearInterval(shiftTimerInterval);
+                shiftTimerInterval = null;
+            }
+
+            const { error } = await supabaseClient
+                .from('shifts')
+                .insert([{
+                    user_id: appData.currentUser.id,
+                    username: appData.currentUser.username,
+                    start_time: activeShift.startTime,
+                    end_time: activeShift.endTime,
+                    start_time_display: activeShift.startTimeDisplay,
+                    end_time_display: activeShift.endTimeDisplay,
+                    duration: activeShift.duration,
+                    duration_hours: parseFloat(activeShift.durationHours),
+                    status: 'pending'
+                }]);
+
+            if (error) {
+                alert('Failed to submit shift');
+                return;
+            }
+            
+            activeShift = null;
+            document.getElementById('currentShiftSection').classList.add('hidden');
+            document.getElementById('shiftTimer').classList.add('hidden');
+            document.getElementById('shiftStatus').innerHTML = '<p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">No active shift</p>';
+            document.getElementById('elapsedTime').textContent = '00:00:00';
+            alert('Shift submitted to admin for approval!');
+            await refreshTimeEntries();
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
