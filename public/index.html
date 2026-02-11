@@ -28,10 +28,6 @@
             box-sizing: border-box;
         }
 
-        .brightness-control {
-            display: none;
-        }
-
         #installButton {
             position: fixed;
             bottom: 80px;
@@ -128,7 +124,7 @@
         .header {
             display: flex;
             justify-content: space-between;
-            36px align-items: center;
+            align-items: center;
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
             gap: 1rem;
@@ -510,48 +506,6 @@
             min-width: 120px;
         }
 
-        .brightness-control {
-            background: #1a1a1a;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-top: 2rem;
-            text-align: center;
-        }
-
-        .brightness-control label {
-            display: block;
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            color: #ccc;
-        }
-
-        .brightness-slider {
-            width: 100%;
-            max-width: 400px;
-            height: 10px;
-            border-radius: 5px;
-            background: #333;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .brightness-slider::-webkit-slider-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-        }
-
-        .brightness-slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
-            border: none;
-        }
-
         .settings-row {
             background: #1a1a1a;
             padding: 1.5rem;
@@ -562,18 +516,25 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            border: 2px solid #333;
         }
 
         @media (max-width: 600px) {
             .settings-row {
-                flex-direction: column;
-                align-items: stretch;
+                align-items: center;
             }
 
             .settings-controls {
                 display: flex;
-                justify-content: space-around;
+                gap: 0.5rem;
+                align-items: center;
             }
+        }
+
+        .settings-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
         .settings-label {
@@ -612,6 +573,7 @@
             padding: 1.5rem;
             border-radius: 12px;
             margin-bottom: 1.5rem;
+            border: 2px solid #333;
         }
 
         .pid-grid {
@@ -634,15 +596,21 @@
         }
 
         .pid-row {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 30px 40px 90px 40px;
+            gap: 50px;
             align-items: center;
             margin-bottom: 10px;
+            justify-items: center;
+        }
+
+        .pid-row span {
+            justify-self: start;
         }
 
         .pid-input {
             width: 90px;
-            text-align: right;
+            text-align: center;
             font-family: monospace;
             font-size: inherit;
             background: #2a2a2a;
@@ -674,6 +642,10 @@
             width: 40px;
             height: 30px;
             font-size: 18px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .full-graph {
@@ -1169,19 +1141,8 @@
             <div class="unit-toggle-group">
                 <button class="btn unit-toggle-btn" id="tempUnitBtn" onclick="toggleTempUnit()">°C</button>
                 <button class="btn unit-toggle-btn" id="pressureUnitBtn" onclick="togglePressureUnit()">bar</button>
-            </div>
-
-            <div class="brightness-control">
-                <label for="brightnessSlider">Display Brightness</label>
-                <input type="range" class="brightness-slider" id="brightnessSlider" min="5" max="255" value="200"
-                    oninput="updateBrightness(this.value)">
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
+                <button class="btn btn-primary" style="padding: 0.9rem 1.3rem; font-size: 1rem;"
                     onclick="showPage('pid')">PID Settings</button>
-                <button class="btn btn-primary" style="flex: 1; padding: 1.5rem; font-size: 1.2rem;"
-                    onclick="showPage('graph')">Full Graph</button>
             </div>
         </div>
 
@@ -1316,14 +1277,9 @@
             groupReady: false,
             useFahrenheit: false,
             pressureIsBar: true,
-            brightness: 200,
             shotRunning: false,
-            shotTime: 0,
-            shotStartTime: null,
-            shotInterval: null,
             tempHistory: [],
             pressureHistory: [],
-            // hasReceivedFirstData: false,
             dataCollectionPaused: false,
             pidGains: {
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
@@ -1342,14 +1298,6 @@
 
         const miniTooltip = document.querySelector('.nav-graph .graph-tooltip');
         const fullTooltip = document.querySelector('.full-graph .graph-tooltip');
-
-        function snap(v) {
-            return Math.round(v) + 0.5;
-        }
-
-        function smooth(prev, next, alpha = 0.2) {
-            return prev == null ? next : prev + alpha * (next - prev);
-        }
 
         async function doConnectGATT() {
             const device = state.bleDevice;
@@ -1502,10 +1450,6 @@
             state.steamReady = false;
             state.groupReady = false;
 
-            state.brewFault = false;
-            state.steamFault = false;
-            state.groupFault = false;
-
             state.shotRunning = false;
             const shotElem = document.getElementById('shotTime');
             if (shotElem) {
@@ -1555,14 +1499,6 @@
             document.querySelectorAll('.ble-indicator').forEach(ind => {
                 ind.classList.toggle('connected', connected);
                 ind.classList.toggle('disconnected', !connected);
-
-                // if (connected) {
-                //     ind.title = 'Connected – Click to disconnect';
-                //     ind.onclick = toggleBLE;  // Click icon to disconnect
-                // } else {
-                //     ind.title = 'Bluetooth Status';
-                //     ind.onclick = null;
-                // }
             });
 
             // Grey overlay for values when disconnected
@@ -1583,12 +1519,6 @@
 
             try { data = JSON.parse(text); }
             catch (e) { console.error('Parse error:', e); return; }
-
-            // Sync brightness slider with live BLE data
-            const slider = document.getElementById('brightnessSlider');
-            if (slider && slider.value != state.brightness) {
-                slider.value = Math.round(state.brightness);
-            }
 
             // PID packet
             if (data.pid) {
@@ -1611,10 +1541,6 @@
                 brewReady: data.brewReady ?? state.brewReady,
                 steamReady: data.steamReady ?? state.steamReady,
                 groupReady: data.groupReady ?? state.groupReady,
-                brewFault: data.brewFault ?? state.brewFault,
-                steamFault: data.steamFault ?? state.steamFault,
-                groupFault: data.groupFault ?? state.groupFault,
-                brightness: data.brightness ?? state.brightness,
                 useFahrenheit: data.useFahrenheit ?? state.useFahrenheit,
                 pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
             });
@@ -1843,11 +1769,6 @@
 
         }
 
-        function updateBrightness(value) {
-            state.brightness = parseInt(value);
-            sendBLECommand({ type: 'brightness', value: state.brightness });
-        }
-
         function adjustSetpoint(zone, delta) {
             if (zone === 'brew') {
                 state.brewSetpoint = Math.max(80, Math.min(100, state.brewSetpoint + delta));
@@ -1871,37 +1792,6 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             return ctx;
         }
-
-        let lastTemp = null;
-        let lastPressure = null;
-
-        // setInterval(() => {
-        //     if (state.bleConnected && state.characteristic) sendBLECommand({ type: "ping" });
-        // }, 2000);
-
-        setInterval(() => {
-            if (!state.bleConnected || !state.hasReceivedFirstData) return;
-
-            if (!state.dataCollectionPaused) {
-                lastTemp = smooth(lastTemp, state.brewTemp);
-                lastPressure = smooth(lastPressure, state.groupPressure);
-
-                state.tempHistory.push(lastTemp);
-                state.pressureHistory.push(lastPressure);
-
-                if (state.tempHistory.length > 600) {
-                    state.tempHistory.shift();
-                    state.pressureHistory.shift();
-                }
-            }
-
-            drawMiniGraph();
-
-            const graphPage = document.getElementById('graphPage');
-            if (graphPage && graphPage.classList.contains('active')) {
-                drawFullGraph();
-            }
-        }, 1000);
 
         function handleGraphHover(event, canvasId) {
             event.preventDefault();
@@ -2582,8 +2472,6 @@
 
             state.tempHistory = [];
             state.pressureHistory = [];
-            lastTemp = null;
-            lastPressure = null;
             miniHoveredIndex = -1;
             fullHoveredIndex = -1;
             miniTooltip.style.display = 'none';
@@ -2611,9 +2499,6 @@
                     const len = Math.min(data.tempHistory.length, data.pressureHistory.length);
                     state.tempHistory = data.tempHistory.slice(-len).map(Number);
                     state.pressureHistory = data.pressureHistory.slice(-len).map(Number);
-
-                    lastTemp = state.tempHistory.length > 0 ? state.tempHistory[state.tempHistory.length - 1] : null;
-                    lastPressure = state.pressureHistory.length > 0 ? state.pressureHistory[state.pressureHistory.length - 1] : null;
 
                     miniHoveredIndex = -1;
                     fullHoveredIndex = -1;
