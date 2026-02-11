@@ -274,11 +274,11 @@
                 <div id="loginAlert" class="alert alert-error hidden"></div>
                 <div class="form-group">
                     <label for="loginUsername">Username</label>
-                    <input type="text" id="loginUsername" placeholder="Enter your username">
+                    <input type="text" id="loginUsername" placeholder="Enter your username" onchange="checkAutoLogin()">
                 </div>
                 <div class="form-group">
                     <label for="loginPin">PIN (4 digits)</label>
-                    <input type="password" id="loginPin" maxlength="4" placeholder="Enter your 4-digit PIN">
+                    <input type="password" id="loginPin" maxlength="4" placeholder="Enter your 4-digit PIN" oninput="this.value = this.value.replace(/[^0-9]/g, ''); checkAutoLogin();">
                 </div>
                 <button onclick="login()">Login</button>
             </div>
@@ -400,7 +400,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="newUserPin">PIN (4 digits)</label>
-                                <input type="number" id="newUserPin" maxlength="4" placeholder="Enter 4-digit PIN">
+                                <input type="password" id="newUserPin" maxlength="4" placeholder="Enter 4-digit PIN" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                             </div>
                         </div>
                         <div class="form-group">
@@ -940,6 +940,20 @@
 
         // Initialize the app when page loads
         init();
+
+        // Check if we can auto-login when username and PIN are both entered
+        function checkAutoLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+            
+            // Only auto-login if both username and PIN are filled and PIN is exactly 4 digits
+            if (username && pin.length === 4 && /^\d{4}$/.test(pin)) {
+                // Small delay to ensure the last digit is captured
+                setTimeout(() => {
+                    login();
+                }, 100);
+            }
+        }
 
         // Start shift function
         function startShift() {
