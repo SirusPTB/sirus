@@ -912,15 +912,19 @@
                 return;
             }
 
-            container.innerHTML = entries.map(entry => `
+            container.innerHTML = entries.map(entry => {
+                const date = new Date(entry.start_time);
+                const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+                const dateStr = date.toLocaleDateString();
+                return `
                 <div class="time-entry">
                     <div>
-                        <strong>${new Date(entry.start_time).toLocaleDateString()}</strong> - ${entry.duration_hours} hours<br>
+                        <strong>${dayName}, ${dateStr}</strong> - ${entry.duration_hours} hours<br>
                         <small style="color: #b0b0b0;">${entry.notes || entry.duration}</small>
                     </div>
                     <button onclick="deleteTimeEntry(${entry.id})" class="btn-danger btn-small">Delete</button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         async function deleteTimeEntry(id) {
@@ -990,10 +994,17 @@
                 return;
             }
 
-            container.innerHTML = requests.map(request => `
+            container.innerHTML = requests.map(request => {
+                const startDate = new Date(request.start_date);
+                const endDate = new Date(request.end_date);
+                const startDay = startDate.toLocaleDateString(undefined, { weekday: 'short' });
+                const endDay = endDate.toLocaleDateString(undefined, { weekday: 'short' });
+                const startDateStr = startDate.toLocaleDateString();
+                const endDateStr = endDate.toLocaleDateString();
+                return `
                 <div class="holiday-request">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <strong>${request.start_date} to ${request.end_date}</strong>
+                        <strong>${startDay}, ${startDateStr} to ${endDay}, ${endDateStr}</strong>
                         <span class="status-badge status-${request.status}">${request.status.toUpperCase()}</span>
                     </div>
                     ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
@@ -1115,11 +1126,15 @@
             }
 
             container.innerHTML = `<h4 style="margin-bottom: 15px;">Shifts for ${username}</h4>` + 
-                shifts.map(s => `
+                shifts.map(s => {
+                    const date = new Date(s.start_time);
+                    const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+                    const dateStr = date.toLocaleDateString();
+                    return `
                     <div class="holiday-request">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <div>
-                                <strong>${new Date(s.start_time).toLocaleDateString()}</strong><br>
+                                <strong>${dayName}, ${dateStr}</strong><br>
                                 <span style="color: #b0b0b0;">Duration: ${s.duration} (${s.duration_hours} hours)</span>
                             </div>
                             <span class="status-badge status-${s.status}">${s.status.toUpperCase()}</span>
@@ -1134,7 +1149,7 @@
                         ` : ''}
                         <button onclick="deleteShiftAdmin(${s.id})" class="btn-danger btn-small" style="margin-top: 5px;">Delete</button>
                     </div>
-                `).join('');
+                `}).join('');
         }
 
         async function approveShift(id) {
@@ -1193,10 +1208,17 @@
             }
 
             container.innerHTML = `<h4 style="margin-bottom: 15px;">Holidays for ${username}</h4>` +
-                holidays.map(h => `
+                holidays.map(h => {
+                    const startDate = new Date(h.start_date);
+                    const endDate = new Date(h.end_date);
+                    const startDay = startDate.toLocaleDateString(undefined, { weekday: 'short' });
+                    const endDay = endDate.toLocaleDateString(undefined, { weekday: 'short' });
+                    const startDateStr = startDate.toLocaleDateString();
+                    const endDateStr = endDate.toLocaleDateString();
+                    return `
                     <div class="holiday-request">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <strong>${h.start_date} to ${h.end_date}</strong>
+                            <strong>${startDay}, ${startDateStr} to ${endDay}, ${endDateStr}</strong>
                             <span class="status-badge status-${h.status}">${h.status.toUpperCase()}</span>
                         </div>
                         ${h.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${h.reason}</p>` : ''}
@@ -1208,7 +1230,7 @@
                         ` : ''}
                         <button onclick="deleteHolidayAdmin(${h.id})" class="btn-danger btn-small" style="margin-top: 5px;">Delete</button>
                     </div>
-                `).join('');
+                `}).join('');
         }
 
         async function approveHoliday(id) {
@@ -1264,15 +1286,19 @@
             }
 
             container.innerHTML = `<h4 style="margin-bottom: 15px;">Time Entries for ${username}</h4>` +
-                entries.map(e => `
+                entries.map(e => {
+                    const date = new Date(e.start_time);
+                    const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+                    const dateStr = date.toLocaleDateString();
+                    return `
                     <div class="time-entry">
                         <div>
-                            <strong>${new Date(e.start_time).toLocaleDateString()}</strong> - ${e.duration_hours} hours<br>
+                            <strong>${dayName}, ${dateStr}</strong> - ${e.duration_hours} hours<br>
                             <small style="color: #b0b0b0;">${e.notes || e.duration}</small>
                         </div>
                         <button onclick="deleteTimeEntryAdmin(${e.id})" class="btn-danger btn-small">Delete</button>
                     </div>
-                `).join('');
+                `}).join('');
         }
 
         async function deleteTimeEntryAdmin(id) {
