@@ -265,6 +265,7 @@
             font-family: 'DSEG7Classic', monospace;
             font-size: 1.8rem;
             line-height: 1;
+            justify-content: flex-start;
         }
 
         /* Numeric value */
@@ -284,12 +285,39 @@
             transition: color 0.3s ease;
         }
 
+        .steam-pressure-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.15em;
+            justify-content: flex-start;
+            font-size: 1.8rem;
+        }
+
+        .steam-pressure-value {
+            font-family: 'DSEG7Classic', monospace;
+            color: #7799bb;
+            line-height: 1;
+        }
+
+        .steam-pressure-unit {
+            font-family: Arial, sans-serif;
+            font-size: 0.5em;
+            color: #7799bb;
+        }
+
+        .steam-readings-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: flex-start;
+            width: 100%;
+            gap: 2.5rem;
+        }
+
         .status-temp-wrap {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            /* 👈 critical */
         }
 
         .temp-bar {
@@ -598,7 +626,7 @@
         .pid-row {
             display: grid;
             grid-template-columns: 30px 40px 90px 40px;
-            gap: 50px;
+            gap: 4px;
             align-items: center;
             margin-bottom: 10px;
             justify-items: center;
@@ -1047,9 +1075,15 @@
                 <div class="status-card" id="steamStatus">
                     <input type="number" class="setpoint-input" id="steamSetpointInput" step="0.1" min="0" max="140">
                     <div class="status-temp-wrap">
-                        <div class="status-temp">
-                            <span class="temp-value" id="steamTempValue">0.0</span>
-                            <span class="temp-unit" id="steamTempUnit">°C</span>
+                        <div class="steam-readings-row">
+                            <div class="status-temp">
+                                <span class="temp-value" id="steamTempValue">0.0</span>
+                                <span class="temp-unit" id="steamTempUnit">°C</span>
+                            </div>
+                            <div class="steam-pressure-display">
+                                <span class="steam-pressure-value" id="steamPressureValue">0.0</span>
+                                <span class="steam-pressure-unit" id="steamPressureUnit">bar</span>
+                            </div>
                         </div>
                         <div class="temp-bar">
                             <div class="temp-bar-fill" id="steamTempBar"></div>
@@ -1269,6 +1303,7 @@
             steamTemp: 0.0,
             groupTemp: 0.0,
             groupPressure: 0.0,
+            steamPressure: 0.0,
             brewSetpoint: 93.0,
             steamSetpoint: 125.0,
             groupSetpoint: 92.0,
@@ -1535,6 +1570,7 @@
                 steamTemp: data.steamTemp ?? state.steamTemp,
                 groupTemp: data.groupTemp ?? state.groupTemp,
                 groupPressure: data.groupPressure ?? state.groupPressure,
+                steamPressure: data.SteamPressure ?? state.steamPressure,
                 brewSetpoint: data.brewSetpoint ?? state.brewSetpoint,
                 steamSetpoint: data.steamSetpoint ?? state.steamSetpoint,
                 groupSetpoint: data.groupSetpoint ?? state.groupSetpoint,
@@ -1681,6 +1717,9 @@
             document.getElementById('steamTempValue').textContent =
                 (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1);
             document.getElementById('steamTempUnit').textContent = tempUnit;
+
+            document.getElementById('steamPressureValue').textContent = state.steamPressure.toFixed(1);
+            document.getElementById('steamPressureUnit').textContent = 'bar';
 
             document.getElementById('groupTempValue').textContent =
                 (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1);
@@ -1959,7 +1998,7 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 const message = state.bleConnected
-                    ? 'Collecting data...'
+                    ? 'Waiting for shot to start.....'
                     : 'Connect to view live graph';
                 ctx.fillText(message, width / 2, height / 2);
                 return;
@@ -2232,7 +2271,6 @@
             const handlePressMax = () => {
                 const val = parseFloat(pressMaxInput.value);
                 if (!isNaN(val) && val >= 0) {
-                    // Convert to bar for storage
                     state.customPressMax = state.pressureIsBar ? val : val / 14.5038;
                 } else {
                     state.customPressMax = null;
