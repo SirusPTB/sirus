@@ -1010,7 +1010,7 @@
                     ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
                     ${request.status === 'pending' ? `<button onclick="cancelHolidayRequest(${request.id})" class="btn-danger btn-small">Cancel Request</button>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         async function cancelHolidayRequest(id) {
