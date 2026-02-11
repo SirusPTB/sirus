@@ -400,6 +400,118 @@
         .toast.hiding {
             animation: slideOut 0.3s ease-in forwards;
         }
+
+        /* Calendar Styles */
+        .calendar-container {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2196f3;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            font-weight: 600;
+            color: #b0b0b0;
+            font-size: 12px;
+        }
+
+        .calendar-day {
+            min-height: 80px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 5px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #252525;
+            border-color: #2196f3;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #2196f3;
+        }
+
+        .calendar-day-number {
+            font-size: 12px;
+            color: #b0b0b0;
+            margin-bottom: 3px;
+        }
+
+        .calendar-holiday {
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .calendar-holiday.pending {
+            background: #ff9800;
+            color: #000;
+        }
+
+        .calendar-holiday.approved {
+            background: #4caf50;
+            color: #fff;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 12px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -535,6 +647,7 @@
                         <button class="tab" onclick="switchAdminTab('shifts')">Shifts</button>
                         <button class="tab" onclick="switchAdminTab('holidays')">Holidays</button>
                         <button class="tab" onclick="switchAdminTab('timeEntries')">Time Entries</button>
+                        <button class="tab" onclick="switchAdminTab('calendar')">Holiday Calendar</button>
                     </div>
 
                     <!-- Users Admin Tab -->
@@ -580,6 +693,29 @@
                         <h3 style="margin-bottom: 20px;">Time Entries by User</h3>
                         <div id="timeEntriesUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
                         <div id="timeEntriesUserContent"></div>
+                    </div>
+
+                    <!-- Calendar Admin Tab -->
+                    <div id="adminCalendarTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">All User Holidays Calendar</h3>
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button onclick="previousMonth()" class="btn-secondary btn-small">← Previous</button>
+                                <div class="calendar-title" id="calendarTitle">Loading...</div>
+                                <button onclick="nextMonth()" class="btn-secondary btn-small">Next →</button>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid"></div>
+                            <div class="calendar-legend">
+                                <div class="legend-item">
+                                    <div class="legend-box" style="background: #4caf50;"></div>
+                                    <span>Approved</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-box" style="background: #ff9800;"></div>
+                                    <span>Pending</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -856,6 +992,11 @@
             const contentId = 'admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab';
             const content = document.getElementById(contentId);
             if (content) content.classList.remove('hidden');
+            
+            // Load calendar when calendar tab is opened
+            if (tabName === 'calendar') {
+                renderCalendar();
+            }
         }
 
         // ============================================
@@ -1467,6 +1608,120 @@
             document.getElementById('elapsedTime').textContent = '00:00:00';
             showToast('Shift submitted to admin for approval!', 'success');
             await refreshTimeEntries();
+        }
+
+        // ============================================
+        // CALENDAR FUNCTIONS
+        // ============================================
+        let currentCalendarDate = new Date();
+
+        async function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            // Update title
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+            
+            // Get all holidays for all users
+            const { data: holidays, error } = await supabaseClient
+                .from('holidays')
+                .select('*')
+                .or('status.eq.pending,status.eq.approved');
+            
+            if (error) {
+                console.error('Error fetching holidays:', error);
+                return;
+            }
+            
+            // Build calendar
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                grid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                
+                const currentDate = new Date(year, month, day);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                // Check if today
+                if (currentDate.getTime() === today.getTime()) {
+                    dayCell.classList.add('today');
+                }
+                
+                // Add day number
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day;
+                dayCell.appendChild(dayNumber);
+                
+                // Find holidays for this day
+                const dateStr = currentDate.toISOString().split('T')[0];
+                
+                holidays.forEach(holiday => {
+                    const holidayStart = new Date(holiday.start_date);
+                    const holidayEnd = new Date(holiday.end_date);
+                    holidayStart.setHours(0, 0, 0, 0);
+                    holidayEnd.setHours(0, 0, 0, 0);
+                    
+                    // Check if this date falls within the holiday range
+                    if (currentDate >= holidayStart && currentDate <= holidayEnd) {
+                        const holidayDiv = document.createElement('div');
+                        holidayDiv.className = `calendar-holiday ${holiday.status}`;
+                        holidayDiv.textContent = holiday.username;
+                        holidayDiv.title = `${holiday.username}: ${holiday.start_date} to ${holiday.end_date} (${holiday.status})`;
+                        dayCell.appendChild(holidayDiv);
+                    }
+                });
+                
+                grid.appendChild(dayCell);
+            }
+            
+            // Add remaining empty cells
+            const totalCells = startingDayOfWeek + daysInMonth;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day other-month';
+                grid.appendChild(emptyDay);
+            }
+        }
+
+        function previousMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
         }
 
         // Initialize
