@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Time Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .admin-tab-content {
+            display: block;
+        }
+
+        .admin-tab-content.hidden {
+            display: none;
+        }
+
+        .time-entry {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .holiday-request {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-approved {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-rejected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .admin-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .user-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .user-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕐 Work Time Tracker</h1>
+            <p>Track your hours and manage holiday requests</p>
+        </div>
+
+        <div class="content">
+            <!-- Login Screen -->
+            <div id="loginScreen">
+                <h2 style="margin-bottom: 20px;">Login</h2>
+                <div id="loginAlert" class="alert alert-error hidden"></div>
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPin">PIN (4 digits)</label>
+                    <input type="password" id="loginPin" maxlength="4" placeholder="Enter your 4-digit PIN">
+                </div>
+                <button onclick="login()">Login</button>
+            </div>
+
+            <!-- User Dashboard -->
+            <div id="userDashboard" class="hidden">
+                <div class="user-info">
+                    <div>
+                        <strong>Logged in as: <span id="currentUserName"></span></strong>
+                        <span id="adminBadge" class="hidden" style="margin-left: 10px; color: #667eea;">(Admin)</span>
+                    </div>
+                    <button onclick="logout()" class="btn-secondary">Logout</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('timeLog')">Time Log</button>
+                    <button class="tab" onclick="switchTab('holidays')">Holiday Requests</button>
+                    <button class="tab hidden" id="adminTabButton" onclick="switchTab('admin')">Admin Panel</button>
+                </div>
+
+                <!-- Time Log Tab -->
+                <div id="timeLogTab" class="tab-content active">
+                    <h3 style="margin-bottom: 20px;">Shift Tracking</h3>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                        <div id="shiftStatus" style="text-align: center; margin-bottom: 15px;">
+                            <p style="font-size: 18px; font-weight: 600; color: #666;">No active shift</p>
+                        </div>
+                        <div id="shiftTimer" class="hidden" style="text-align: center; margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px;">
+                            <p style="font-size: 14px; color: #666; margin-bottom: 5px;"><strong>Date:</strong> <span id="shiftDate"></span></p>
+                            <p style="font-size: 14px; color: #666; margin-bottom: 5px;"><strong>Start Time:</strong> <span id="shiftStartDisplay"></span></p>
+                            <p style="font-size: 24px; font-weight: 700; color: #667eea; margin-top: 10px;">
+                                <span id="elapsedTime">00:00:00</span>
+                            </p>
+                            <p style="font-size: 12px; color: #999;">Elapsed Time</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button id="startShiftBtn" onclick="startShift()" class="btn-success">Start Shift</button>
+                            <button id="endShiftBtn" onclick="endShift()" class="btn-danger" disabled style="opacity: 0.5;">End Shift</button>
+                        </div>
+                    </div>
+
+                    <div id="currentShiftSection" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ffc107;">
+                        <h4 style="margin-bottom: 10px;">Current Shift</h4>
+                        <div class="form-group">
+                            <label for="editShiftStart">Start Time</label>
+                            <input type="datetime-local" id="editShiftStart" style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label for="editShiftEnd">End Time</label>
+                            <input type="datetime-local" id="editShiftEnd" style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label for="editShiftHours">Hours (will auto-calculate from times above)</label>
+                            <input type="number" id="editShiftHours" step="0.01" min="0" placeholder="Auto-calculated" readonly style="background: #f0f0f0;">
+                        </div>
+                        <button onclick="submitShift()" class="btn-success" style="margin-top: 10px;">Submit Shift to Admin</button>
+                    </div>
+
+                    <h3 style="margin-bottom: 20px;">Manual Time Entry</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="workDate">Date</label>
+                            <input type="date" id="workDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="workHours">Hours Worked</label>
+                            <input type="number" id="workHours" min="0" max="24" step="0.5" placeholder="8.0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="workDescription">Description</label>
+                        <textarea id="workDescription" rows="3" placeholder="What did you work on?"></textarea>
+                    </div>
+                    <button onclick="logTime()">Log Time</button>
+
+                    <h3 style="margin: 30px 0 20px 0;">Your Time Entries</h3>
+                    <div id="timeEntries"></div>
+                </div>
+
+                <!-- Holiday Requests Tab -->
+                <div id="holidaysTab" class="tab-content">
+                    <h3 style="margin-bottom: 20px;">Request Holiday</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="holidayStart">Start Date</label>
+                            <input type="date" id="holidayStart">
+                        </div>
+                        <div class="form-group">
+                            <label for="holidayEnd">End Date</label>
+                            <input type="date" id="holidayEnd">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="holidayReason">Reason</label>
+                        <textarea id="holidayReason" rows="3" placeholder="Optional reason for your holiday request"></textarea>
+                    </div>
+                    <button onclick="requestHoliday()">Submit Request</button>
+
+                    <h3 style="margin: 30px 0 20px 0;">Your Holiday Requests</h3>
+                    <div id="holidayRequests"></div>
+                </div>
+
+                <!-- Admin Panel Tab -->
+                <div id="adminTab" class="tab-content">
+                    <div class="tabs" style="border-bottom: 2px solid #e0e0e0; margin-bottom: 20px;">
+                        <button class="tab active" onclick="switchAdminTab('users')">Users</button>
+                        <button class="tab" onclick="switchAdminTab('shifts')">Shifts</button>
+                        <button class="tab" onclick="switchAdminTab('holidays')">Holidays</button>
+                        <button class="tab" onclick="switchAdminTab('timeEntries')">Time Entries</button>
+                    </div>
+
+                    <!-- Users Admin Tab -->
+                    <div id="adminUsersTab" class="admin-tab-content">
+                        <h3 style="margin-bottom: 20px;">Add New User</h3>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="newUsername">Username</label>
+                                <input type="text" id="newUsername" placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserPin">PIN (4 digits)</label>
+                                <input type="number" id="newUserPin" maxlength="4" placeholder="Enter 4-digit PIN">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="isAdmin"> Make this user an admin
+                            </label>
+                        </div>
+                        <button onclick="addUser()">Add User</button>
+
+                        <h3 style="margin: 30px 0 20px 0;">All Users</h3>
+                        <div id="usersList" class="user-list"></div>
+                    </div>
+
+                    <!-- Shifts Admin Tab -->
+                    <div id="adminShiftsTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">Pending Shift Approvals</h3>
+                        <div id="pendingShifts"></div>
+                    </div>
+
+                    <!-- Holidays Admin Tab -->
+                    <div id="adminHolidaysTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">Pending Holiday Requests</h3>
+                        <div id="pendingHolidays"></div>
+                    </div>
+
+                    <!-- Time Entries Admin Tab -->
+                    <div id="adminTimeEntriesTab" class="admin-tab-content hidden">
+                        <h3 style="margin-bottom: 20px;">All Time Entries</h3>
+                        <div id="allTimeEntries"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize data structure
+        let appData = {
+            users: [
+                { username: 'admin', pin: '1234', isAdmin: true }
+            ],
+            timeEntries: [],
+            holidayRequests: [],
+            shifts: [],
+            currentUser: null
+        };
+
+        // Track active shift
+        let activeShift = null;
+        let shiftTimerInterval = null;
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('workTrackerData');
+            if (saved) {
+                appData = JSON.parse(saved);
+                // Ensure shifts array exists (for backwards compatibility)
+                if (!appData.shifts) {
+                    appData.shifts = [];
+                }
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('workTrackerData', JSON.stringify(appData));
+        }
+
+        // Initialize app
+        function init() {
+            loadData();
+            document.getElementById('workDate').valueAsDate = new Date();
+            document.getElementById('holidayStart').valueAsDate = new Date();
+            document.getElementById('holidayEnd').valueAsDate = new Date();
+        }
+
+        // Login function
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+            const alertBox = document.getElementById('loginAlert');
+
+            if (!username || !pin) {
+                showAlert('loginAlert', 'Please enter both username and PIN', 'error');
+                return;
+            }
+
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                showAlert('loginAlert', 'PIN must be exactly 4 digits', 'error');
+                return;
+            }
+
+            const user = appData.users.find(u => u.username === username && u.pin === pin);
+
+            if (user) {
+                appData.currentUser = user;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('userDashboard').classList.remove('hidden');
+                document.getElementById('currentUserName').textContent = user.username;
+
+                // Make sure admin tab is hidden by default
+                document.getElementById('adminTabButton').classList.add('hidden');
+                document.getElementById('adminBadge').classList.add('hidden');
+
+                if (user.isAdmin) {
+                    document.getElementById('adminBadge').classList.remove('hidden');
+                    document.getElementById('adminTabButton').classList.remove('hidden');
+                    // Switch to admin panel and hide other tabs for admin
+                    switchTab('admin');
+                    document.querySelector('.tab[onclick*="timeLog"]').style.display = 'none';
+                    document.querySelector('.tab[onclick*="holidays"]').style.display = 'none';
+                    refreshUsersList();
+                    refreshPendingShifts();
+                    refreshPendingHolidays();
+                    refreshAllTimeEntries();
+                } else {
+                    // Show time log and holidays tabs for regular users
+                    document.querySelector('.tab[onclick*="timeLog"]').style.display = 'block';
+                    document.querySelector('.tab[onclick*="holidays"]').style.display = 'block';
+                    switchTab('timeLog');
+                    refreshTimeEntries();
+                    refreshHolidayRequests();
+                }
+
+                // Clear login fields
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPin').value = '';
+            } else {
+                showAlert('loginAlert', 'Invalid username or PIN', 'error');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            appData.currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('userDashboard').classList.add('hidden');
+            document.getElementById('adminBadge').classList.add('hidden');
+            document.getElementById('adminTabButton').classList.add('hidden');
+            // Show all tabs again
+            document.querySelector('.tab[onclick*="timeLog"]').style.display = 'block';
+            document.querySelector('.tab[onclick*="holidays"]').style.display = 'block';
+            switchTab('timeLog');
+        }
+
+        // Show alert message
+        function showAlert(elementId, message, type) {
+            const alertBox = document.getElementById(elementId);
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => alertBox.classList.add('hidden'), 4000);
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            // Find and activate the correct tab button
+            const tabButton = document.querySelector(`.tab[onclick*="${tabName}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            
+            // Activate the correct tab content
+            const tabContent = document.getElementById(tabName + 'Tab');
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+        }
+
+        // Switch admin sub-tabs
+        function switchAdminTab(tabName) {
+            // Remove active class from all admin tabs
+            const adminTabs = document.querySelectorAll('#adminTab .tab');
+            adminTabs.forEach(t => t.classList.remove('active'));
+            
+            // Hide all admin tab content
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+            
+            // Find and activate the clicked tab button
+            const clickedTab = Array.from(adminTabs).find(t => t.getAttribute('onclick').includes(tabName));
+            if (clickedTab) {
+                clickedTab.classList.add('active');
+            }
+            
+            // Show the selected admin tab content
+            const contentId = 'admin' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Tab';
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.classList.remove('hidden');
+            }
+        }
+
+        // Log work time
+        function logTime() {
+            const date = document.getElementById('workDate').value;
+            const hours = parseFloat(document.getElementById('workHours').value);
+            const description = document.getElementById('workDescription').value.trim();
+
+            if (!date || !hours || hours <= 0) {
+                alert('Please enter a valid date and hours');
+                return;
+            }
+
+            const entry = {
+                id: Date.now(),
+                username: appData.currentUser.username,
+                date: date,
+                hours: hours,
+                description: description,
+                timestamp: new Date().toISOString()
+            };
+
+            appData.timeEntries.push(entry);
+            saveData();
+
+            // Clear form
+            document.getElementById('workHours').value = '';
+            document.getElementById('workDescription').value = '';
+
+            refreshTimeEntries();
+            alert('Time logged successfully!');
+        }
+
+        // Refresh time entries display
+        function refreshTimeEntries() {
+            const container = document.getElementById('timeEntries');
+            const userEntries = appData.timeEntries
+                .filter(e => e.username === appData.currentUser.username)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (userEntries.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No time entries yet</p>';
+                return;
+            }
+
+            container.innerHTML = userEntries.map(entry => `
+                <div class="time-entry">
+                    <div>
+                        <strong>${entry.date}</strong> - ${entry.hours} hours<br>
+                        <small style="color: #666;">${entry.description || 'No description'}</small>
+                    </div>
+                    <button onclick="deleteTimeEntry(${entry.id})" class="btn-danger btn-small">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Delete time entry
+        function deleteTimeEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                appData.timeEntries = appData.timeEntries.filter(e => e.id !== id);
+                saveData();
+                refreshTimeEntries();
+            }
+        }
+
+        // Request holiday
+        function requestHoliday() {
+            const startDate = document.getElementById('holidayStart').value;
+            const endDate = document.getElementById('holidayEnd').value;
+            const reason = document.getElementById('holidayReason').value.trim();
+
+            if (!startDate || !endDate) {
+                alert('Please select start and end dates');
+                return;
+            }
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('End date must be after start date');
+                return;
+            }
+
+            const request = {
+                id: Date.now(),
+                username: appData.currentUser.username,
+                startDate: startDate,
+                endDate: endDate,
+                reason: reason,
+                status: 'pending',
+                requestDate: new Date().toISOString()
+            };
+
+            appData.holidayRequests.push(request);
+            saveData();
+
+            // Clear form
+            document.getElementById('holidayReason').value = '';
+
+            refreshHolidayRequests();
+            if (appData.currentUser.isAdmin) {
+                refreshPendingHolidays();
+            }
+            alert('Holiday request submitted!');
+        }
+
+        // Refresh holiday requests display
+        function refreshHolidayRequests() {
+            const container = document.getElementById('holidayRequests');
+            const userRequests = appData.holidayRequests
+                .filter(r => r.username === appData.currentUser.username)
+                .sort((a, b) => new Date(b.requestDate) - new Date(a.requestDate));
+
+            if (userRequests.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No holiday requests yet</p>';
+                return;
+            }
+
+            container.innerHTML = userRequests.map(request => `
+                <div class="holiday-request">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>${request.startDate} to ${request.endDate}</strong>
+                        <span class="status-badge status-${request.status}">${request.status.toUpperCase()}</span>
+                    </div>
+                    ${request.reason ? `<p style="color: #666; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                    ${request.status === 'pending' ? `<button onclick="cancelHolidayRequest(${request.id})" class="btn-danger btn-small">Cancel Request</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Cancel holiday request
+        function cancelHolidayRequest(id) {
+            if (confirm('Are you sure you want to cancel this request?')) {
+                appData.holidayRequests = appData.holidayRequests.filter(r => r.id !== id);
+                saveData();
+                refreshHolidayRequests();
+                if (appData.currentUser.isAdmin) {
+                    refreshPendingHolidays();
+                }
+            }
+        }
+
+        // Add new user (admin only)
+        function addUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const pin = document.getElementById('newUserPin').value.trim();
+            const isAdmin = document.getElementById('isAdmin').checked;
+
+            if (!username || !pin) {
+                alert('Please enter both username and PIN');
+                return;
+            }
+
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                alert('PIN must be exactly 4 digits');
+                return;
+            }
+
+            if (appData.users.find(u => u.username === username)) {
+                alert('Username already exists');
+                return;
+            }
+
+            appData.users.push({ username, pin, isAdmin });
+            saveData();
+
+            // Clear form
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newUserPin').value = '';
+            document.getElementById('isAdmin').checked = false;
+
+            refreshUsersList();
+            alert('User added successfully!');
+        }
+
+        // Refresh users list (admin only)
+        function refreshUsersList() {
+            const container = document.getElementById('usersList');
+            container.innerHTML = appData.users.map(user => `
+                <div class="user-item">
+                    <div>
+                        <strong>${user.username}</strong>
+                        ${user.isAdmin ? '<span style="color: #667eea; margin-left: 10px;">(Admin)</span>' : ''}
+                    </div>
+                    ${user.username !== 'admin' ? `<button onclick="deleteUser('${user.username}')" class="btn-danger btn-small">Delete</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Delete user (admin only)
+        function deleteUser(username) {
+            if (confirm(`Are you sure you want to delete user "${username}"?`)) {
+                appData.users = appData.users.filter(u => u.username !== username);
+                appData.timeEntries = appData.timeEntries.filter(e => e.username !== username);
+                appData.holidayRequests = appData.holidayRequests.filter(r => r.username !== username);
+                saveData();
+                refreshUsersList();
+                refreshPendingHolidays();
+            }
+        }
+
+        // Refresh pending holidays (admin only)
+        function refreshPendingHolidays() {
+            const container = document.getElementById('pendingHolidays');
+            const pending = appData.holidayRequests.filter(r => r.status === 'pending');
+
+            if (pending.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No pending requests</p>';
+                return;
+            }
+
+            container.innerHTML = pending.map(request => `
+                <div class="holiday-request">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <div>
+                            <strong>${request.username}</strong><br>
+                            <span style="color: #666;">${request.startDate} to ${request.endDate}</span>
+                        </div>
+                        <span class="status-badge status-pending">PENDING</span>
+                    </div>
+                    ${request.reason ? `<p style="color: #666; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                    <div>
+                        <button onclick="approveHoliday(${request.id})" class="btn-success btn-small">Approve</button>
+                        <button onclick="rejectHoliday(${request.id})" class="btn-danger btn-small">Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Refresh pending shifts (admin only)
+        function refreshPendingShifts() {
+            const container = document.getElementById('pendingShifts');
+            const pending = appData.shifts.filter(s => s.status === 'pending');
+
+            if (pending.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No pending shifts</p>';
+                return;
+            }
+
+            container.innerHTML = pending.map(shift => `
+                <div class="holiday-request">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <div>
+                            <strong>${shift.username}</strong><br>
+                            <span style="color: #666;">Duration: ${shift.duration} (${shift.durationHours} hours)</span>
+                        </div>
+                        <span class="status-badge status-pending">PENDING</span>
+                    </div>
+                    <p style="color: #666; margin-bottom: 5px;"><strong>Start:</strong> ${shift.startTimeDisplay}</p>
+                    <p style="color: #666; margin-bottom: 10px;"><strong>End:</strong> ${shift.endTimeDisplay}</p>
+                    <div>
+                        <button onclick="approveShift(${shift.id})" class="btn-success btn-small">Approve</button>
+                        <button onclick="rejectShift(${shift.id})" class="btn-danger btn-small">Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Approve shift (admin only)
+        function approveShift(id) {
+            const shift = appData.shifts.find(s => s.id === id);
+            if (shift) {
+                shift.status = 'approved';
+                
+                // Create a time entry from the approved shift
+                const entry = {
+                    id: Date.now(),
+                    username: shift.username,
+                    date: new Date(shift.startTime).toISOString().split('T')[0],
+                    hours: shift.durationHours,
+                    description: `Shift: ${shift.startTimeDisplay} - ${shift.endTimeDisplay}`,
+                    timestamp: new Date().toISOString()
+                };
+                appData.timeEntries.push(entry);
+                
+                saveData();
+                refreshPendingShifts();
+                refreshAllTimeEntries();
+                alert('Shift approved and added to time entries!');
+            }
+        }
+
+        // Reject shift (admin only)
+        function rejectShift(id) {
+            const shift = appData.shifts.find(s => s.id === id);
+            if (shift) {
+                shift.status = 'rejected';
+                saveData();
+                refreshPendingShifts();
+                alert('Shift rejected!');
+            }
+        }
+
+        // Refresh all time entries (admin only)
+        function refreshAllTimeEntries() {
+            const container = document.getElementById('allTimeEntries');
+            const allEntries = appData.timeEntries
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (allEntries.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No time entries yet</p>';
+                return;
+            }
+
+            container.innerHTML = allEntries.map(entry => `
+                <div class="time-entry">
+                    <div>
+                        <strong>${entry.username}</strong> - ${entry.date} - ${entry.hours} hours<br>
+                        <small style="color: #666;">${entry.description || 'No description'}</small>
+                    </div>
+                    <button onclick="deleteTimeEntryAdmin(${entry.id})" class="btn-danger btn-small">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Delete time entry as admin
+        function deleteTimeEntryAdmin(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                appData.timeEntries = appData.timeEntries.filter(e => e.id !== id);
+                saveData();
+                refreshAllTimeEntries();
+            }
+        }
+
+        // Approve holiday (admin only)
+        function approveHoliday(id) {
+            const request = appData.holidayRequests.find(r => r.id === id);
+            if (request) {
+                request.status = 'approved';
+                saveData();
+                refreshPendingHolidays();
+                alert('Holiday request approved!');
+            }
+        }
+
+        // Reject holiday (admin only)
+        function rejectHoliday(id) {
+            const request = appData.holidayRequests.find(r => r.id === id);
+            if (request) {
+                request.status = 'rejected';
+                saveData();
+                refreshPendingHolidays();
+                alert('Holiday request rejected!');
+            }
+        }
+
+        // Initialize the app when page loads
+        init();
+
+        // Start shift function
+        function startShift() {
+            const now = new Date();
+            activeShift = {
+                username: appData.currentUser.username,
+                startTime: now.toISOString(),
+                startTimeDisplay: now.toLocaleString()
+            };
+            
+            document.getElementById('startShiftBtn').disabled = true;
+            document.getElementById('startShiftBtn').style.opacity = '0.5';
+            document.getElementById('endShiftBtn').disabled = false;
+            document.getElementById('endShiftBtn').style.opacity = '1';
+            
+            document.getElementById('shiftStatus').innerHTML = 
+                '<p style="font-size: 18px; font-weight: 600; color: #28a745;">Shift in progress...</p>';
+            
+            // Show timer section
+            document.getElementById('shiftTimer').classList.remove('hidden');
+            
+            // Display date and start time
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('shiftDate').textContent = now.toLocaleDateString(undefined, options);
+            document.getElementById('shiftStartDisplay').textContent = now.toLocaleTimeString();
+            
+            // Start the elapsed time counter
+            updateElapsedTime();
+            shiftTimerInterval = setInterval(updateElapsedTime, 1000);
+            
+            alert('Shift started!');
+        }
+
+        // Update elapsed time display
+        function updateElapsedTime() {
+            if (!activeShift) return;
+            
+            const now = new Date();
+            const startDate = new Date(activeShift.startTime);
+            const diffMs = now - startDate;
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+            
+            const display = 
+                String(hours).padStart(2, '0') + ':' + 
+                String(minutes).padStart(2, '0') + ':' + 
+                String(seconds).padStart(2, '0');
+            
+            document.getElementById('elapsedTime').textContent = display;
+        }
+
+        // End shift function
+        function endShift() {
+            if (!activeShift) return;
+            
+            // Stop the timer
+            if (shiftTimerInterval) {
+                clearInterval(shiftTimerInterval);
+                shiftTimerInterval = null;
+            }
+            
+            const now = new Date();
+            activeShift.endTime = now.toISOString();
+            activeShift.endTimeDisplay = now.toLocaleString();
+            
+            const startDate = new Date(activeShift.startTime);
+            const endDate = new Date(activeShift.endTime);
+            const durationMs = endDate - startDate;
+            const hours = Math.floor(durationMs / (1000 * 60 * 60));
+            const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            activeShift.duration = `${hours}h ${minutes}m`;
+            activeShift.durationHours = (durationMs / (1000 * 60 * 60)).toFixed(2);
+            
+            document.getElementById('startShiftBtn').disabled = false;
+            document.getElementById('startShiftBtn').style.opacity = '1';
+            document.getElementById('endShiftBtn').disabled = true;
+            document.getElementById('endShiftBtn').style.opacity = '0.5';
+            
+            document.getElementById('shiftStatus').innerHTML = 
+                '<p style="font-size: 18px; font-weight: 600; color: #666;">Shift ended - Ready to submit</p>';
+            
+            // Hide timer section
+            document.getElementById('shiftTimer').classList.add('hidden');
+            
+            // Show current shift section with editable fields
+            document.getElementById('currentShiftSection').classList.remove('hidden');
+            
+            // Convert ISO times to datetime-local format
+            const startLocal = new Date(activeShift.startTime);
+            const endLocal = new Date(activeShift.endTime);
+            
+            // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+            const formatDateTimeLocal = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+            
+            document.getElementById('editShiftStart').value = formatDateTimeLocal(startLocal);
+            document.getElementById('editShiftEnd').value = formatDateTimeLocal(endLocal);
+            document.getElementById('editShiftHours').value = activeShift.durationHours;
+            
+            // Add event listeners to recalculate hours when times change
+            document.getElementById('editShiftStart').addEventListener('change', recalculateShiftHours);
+            document.getElementById('editShiftEnd').addEventListener('change', recalculateShiftHours);
+            
+            alert('Shift ended! You can now edit the times if needed before submitting.');
+        }
+
+        // Recalculate shift hours when start or end time is edited
+        function recalculateShiftHours() {
+            const startValue = document.getElementById('editShiftStart').value;
+            const endValue = document.getElementById('editShiftEnd').value;
+            
+            if (startValue && endValue) {
+                const startDate = new Date(startValue);
+                const endDate = new Date(endValue);
+                
+                if (endDate > startDate) {
+                    const durationMs = endDate - startDate;
+                    const hours = (durationMs / (1000 * 60 * 60)).toFixed(2);
+                    document.getElementById('editShiftHours').value = hours;
+                    
+                    // Update activeShift with new values
+                    if (activeShift) {
+                        activeShift.startTime = startDate.toISOString();
+                        activeShift.endTime = endDate.toISOString();
+                        activeShift.durationHours = hours;
+                        
+                        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                        const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                        activeShift.duration = `${durationHours}h ${durationMinutes}m`;
+                        activeShift.startTimeDisplay = startDate.toLocaleString();
+                        activeShift.endTimeDisplay = endDate.toLocaleString();
+                    }
+                } else {
+                    document.getElementById('editShiftHours').value = '0.00';
+                    alert('End time must be after start time');
+                }
+            }
+        }
+
+        // Submit shift function
+        function submitShift() {
+            if (!activeShift || !activeShift.endTime) {
+                alert('Please end your shift before submitting');
+                return;
+            }
+            
+            // Stop any running timer
+            if (shiftTimerInterval) {
+                clearInterval(shiftTimerInterval);
+                shiftTimerInterval = null;
+            }
+            
+            const shift = {
+                id: Date.now(),
+                username: appData.currentUser.username,
+                startTime: activeShift.startTime,
+                endTime: activeShift.endTime,
+                startTimeDisplay: activeShift.startTimeDisplay,
+                endTimeDisplay: activeShift.endTimeDisplay,
+                duration: activeShift.duration,
+                durationHours: parseFloat(activeShift.durationHours),
+                status: 'pending',
+                submittedAt: new Date().toISOString()
+            };
+            
+            appData.shifts.push(shift);
+            saveData();
+            
+            // Clear active shift
+            activeShift = null;
+            document.getElementById('currentShiftSection').classList.add('hidden');
+            document.getElementById('shiftTimer').classList.add('hidden');
+            document.getElementById('shiftStatus').innerHTML = 
+                '<p style="font-size: 18px; font-weight: 600; color: #666;">No active shift</p>';
+            document.getElementById('elapsedTime').textContent = '00:00:00';
+            
+            alert('Shift submitted to admin for approval!');
+            refreshTimeEntries();
+        }
+    </script>
+</body>
+</html>
