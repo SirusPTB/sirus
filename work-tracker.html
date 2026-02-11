@@ -13,22 +13,24 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #121212;
             min-height: 100vh;
             padding: 20px;
+            color: #e0e0e0;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background: white;
+            background: #1e1e1e;
             border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             overflow: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e1e1e;
+            border-bottom: 2px solid #2196f3;
             color: white;
             padding: 30px;
             text-align: center;
@@ -37,6 +39,11 @@
         .header h1 {
             font-size: 28px;
             margin-bottom: 10px;
+            color: #2196f3;
+        }
+
+        .header p {
+            color: #b0b0b0;
         }
 
         .content {
@@ -51,21 +58,23 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #333;
+            color: #e0e0e0;
         }
 
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #333;
             border-radius: 8px;
             font-size: 14px;
             transition: border-color 0.3s;
+            background: #2a2a2a;
+            color: #e0e0e0;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2196f3;
         }
 
         input[type="number"] {
@@ -79,7 +88,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2196f3;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -87,29 +96,45 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background 0.2s, transform 0.2s;
         }
 
         button:hover {
+            background: #1976d2;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         button:active {
             transform: translateY(0);
         }
 
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
         .btn-secondary {
-            background: #6c757d;
-            margin-left: 10px;
+            background: #555;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
         }
 
         .btn-danger {
-            background: #dc3545;
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
         }
 
         .btn-success {
-            background: #28a745;
+            background: #4caf50;
+        }
+
+        .btn-success:hover {
+            background: #388e3c;
         }
 
         .btn-small {
@@ -118,18 +143,19 @@
         }
 
         .user-info {
-            background: #f8f9fa;
+            background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #333;
         }
 
         .tabs {
             display: flex;
-            border-bottom: 2px solid #e0e0e0;
+            border-bottom: 2px solid #333;
             margin-bottom: 20px;
         }
 
@@ -139,14 +165,18 @@
             background: none;
             border: none;
             border-bottom: 3px solid transparent;
-            color: #666;
+            color: #b0b0b0;
             font-weight: 600;
             transition: all 0.3s;
         }
 
         .tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #2196f3;
+            border-bottom-color: #2196f3;
+        }
+
+        .tab:hover {
+            color: #2196f3;
         }
 
         .tab-content {
@@ -166,20 +196,22 @@
         }
 
         .time-entry {
-            background: #f8f9fa;
+            background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #333;
         }
 
         .holiday-request {
-            background: #f8f9fa;
+            background: #2a2a2a;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 10px;
+            border: 1px solid #333;
         }
 
         .status-badge {
@@ -191,24 +223,24 @@
         }
 
         .status-pending {
-            background: #ffc107;
+            background: #ff9800;
             color: #000;
         }
 
         .status-approved {
-            background: #28a745;
+            background: #4caf50;
             color: white;
         }
 
         .status-rejected {
-            background: #dc3545;
+            background: #f44336;
             color: white;
         }
 
         .admin-section {
             margin-top: 30px;
             padding-top: 30px;
-            border-top: 2px solid #e0e0e0;
+            border-top: 2px solid #333;
         }
 
         .user-list {
@@ -217,12 +249,13 @@
         }
 
         .user-item {
-            background: #f8f9fa;
+            background: #2a2a2a;
             padding: 12px;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid #333;
         }
 
         .alert {
@@ -232,15 +265,15 @@
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #5a1f1f;
+            color: #ffcccc;
+            border: 1px solid #8b3a3a;
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #1f4d1f;
+            color: #ccffcc;
+            border: 1px solid #3a8b3a;
         }
 
         .hidden {
@@ -288,7 +321,7 @@
                 <div class="user-info">
                     <div>
                         <strong>Logged in as: <span id="currentUserName"></span></strong>
-                        <span id="adminBadge" class="hidden" style="margin-left: 10px; color: #667eea;">(Admin)</span>
+                        <span id="adminBadge" class="hidden" style="margin-left: 10px; color: #2196f3;">(Admin)</span>
                     </div>
                     <button onclick="logout()" class="btn-secondary">Logout</button>
                 </div>
@@ -302,17 +335,17 @@
                 <!-- Time Log Tab -->
                 <div id="timeLogTab" class="tab-content active">
                     <h3 style="margin-bottom: 20px;">Shift Tracking</h3>
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <div style="background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333;">
                         <div id="shiftStatus" style="text-align: center; margin-bottom: 15px;">
-                            <p style="font-size: 18px; font-weight: 600; color: #666;">No active shift</p>
+                            <p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">No active shift</p>
                         </div>
-                        <div id="shiftTimer" class="hidden" style="text-align: center; margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px;">
-                            <p style="font-size: 14px; color: #666; margin-bottom: 5px;"><strong>Date:</strong> <span id="shiftDate"></span></p>
-                            <p style="font-size: 14px; color: #666; margin-bottom: 5px;"><strong>Start Time:</strong> <span id="shiftStartDisplay"></span></p>
-                            <p style="font-size: 24px; font-weight: 700; color: #667eea; margin-top: 10px;">
+                        <div id="shiftTimer" class="hidden" style="text-align: center; margin-bottom: 15px; padding: 15px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333;">
+                            <p style="font-size: 14px; color: #b0b0b0; margin-bottom: 5px;"><strong>Date:</strong> <span id="shiftDate"></span></p>
+                            <p style="font-size: 14px; color: #b0b0b0; margin-bottom: 5px;"><strong>Start Time:</strong> <span id="shiftStartDisplay"></span></p>
+                            <p style="font-size: 24px; font-weight: 700; color: #2196f3; margin-top: 10px;">
                                 <span id="elapsedTime">00:00:00</span>
                             </p>
-                            <p style="font-size: 12px; color: #999;">Elapsed Time</p>
+                            <p style="font-size: 12px; color: #888;">Elapsed Time</p>
                         </div>
                         <div style="display: flex; gap: 10px; justify-content: center;">
                             <button id="startShiftBtn" onclick="startShift()" class="btn-success">Start Shift</button>
@@ -320,8 +353,8 @@
                         </div>
                     </div>
 
-                    <div id="currentShiftSection" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ffc107;">
-                        <h4 style="margin-bottom: 10px;">Current Shift</h4>
+                    <div id="currentShiftSection" class="hidden" style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #2196f3;">
+                        <h4 style="margin-bottom: 10px; color: #2196f3;">Current Shift</h4>
                         <div class="form-group">
                             <label for="editShiftStart">Start Time</label>
                             <input type="datetime-local" id="editShiftStart" style="width: 100%;">
@@ -332,7 +365,7 @@
                         </div>
                         <div class="form-group">
                             <label for="editShiftHours">Hours (will auto-calculate from times above)</label>
-                            <input type="number" id="editShiftHours" step="0.01" min="0" placeholder="Auto-calculated" readonly style="background: #f0f0f0;">
+                            <input type="number" id="editShiftHours" step="0.01" min="0" placeholder="Auto-calculated" readonly style="background: #1e1e1e;">
                         </div>
                         <button onclick="submitShift()" class="btn-success" style="margin-top: 10px;">Submit Shift to Admin</button>
                     </div>
@@ -416,20 +449,23 @@
 
                     <!-- Shifts Admin Tab -->
                     <div id="adminShiftsTab" class="admin-tab-content hidden">
-                        <h3 style="margin-bottom: 20px;">Pending Shift Approvals</h3>
-                        <div id="pendingShifts"></div>
+                        <h3 style="margin-bottom: 20px;">Shifts by User</h3>
+                        <div id="shiftsUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="shiftsUserContent"></div>
                     </div>
 
                     <!-- Holidays Admin Tab -->
                     <div id="adminHolidaysTab" class="admin-tab-content hidden">
-                        <h3 style="margin-bottom: 20px;">Pending Holiday Requests</h3>
-                        <div id="pendingHolidays"></div>
+                        <h3 style="margin-bottom: 20px;">Holidays by User</h3>
+                        <div id="holidaysUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="holidaysUserContent"></div>
                     </div>
 
                     <!-- Time Entries Admin Tab -->
                     <div id="adminTimeEntriesTab" class="admin-tab-content hidden">
-                        <h3 style="margin-bottom: 20px;">All Time Entries</h3>
-                        <div id="allTimeEntries"></div>
+                        <h3 style="margin-bottom: 20px;">Time Entries by User</h3>
+                        <div id="timeEntriesUserTabs" class="tabs" style="border-bottom: 2px solid #333; margin-bottom: 20px;"></div>
+                        <div id="timeEntriesUserContent"></div>
                     </div>
                 </div>
             </div>
@@ -513,9 +549,9 @@
                     document.querySelector('.tab[onclick*="timeLog"]').style.display = 'none';
                     document.querySelector('.tab[onclick*="holidays"]').style.display = 'none';
                     refreshUsersList();
-                    refreshPendingShifts();
-                    refreshPendingHolidays();
-                    refreshAllTimeEntries();
+                    refreshShiftsByUser();
+                    refreshHolidaysByUser();
+                    refreshTimeEntriesByUser();
                 } else {
                     // Show time log and holidays tabs for regular users
                     document.querySelector('.tab[onclick*="timeLog"]').style.display = 'block';
@@ -594,6 +630,21 @@
             if (content) {
                 content.classList.remove('hidden');
             }
+
+            // Ensure first user tab is active and showing when switching to Shifts, Holidays, or Time Entries
+            const users = appData.users.filter(u => !u.isAdmin);
+            if (users.length > 0) {
+                if (tabName === 'shifts') {
+                    // Make sure first user's shifts are showing
+                    setTimeout(() => showUserShifts(users[0].username), 0);
+                } else if (tabName === 'holidays') {
+                    // Make sure first user's holidays are showing
+                    setTimeout(() => showUserHolidays(users[0].username), 0);
+                } else if (tabName === 'timeEntries') {
+                    // Make sure first user's time entries are showing
+                    setTimeout(() => showUserTimeEntries(users[0].username), 0);
+                }
+            }
         }
 
         // Log work time
@@ -635,7 +686,7 @@
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (userEntries.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No time entries yet</p>';
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No time entries yet</p>';
                 return;
             }
 
@@ -643,7 +694,7 @@
                 <div class="time-entry">
                     <div>
                         <strong>${entry.date}</strong> - ${entry.hours} hours<br>
-                        <small style="color: #666;">${entry.description || 'No description'}</small>
+                        <small style="color: #b0b0b0;">${entry.description || 'No description'}</small>
                     </div>
                     <button onclick="deleteTimeEntry(${entry.id})" class="btn-danger btn-small">Delete</button>
                 </div>
@@ -706,7 +757,7 @@
                 .sort((a, b) => new Date(b.requestDate) - new Date(a.requestDate));
 
             if (userRequests.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No holiday requests yet</p>';
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No holiday requests yet</p>';
                 return;
             }
 
@@ -716,7 +767,7 @@
                         <strong>${request.startDate} to ${request.endDate}</strong>
                         <span class="status-badge status-${request.status}">${request.status.toUpperCase()}</span>
                     </div>
-                    ${request.reason ? `<p style="color: #666; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                    ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
                     ${request.status === 'pending' ? `<button onclick="cancelHolidayRequest(${request.id})" class="btn-danger btn-small">Cancel Request</button>` : ''}
                 </div>
             `).join('');
@@ -764,6 +815,9 @@
             document.getElementById('isAdmin').checked = false;
 
             refreshUsersList();
+            refreshShiftsByUser();
+            refreshHolidaysByUser();
+            refreshTimeEntriesByUser();
             alert('User added successfully!');
         }
 
@@ -774,7 +828,7 @@
                 <div class="user-item">
                     <div>
                         <strong>${user.username}</strong>
-                        ${user.isAdmin ? '<span style="color: #667eea; margin-left: 10px;">(Admin)</span>' : ''}
+                        ${user.isAdmin ? '<span style="color: #2196f3; margin-left: 10px;">(Admin)</span>' : ''}
                     </div>
                     ${user.username !== 'admin' ? `<button onclick="deleteUser('${user.username}')" class="btn-danger btn-small">Delete</button>` : ''}
                 </div>
@@ -787,9 +841,12 @@
                 appData.users = appData.users.filter(u => u.username !== username);
                 appData.timeEntries = appData.timeEntries.filter(e => e.username !== username);
                 appData.holidayRequests = appData.holidayRequests.filter(r => r.username !== username);
+                appData.shifts = appData.shifts.filter(s => s.username !== username);
                 saveData();
                 refreshUsersList();
-                refreshPendingHolidays();
+                refreshShiftsByUser();
+                refreshHolidaysByUser();
+                refreshTimeEntriesByUser();
             }
         }
 
@@ -799,7 +856,7 @@
             const pending = appData.holidayRequests.filter(r => r.status === 'pending');
 
             if (pending.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No pending requests</p>';
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No pending requests</p>';
                 return;
             }
 
@@ -808,11 +865,11 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <div>
                             <strong>${request.username}</strong><br>
-                            <span style="color: #666;">${request.startDate} to ${request.endDate}</span>
+                            <span style="color: #b0b0b0;">${request.startDate} to ${request.endDate}</span>
                         </div>
                         <span class="status-badge status-pending">PENDING</span>
                     </div>
-                    ${request.reason ? `<p style="color: #666; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                    ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
                     <div>
                         <button onclick="approveHoliday(${request.id})" class="btn-success btn-small">Approve</button>
                         <button onclick="rejectHoliday(${request.id})" class="btn-danger btn-small">Reject</button>
@@ -827,7 +884,7 @@
             const pending = appData.shifts.filter(s => s.status === 'pending');
 
             if (pending.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No pending shifts</p>';
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No pending shifts</p>';
                 return;
             }
 
@@ -836,12 +893,12 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <div>
                             <strong>${shift.username}</strong><br>
-                            <span style="color: #666;">Duration: ${shift.duration} (${shift.durationHours} hours)</span>
+                            <span style="color: #b0b0b0;">Duration: ${shift.duration} (${shift.durationHours} hours)</span>
                         </div>
                         <span class="status-badge status-pending">PENDING</span>
                     </div>
-                    <p style="color: #666; margin-bottom: 5px;"><strong>Start:</strong> ${shift.startTimeDisplay}</p>
-                    <p style="color: #666; margin-bottom: 10px;"><strong>End:</strong> ${shift.endTimeDisplay}</p>
+                    <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>Start:</strong> ${shift.startTimeDisplay}</p>
+                    <p style="color: #b0b0b0; margin-bottom: 10px;"><strong>End:</strong> ${shift.endTimeDisplay}</p>
                     <div>
                         <button onclick="approveShift(${shift.id})" class="btn-success btn-small">Approve</button>
                         <button onclick="rejectShift(${shift.id})" class="btn-danger btn-small">Reject</button>
@@ -868,8 +925,12 @@
                 appData.timeEntries.push(entry);
                 
                 saveData();
-                refreshPendingShifts();
-                refreshAllTimeEntries();
+                showUserShifts(shift.username);
+                // Also refresh time entries if on that tab
+                const activeTab = document.querySelector('#timeEntriesUserTabs .tab.active');
+                if (activeTab && activeTab.textContent === shift.username) {
+                    showUserTimeEntries(shift.username);
+                }
                 alert('Shift approved and added to time entries!');
             }
         }
@@ -880,7 +941,7 @@
             if (shift) {
                 shift.status = 'rejected';
                 saveData();
-                refreshPendingShifts();
+                showUserShifts(shift.username);
                 alert('Shift rejected!');
             }
         }
@@ -892,7 +953,7 @@
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (allEntries.length === 0) {
-                container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No time entries yet</p>';
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No time entries yet</p>';
                 return;
             }
 
@@ -900,7 +961,7 @@
                 <div class="time-entry">
                     <div>
                         <strong>${entry.username}</strong> - ${entry.date} - ${entry.hours} hours<br>
-                        <small style="color: #666;">${entry.description || 'No description'}</small>
+                        <small style="color: #b0b0b0;">${entry.description || 'No description'}</small>
                     </div>
                     <button onclick="deleteTimeEntryAdmin(${entry.id})" class="btn-danger btn-small">Delete</button>
                 </div>
@@ -913,7 +974,258 @@
                 appData.timeEntries = appData.timeEntries.filter(e => e.id !== id);
                 saveData();
                 refreshAllTimeEntries();
+                refreshTimeEntriesByUser();
             }
+        }
+
+        // Display shifts by user
+        function refreshShiftsByUser() {
+            const users = appData.users.filter(u => !u.isAdmin);
+            const tabsContainer = document.getElementById('shiftsUserTabs');
+            const contentContainer = document.getElementById('shiftsUserContent');
+
+            if (users.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                contentContainer.innerHTML = '';
+                return;
+            }
+
+            // Create user tabs
+            tabsContainer.innerHTML = users.map((user, index) => 
+                `<button class="tab ${index === 0 ? 'active' : ''}" onclick="showUserShifts('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            // Show first user's shifts by default
+            if (users.length > 0) {
+                showUserShifts(users[0].username);
+            }
+        }
+
+        function showUserShifts(username) {
+            // Update active tab
+            const tabs = document.querySelectorAll('#shiftsUserTabs .tab');
+            tabs.forEach(tab => {
+                if (tab.textContent === username) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Get user's shifts
+            const userShifts = appData.shifts.filter(s => s.username === username)
+                .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+            const contentContainer = document.getElementById('shiftsUserContent');
+
+            if (userShifts.length === 0) {
+                contentContainer.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No shifts recorded</p>';
+                return;
+            }
+
+            // Separate pending and other shifts
+            const pendingShifts = userShifts.filter(s => s.status === 'pending');
+            const otherShifts = userShifts.filter(s => s.status !== 'pending');
+
+            let html = '';
+
+            // Show pending shifts first with approve/reject buttons
+            if (pendingShifts.length > 0) {
+                html += '<h4 style="color: #ff9800; margin-bottom: 15px;">⏳ Pending Approval</h4>';
+                html += pendingShifts.map(shift => `
+                    <div class="holiday-request" style="border: 2px solid #ff9800;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div>
+                                <span style="color: #b0b0b0;">Duration: ${shift.duration} (${shift.durationHours} hours)</span>
+                            </div>
+                            <span class="status-badge status-pending">PENDING</span>
+                        </div>
+                        <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>Start:</strong> ${shift.startTimeDisplay}</p>
+                        <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>End:</strong> ${shift.endTimeDisplay}</p>
+                        <p style="color: #888; font-size: 12px; margin-bottom: 10px;">Submitted: ${new Date(shift.submittedAt).toLocaleString()}</p>
+                        <div>
+                            <button onclick="approveShift(${shift.id})" class="btn-success btn-small">Approve</button>
+                            <button onclick="rejectShift(${shift.id})" class="btn-danger btn-small">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Show other shifts
+            if (otherShifts.length > 0) {
+                if (pendingShifts.length > 0) {
+                    html += '<h4 style="color: #b0b0b0; margin-top: 30px; margin-bottom: 15px;">Previous Shifts</h4>';
+                }
+                html += otherShifts.map(shift => `
+                    <div class="holiday-request">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <div>
+                                <span style="color: #b0b0b0;">Duration: ${shift.duration} (${shift.durationHours} hours)</span>
+                            </div>
+                            <span class="status-badge status-${shift.status}">${shift.status.toUpperCase()}</span>
+                        </div>
+                        <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>Start:</strong> ${shift.startTimeDisplay}</p>
+                        <p style="color: #b0b0b0; margin-bottom: 5px;"><strong>End:</strong> ${shift.endTimeDisplay}</p>
+                        <p style="color: #888; font-size: 12px;">Submitted: ${new Date(shift.submittedAt).toLocaleString()}</p>
+                    </div>
+                `).join('');
+            }
+
+            contentContainer.innerHTML = html;
+        }
+
+        // Display holidays by user
+        function refreshHolidaysByUser() {
+            const users = appData.users.filter(u => !u.isAdmin);
+            const tabsContainer = document.getElementById('holidaysUserTabs');
+            const contentContainer = document.getElementById('holidaysUserContent');
+
+            if (users.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                contentContainer.innerHTML = '';
+                return;
+            }
+
+            // Create user tabs
+            tabsContainer.innerHTML = users.map((user, index) => 
+                `<button class="tab ${index === 0 ? 'active' : ''}" onclick="showUserHolidays('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            // Show first user's holidays by default
+            if (users.length > 0) {
+                showUserHolidays(users[0].username);
+            }
+        }
+
+        function showUserHolidays(username) {
+            // Update active tab
+            const tabs = document.querySelectorAll('#holidaysUserTabs .tab');
+            tabs.forEach(tab => {
+                if (tab.textContent === username) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Get user's holidays
+            const userHolidays = appData.holidayRequests.filter(h => h.username === username)
+                .sort((a, b) => new Date(b.requestDate) - new Date(a.requestDate));
+
+            const contentContainer = document.getElementById('holidaysUserContent');
+
+            if (userHolidays.length === 0) {
+                contentContainer.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No holiday requests</p>';
+                return;
+            }
+
+            // Separate pending and other holidays
+            const pendingHolidays = userHolidays.filter(h => h.status === 'pending');
+            const otherHolidays = userHolidays.filter(h => h.status !== 'pending');
+
+            let html = '';
+
+            // Show pending holidays first with approve/reject buttons
+            if (pendingHolidays.length > 0) {
+                html += '<h4 style="color: #ff9800; margin-bottom: 15px;">⏳ Pending Approval</h4>';
+                html += pendingHolidays.map(request => `
+                    <div class="holiday-request" style="border: 2px solid #ff9800;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong>${request.startDate} to ${request.endDate}</strong>
+                            <span class="status-badge status-pending">PENDING</span>
+                        </div>
+                        ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                        <p style="color: #888; font-size: 12px; margin-bottom: 10px;">Requested: ${new Date(request.requestDate).toLocaleString()}</p>
+                        <div>
+                            <button onclick="approveHoliday(${request.id})" class="btn-success btn-small">Approve</button>
+                            <button onclick="rejectHoliday(${request.id})" class="btn-danger btn-small">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Show other holidays
+            if (otherHolidays.length > 0) {
+                if (pendingHolidays.length > 0) {
+                    html += '<h4 style="color: #b0b0b0; margin-top: 30px; margin-bottom: 15px;">Previous Requests</h4>';
+                }
+                html += otherHolidays.map(request => `
+                    <div class="holiday-request">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong>${request.startDate} to ${request.endDate}</strong>
+                            <span class="status-badge status-${request.status}">${request.status.toUpperCase()}</span>
+                        </div>
+                        ${request.reason ? `<p style="color: #b0b0b0; margin-bottom: 10px;">${request.reason}</p>` : ''}
+                        <p style="color: #888; font-size: 12px;">Requested: ${new Date(request.requestDate).toLocaleString()}</p>
+                    </div>
+                `).join('');
+            }
+
+            contentContainer.innerHTML = html;
+        }
+
+        // Display time entries by user
+        function refreshTimeEntriesByUser() {
+            const users = appData.users.filter(u => !u.isAdmin);
+            const tabsContainer = document.getElementById('timeEntriesUserTabs');
+            const contentContainer = document.getElementById('timeEntriesUserContent');
+
+            if (users.length === 0) {
+                tabsContainer.innerHTML = '<p style="color: #888; padding: 10px;">No users yet</p>';
+                contentContainer.innerHTML = '';
+                return;
+            }
+
+            // Create user tabs
+            tabsContainer.innerHTML = users.map((user, index) => 
+                `<button class="tab ${index === 0 ? 'active' : ''}" onclick="showUserTimeEntries('${user.username}')">${user.username}</button>`
+            ).join('');
+
+            // Show first user's time entries by default
+            if (users.length > 0) {
+                showUserTimeEntries(users[0].username);
+            }
+        }
+
+        function showUserTimeEntries(username) {
+            // Update active tab
+            const tabs = document.querySelectorAll('#timeEntriesUserTabs .tab');
+            tabs.forEach(tab => {
+                if (tab.textContent === username) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Get user's time entries
+            const userEntries = appData.timeEntries.filter(e => e.username === username)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const contentContainer = document.getElementById('timeEntriesUserContent');
+
+            if (userEntries.length === 0) {
+                contentContainer.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No time entries</p>';
+                return;
+            }
+
+            // Calculate total hours
+            const totalHours = userEntries.reduce((sum, entry) => sum + entry.hours, 0).toFixed(2);
+
+            contentContainer.innerHTML = `
+                <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #2196f3;">
+                    <p style="font-size: 18px;"><strong>Total Hours:</strong> <span style="color: #2196f3; font-size: 24px; font-weight: 700;">${totalHours}</span></p>
+                </div>
+                ${userEntries.map(entry => `
+                    <div class="time-entry">
+                        <div>
+                            <strong>${entry.date}</strong> - ${entry.hours} hours<br>
+                            <small style="color: #b0b0b0;">${entry.description || 'No description'}</small>
+                        </div>
+                        <button onclick="deleteTimeEntryAdmin(${entry.id})" class="btn-danger btn-small">Delete</button>
+                    </div>
+                `).join('')}
+            `;
         }
 
         // Approve holiday (admin only)
@@ -922,7 +1234,7 @@
             if (request) {
                 request.status = 'approved';
                 saveData();
-                refreshPendingHolidays();
+                showUserHolidays(request.username);
                 alert('Holiday request approved!');
             }
         }
@@ -933,7 +1245,7 @@
             if (request) {
                 request.status = 'rejected';
                 saveData();
-                refreshPendingHolidays();
+                showUserHolidays(request.username);
                 alert('Holiday request rejected!');
             }
         }
@@ -1036,7 +1348,7 @@
             document.getElementById('endShiftBtn').style.opacity = '0.5';
             
             document.getElementById('shiftStatus').innerHTML = 
-                '<p style="font-size: 18px; font-weight: 600; color: #666;">Shift ended - Ready to submit</p>';
+                '<p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">Shift ended - Ready to submit</p>';
             
             // Hide timer section
             document.getElementById('shiftTimer').classList.add('hidden');
@@ -1136,7 +1448,7 @@
             document.getElementById('currentShiftSection').classList.add('hidden');
             document.getElementById('shiftTimer').classList.add('hidden');
             document.getElementById('shiftStatus').innerHTML = 
-                '<p style="font-size: 18px; font-weight: 600; color: #666;">No active shift</p>';
+                '<p style="font-size: 18px; font-weight: 600; color: #b0b0b0;">No active shift</p>';
             document.getElementById('elapsedTime').textContent = '00:00:00';
             
             alert('Shift submitted to admin for approval!');
