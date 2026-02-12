@@ -20,6 +20,7 @@
         .graph-container.full-graph {
             border: 2px solid #444;
             border-radius: 16px;
+            padding-bottom: 1.2rem;
         }
 
         * {
@@ -504,8 +505,10 @@
             flex-wrap: wrap;
             gap: 1rem;
             margin-top: .8rem;
+            margin-bottom: 1.2rem;
             justify-content: center;
             font-size: .9rem;
+            align-items: center;
         }
 
         .legend-item {
@@ -518,6 +521,66 @@
             width: 12px;
             height: 12px;
             border-radius: 2px;
+        }
+
+        .graph-record-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #16a34a;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-slider:hover {
+            background-color: #555;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:hover {
+            background-color: #15803d;
         }
 
         .graph-tooltip {
@@ -922,6 +985,7 @@
             border-radius: 16px;
             margin-top: 0;
             /* match other panels */
+            padding-bottom: 1.8rem;
         }
 
         /* Y-axis scale controls */
@@ -1123,6 +1187,13 @@
                         <div class="legend-color" style="background: #7799bb;"></div>
                         <span>Group Pressure</span>
                     </div>
+                    <div class="graph-record-toggle-wrapper" onclick="event.stopPropagation();">
+                        <span>Always Record</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="graphRecordToggle" onchange="toggleGraphRecording()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
                 <div class="graph-tooltip"></div>
             </div>
@@ -1316,6 +1387,7 @@
             tempHistory: [],
             pressureHistory: [],
             dataCollectionPaused: false,
+            alwaysRecordGraph: false,
             pidGains: {
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
@@ -1633,8 +1705,8 @@
             }
 
 
-            // Graph history — ONLY during shot
-            if (!state.dataCollectionPaused && state.shotRunning) {
+            // Graph history — during shot OR if always-record is enabled
+            if (!state.dataCollectionPaused && (state.shotRunning || state.alwaysRecordGraph)) {
                 state.tempHistory.push(state.brewTemp);
                 state.pressureHistory.push(state.groupPressure);
 
@@ -1999,6 +2071,19 @@
             } else {
                 fullHoveredIndex = -1;
                 fullTooltip.style.display = 'none';
+                drawFullGraph();
+            }
+        }
+
+        function toggleGraphRecording() {
+            const checkbox = document.getElementById('graphRecordToggle');
+            state.alwaysRecordGraph = checkbox.checked;
+            
+            // If turning off and not in a shot, clear the history
+            if (!state.alwaysRecordGraph && !state.shotRunning) {
+                state.tempHistory = [];
+                state.pressureHistory = [];
+                drawMiniGraph();
                 drawFullGraph();
             }
         }
@@ -2614,6 +2699,33 @@
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
         }
 
+        // Track hold intervals for PID buttons
+        let pidHoldInterval = null;
+        let pidHoldTimeout = null;
+
+        function startPIDHold(zone, param, delta) {
+            // Immediate first adjustment
+            adjustPID(zone, param, delta);
+            
+            // Wait 500ms before starting continuous adjustments
+            pidHoldTimeout = setTimeout(() => {
+                pidHoldInterval = setInterval(() => {
+                    adjustPID(zone, param, delta);
+                }, 100); // Adjust every 100ms while held
+            }, 500);
+        }
+
+        function stopPIDHold() {
+            if (pidHoldTimeout) {
+                clearTimeout(pidHoldTimeout);
+                pidHoldTimeout = null;
+            }
+            if (pidHoldInterval) {
+                clearInterval(pidHoldInterval);
+                pidHoldInterval = null;
+            }
+        }
+
         function renderPIDSettings() {
             const container = document.getElementById('pidZones');
             container.innerHTML = '';
@@ -2629,60 +2741,60 @@
                             <h4 class="aggressive">Aggressive</h4>
                             <div class="pid-row">
                                 <span>Kp:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKp', -0.1)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKp" data-delta="-0.1">−</button>
                                 <input type="number" class="pid-input" id="${zone}-aggKp" 
                                        value="${state.pidGains[zone].aggKp.toFixed(2)}" 
                                        step="0.1" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'aggKp')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKp', 0.1)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKp" data-delta="0.1">+</button>
                             </div>
                             <div class="pid-row">
                                 <span>Ki:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKi', -0.01)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKi" data-delta="-0.01">−</button>
                                 <input type="number" class="pid-input" id="${zone}-aggKi" 
                                        value="${state.pidGains[zone].aggKi.toFixed(2)}" 
                                        step="0.01" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'aggKi')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKi', 0.01)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKi" data-delta="0.01">+</button>
                             </div>
                             <div class="pid-row">
                                 <span>Kd:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'aggKd', -0.1)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKd" data-delta="-0.1">−</button>
                                 <input type="number" class="pid-input" id="${zone}-aggKd" 
                                        value="${state.pidGains[zone].aggKd.toFixed(2)}" 
                                        step="0.1" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'aggKd')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'aggKd', 0.1)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKd" data-delta="0.1">+</button>
                             </div>
                         </div>
                         <div class="pid-column">
                             <h4 class="conservative">Conservative</h4>
                             <div class="pid-row">
                                 <span>Kp:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKp', -0.1)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKp" data-delta="-0.1">−</button>
                                 <input type="number" class="pid-input" id="${zone}-consKp" 
                                        value="${state.pidGains[zone].consKp.toFixed(2)}" 
                                        step="0.1" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'consKp')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKp', 0.1)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKp" data-delta="0.1">+</button>
                             </div>
                             <div class="pid-row">
                                 <span>Ki:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKi', -0.01)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKi" data-delta="-0.01">−</button>
                                 <input type="number" class="pid-input" id="${zone}-consKi" 
                                        value="${state.pidGains[zone].consKi.toFixed(2)}" 
                                        step="0.01" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'consKi')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKi', 0.01)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKi" data-delta="0.01">+</button>
                             </div>
                             <div class="pid-row">
                                 <span>Kd:</span>
-                                <button class="btn btn-danger btn-pid" onclick="adjustPID('${zone}', 'consKd', -0.1)">−</button>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKd" data-delta="-0.1">−</button>
                                 <input type="number" class="pid-input" id="${zone}-consKd" 
                                        value="${state.pidGains[zone].consKd.toFixed(2)}" 
                                        step="0.1" min="0"
                                        onchange="updatePIDFromInput(this, '${zone}', 'consKd')">
-                                <button class="btn btn-success btn-pid" onclick="adjustPID('${zone}', 'consKd', 0.1)">+</button>
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKd" data-delta="0.1">+</button>
                             </div>
                         </div>
                     </div>
@@ -2690,6 +2802,29 @@
 
                 div.innerHTML = html;
                 container.appendChild(div);
+            });
+
+            // Add press-and-hold event listeners to all PID buttons
+            document.querySelectorAll('.pid-hold-btn').forEach(btn => {
+                const zone = btn.dataset.zone;
+                const param = btn.dataset.param;
+                const delta = parseFloat(btn.dataset.delta);
+
+                // Mouse events
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    startPIDHold(zone, param, delta);
+                });
+                btn.addEventListener('mouseup', stopPIDHold);
+                btn.addEventListener('mouseleave', stopPIDHold);
+
+                // Touch events
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    startPIDHold(zone, param, delta);
+                });
+                btn.addEventListener('touchend', stopPIDHold);
+                btn.addEventListener('touchcancel', stopPIDHold);
             });
         }
 
