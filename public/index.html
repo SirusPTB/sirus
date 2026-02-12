@@ -1731,19 +1731,22 @@
         function updateDisplay() {
             const tempUnit = state.useFahrenheit ? '°F' : '°C';
 
-            document.getElementById('brewTempValue').textContent =
-                (state.useFahrenheit ? cToF(state.brewTemp) : state.brewTemp).toFixed(1);
+            // When disconnected, show 0.0 regardless of unit (instead of converting 0°C to 32°F)
+            const displayTemp = (tempC) => {
+                if (!state.bleConnected) return '0.0';
+                return (state.useFahrenheit ? cToF(tempC) : tempC).toFixed(1);
+            };
+
+            document.getElementById('brewTempValue').textContent = displayTemp(state.brewTemp);
             document.getElementById('brewTempUnit').textContent = tempUnit;
 
-            document.getElementById('steamTempValue').textContent =
-                (state.useFahrenheit ? cToF(state.steamTemp) : state.steamTemp).toFixed(1);
+            document.getElementById('steamTempValue').textContent = displayTemp(state.steamTemp);
             document.getElementById('steamTempUnit').textContent = tempUnit;
 
             document.getElementById('steamPressureValue').textContent = state.steamPressure.toFixed(1);
             document.getElementById('steamPressureUnit').textContent = 'bar';
 
-            document.getElementById('groupTempValue').textContent =
-                (state.useFahrenheit ? cToF(state.groupTemp) : state.groupTemp).toFixed(1);
+            document.getElementById('groupTempValue').textContent = displayTemp(state.groupTemp);
             document.getElementById('groupTempUnit').textContent = tempUnit;
             document.getElementById('brewStatus').className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
             document.getElementById('steamStatus').className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
