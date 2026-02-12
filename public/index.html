@@ -626,7 +626,7 @@
         .pid-row {
             display: grid;
             grid-template-columns: 30px 40px 90px 40px;
-            gap: 50px;
+            gap: 12px;
             align-items: center;
             margin-bottom: 10px;
             justify-items: center;
@@ -1480,6 +1480,7 @@
             state.steamTemp = 0;
             state.groupTemp = 0;
             state.groupPressure = 0;
+            state.steamPressure = 0;
 
             state.brewReady = false;
             state.steamReady = false;
@@ -1495,7 +1496,10 @@
 
             state.tempHistory = [];
             state.pressureHistory = [];
-            document.getElementById('sampleCount').textContent = '0';
+            const sampleCountElem = document.getElementById('sampleCount');
+            if (sampleCountElem) {
+                sampleCountElem.textContent = '0';
+            }
             miniHoveredIndex = -1;
             drawMiniGraph();
             drawFullGraph();
@@ -1516,6 +1520,23 @@
 
             updateBLEUI();
             resetLiveData();
+            
+            // Return to main page when disconnected
+            // Can't call showPage() here because it's not defined yet in the code
+            document.querySelectorAll('.page').forEach(page =>
+                page.classList.remove('active')
+            );
+            const mainPage = document.getElementById('mainPage');
+            if (mainPage) {
+                mainPage.classList.add('active');
+            }
+            
+            // Redraw mini graph after switching to main page
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    drawMiniGraph();
+                });
+            });
         }
 
         function updateBLEUI() {
