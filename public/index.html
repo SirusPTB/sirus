@@ -266,6 +266,11 @@
             font-family: 'DSEG7Classic', monospace;
             font-size: 1.8rem;
             line-height: 1;
+            justify-content: center;
+        }
+
+        /* Keep steam panel readings left-aligned since they're side-by-side */
+        .steam-readings-row .status-temp {
             justify-content: flex-start;
         }
 
@@ -309,7 +314,7 @@
         .steam-readings-row {
             display: flex;
             align-items: baseline;
-            justify-content: flex-start;
+            justify-content: center;
             width: 100%;
             gap: 2.5rem;
         }
