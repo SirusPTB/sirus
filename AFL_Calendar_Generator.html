@@ -76,12 +76,12 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s;
-            background: #000000;
+            background: #d1d5db;
         }
 
         .team-checkbox:hover {
             border-color: #001f3f;
-            background: #0a0a0a;
+            background: #e5e7eb;
         }
 
         .team-checkbox input[type="checkbox"] {
@@ -98,7 +98,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #cbd5e0;
+            color: #1f2937;
         }
 
         .team-logo {
@@ -109,7 +109,7 @@
 
         .team-checkbox input[type="checkbox"]:checked + label {
             font-weight: 600;
-            color: #5fa3d0;
+            color: #001f3f;
         }
 
         .select-all-btn {
@@ -578,7 +578,7 @@
                 // Get ladder position if available
                 const standing = ladder[team.name];
                 const ladderInfo = standing 
-                    ? `<span style="color: #94a3b8; font-size: 0.85rem; margin-left: auto;">#${standing.rank}</span>`
+                    ? `<span style="color: #4b5563; font-size: 0.85rem; margin-left: auto;">#${standing.rank}</span>`
                     : '';
                 
                 return `
