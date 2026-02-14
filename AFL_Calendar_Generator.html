@@ -481,14 +481,14 @@
                 
                 const data = await response.json();
                 console.log('User data received:', data);
-                const displayName = data.name || data.email || 'Signed In User';
+                const displayEmail = data.email || 'Signed In User';
                 
                 // Store user info in session
-                sessionStorage.setItem('google_user_name', displayName);
+                sessionStorage.setItem('google_user_name', displayEmail);
                 
-                document.getElementById('userEmail').textContent = displayName;
+                document.getElementById('userEmail').textContent = displayEmail;
                 document.getElementById('userInfo').classList.add('show');
-                console.log('User info displayed:', displayName);
+                console.log('User info displayed:', displayEmail);
             } catch (error) {
                 console.error('Error getting user info:', error);
                 // Still show the user info box even if we can't get details
