@@ -373,6 +373,14 @@
 
             <div class="section">
                 <div class="section-title">🔗 Direct Google Calendar Integration</div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; color: #94a3b8; cursor: pointer;">
+                        <input type="checkbox" id="allDayEventsCheckbox" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>Create as all-day events (better for year view)</span>
+                    </label>
+                </div>
+
                 <div class="user-info" id="userInfo">
                     <div class="user-details">
                         <span>✓ Signed in as <strong id="userEmail"></strong></span>
@@ -818,20 +826,32 @@
                 timezone = isDST ? 'AEDT' : 'AEST';
             }
 
+            // Check if user wants all-day events
+            const allDay = document.getElementById('allDayEventsCheckbox').checked;
+
             const event = {
-                summary: `${game.hteam} vs ${game.ateam} (${timezone})`,
+                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
-                start: {
-                    dateTime: gameDate.toISOString(),
-                    timeZone: 'Australia/Melbourne'
-                },
-                end: {
-                    dateTime: endDate.toISOString(),
-                    timeZone: 'Australia/Melbourne'
-                },
                 colorId: '9'
             };
+
+            if (allDay) {
+                // All-day event (shows in year view)
+                const dateStr = gameDate.toISOString().split('T')[0];
+                event.start = { date: dateStr };
+                event.end = { date: dateStr };
+            } else {
+                // Timed event
+                event.start = {
+                    dateTime: gameDate.toISOString(),
+                    timeZone: 'Australia/Melbourne'
+                };
+                event.end = {
+                    dateTime: endDate.toISOString(),
+                    timeZone: 'Australia/Melbourne'
+                };
+            }
 
             const response = await fetch(
                 `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
@@ -1007,20 +1027,32 @@
                 timezone = isDST ? 'AEDT' : 'AEST';
             }
 
+            // Check if user wants all-day events
+            const allDay = document.getElementById('allDayEventsCheckbox').checked;
+
             const event = {
-                summary: `${game.hteam} vs ${game.ateam} (${timezone})`,
+                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
-                start: {
-                    dateTime: gameDate.toISOString(),
-                    timeZone: 'Australia/Melbourne'
-                },
-                end: {
-                    dateTime: endDate.toISOString(),
-                    timeZone: 'Australia/Melbourne'
-                },
                 colorId: '9' // Blue color for AFL games
             };
+
+            if (allDay) {
+                // All-day event (shows in year view)
+                const dateStr = gameDate.toISOString().split('T')[0];
+                event.start = { date: dateStr };
+                event.end = { date: dateStr };
+            } else {
+                // Timed event
+                event.start = {
+                    dateTime: gameDate.toISOString(),
+                    timeZone: 'Australia/Melbourne'
+                };
+                event.end = {
+                    dateTime: endDate.toISOString(),
+                    timeZone: 'Australia/Melbourne'
+                };
+            }
 
             const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
                 method: 'POST',
