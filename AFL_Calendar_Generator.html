@@ -467,11 +467,21 @@
                         'Authorization': `Bearer ${accessToken}`
                     }
                 });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get user info');
+                }
+                
                 const data = await response.json();
-                document.getElementById('userEmail').textContent = data.email;
+                const displayName = data.name || data.email || 'User';
+                document.getElementById('userEmail').textContent = displayName;
                 document.getElementById('userInfo').classList.add('show');
+                console.log('User info loaded:', displayName);
             } catch (error) {
                 console.error('Error getting user info:', error);
+                // Still show the user info box even if we can't get details
+                document.getElementById('userEmail').textContent = 'Signed In';
+                document.getElementById('userInfo').classList.add('show');
             }
         }
 
