@@ -736,8 +736,17 @@
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
 
+            // Use timezone from API if available, otherwise default to AEDT/AEST based on date
+            let timezone = game.tz || 'AEDT';
+            // Normalize timezone format (API might return +11:00 format)
+            if (timezone.includes('+')) {
+                const month = gameDate.getMonth();
+                const isDST = month >= 9 || month <= 2;
+                timezone = isDST ? 'AEDT' : 'AEST';
+            }
+
             const event = {
-                summary: `${game.hteam} vs ${game.ateam}`,
+                summary: `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 start: {
@@ -906,8 +915,17 @@
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
 
+            // Use timezone from API if available, otherwise default to AEDT/AEST based on date
+            let timezone = game.tz || 'AEDT';
+            // Normalize timezone format (API might return +11:00 format)
+            if (timezone.includes('+')) {
+                const month = gameDate.getMonth();
+                const isDST = month >= 9 || month <= 2;
+                timezone = isDST ? 'AEDT' : 'AEST';
+            }
+
             const event = {
-                summary: `${game.hteam} vs ${game.ateam}`,
+                summary: `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 start: {
