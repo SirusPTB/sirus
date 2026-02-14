@@ -425,6 +425,7 @@
         const CURRENT_YEAR = 2026;
         
         let teams = [];
+        let ladder = {};
         let allTeamsSelected = false;
         let tokenClient;
         let accessToken = null;
@@ -506,9 +507,35 @@
                 const response = await fetch(`${API_BASE}/?q=teams`);
                 const data = await response.json();
                 teams = data.teams;
+                
+                // Load ladder standings
+                await loadLadder();
+                
                 renderTeams();
             } catch (error) {
                 showStatus('error', 'Failed to load teams. Please refresh the page.');
+            }
+        }
+
+        async function loadLadder() {
+            try {
+                const response = await fetch(`${API_BASE}/?q=standings;year=${CURRENT_YEAR}`);
+                const data = await response.json();
+                
+                // Create a map of team name to ladder position
+                if (data.standings && data.standings.length > 0) {
+                    data.standings.forEach(standing => {
+                        ladder[standing.name] = {
+                            rank: standing.rank,
+                            wins: standing.wins,
+                            losses: standing.losses,
+                            draws: standing.draws,
+                            points: standing.pts
+                        };
+                    });
+                }
+            } catch (error) {
+                console.log('Ladder data not available yet for', CURRENT_YEAR);
             }
         }
 
@@ -520,12 +547,19 @@
                     ? team.logo 
                     : `https://squiggle.com.au/${team.logo}`;
                 
+                // Get ladder position if available
+                const standing = ladder[team.name];
+                const ladderInfo = standing 
+                    ? `<span style="color: #94a3b8; font-size: 0.85rem; margin-left: auto;">#${standing.rank}</span>`
+                    : '';
+                
                 return `
                     <div class="team-checkbox">
                         <input type="checkbox" id="team-${team.id}" value="${team.id}" data-name="${team.name}">
-                        <label for="team-${team.id}">
+                        <label for="team-${team.id}" style="display: flex; align-items: center; width: 100%;">
                             <img src="${logoUrl}" alt="${team.name}" class="team-logo" onerror="this.style.display='none'">
-                            ${team.name}
+                            <span style="flex: 1;">${team.name}</span>
+                            ${ladderInfo}
                         </label>
                     </div>
                 `;
