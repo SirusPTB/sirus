@@ -837,10 +837,16 @@
             // Check if user wants all-day events
             const allDay = document.getElementById('allDayEventsCheckbox').checked;
 
+            // Get ladder positions for teams
+            const homeStanding = ladder[game.hteam];
+            const awayStanding = ladder[game.ateam];
+            const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
+            const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
+
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 colorId: '9'
             };
 
@@ -1038,10 +1044,16 @@
             // Check if user wants all-day events
             const allDay = document.getElementById('allDayEventsCheckbox').checked;
 
+            // Get ladder positions for teams
+            const homeStanding = ladder[game.hteam];
+            const awayStanding = ladder[game.ateam];
+            const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
+            const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
+
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}\nAway: ${game.ateam}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 colorId: '9' // Blue color for AFL games
             };
 
