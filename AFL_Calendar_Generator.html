@@ -1030,6 +1030,7 @@ END:VEVENT
         function showStatus(type, message) {
             const statusEl = document.getElementById('statusMsg');
             statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
             
             if (type === 'loading') {
                 statusEl.innerHTML = `<div class="spinner"></div>${message}`;
