@@ -740,10 +740,6 @@
                 return;
             }
 
-            if (!confirm('This will DELETE all AFL 2026 events from your calendar. This action cannot be undone. Continue?')) {
-                return;
-            }
-
             showStatus('loading', 'Fetching AFL events from your calendar...');
             document.getElementById('removeBtn').disabled = true;
 
