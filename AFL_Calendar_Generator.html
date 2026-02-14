@@ -635,6 +635,13 @@
                 return;
             }
 
+            // Validate token is still valid
+            if (!isTokenValid()) {
+                showStatus('error', 'Your session has expired. Please sign in again.');
+                clearSession();
+                return;
+            }
+
             if (!confirm('This will update all existing AFL 2026 events in your calendar with the latest information. Continue?')) {
                 return;
             }
@@ -713,6 +720,13 @@
         async function removeAllAFLEvents() {
             if (!accessToken) {
                 showStatus('error', 'Please sign in with Google first.');
+                return;
+            }
+
+            // Validate token is still valid
+            if (!isTokenValid()) {
+                showStatus('error', 'Your session has expired. Please sign in again.');
+                clearSession();
                 return;
             }
 
@@ -860,6 +874,13 @@
         async function addToGoogleCalendar() {
             if (!accessToken) {
                 showStatus('error', 'Please sign in with Google first.');
+                return;
+            }
+
+            // Validate token is still valid
+            if (!isTokenValid()) {
+                showStatus('error', 'Your session has expired. Please sign in again.');
+                clearSession();
                 return;
             }
 
@@ -1150,12 +1171,34 @@ END:VEVENT
                     console.log('Session restored successfully');
                 } else {
                     // Token expired, clear storage
-                    sessionStorage.removeItem('google_access_token');
-                    sessionStorage.removeItem('google_token_expiry');
-                    sessionStorage.removeItem('google_user_name');
+                    clearSession();
                     console.log('Session expired, please sign in again');
                 }
             }
+        }
+
+        function isTokenValid() {
+            const storedExpiry = sessionStorage.getItem('google_token_expiry');
+            if (!storedExpiry) return false;
+            
+            const expiryTime = parseInt(storedExpiry);
+            const now = Date.now();
+            
+            return now < expiryTime;
+        }
+
+        function clearSession() {
+            sessionStorage.removeItem('google_access_token');
+            sessionStorage.removeItem('google_token_expiry');
+            sessionStorage.removeItem('google_user_name');
+            accessToken = null;
+            
+            document.getElementById('authorizeBtn').style.display = 'flex';
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('updateBtn').disabled = true;
+            document.getElementById('removeBtn').disabled = true;
+            document.getElementById('userInfo').classList.remove('show');
         }
     </script>
 </body>
