@@ -641,10 +641,6 @@
                 return;
             }
 
-            if (!confirm('This will update all existing AFL 2026 events in your calendar with the latest information. Continue?')) {
-                return;
-            }
-
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
                 .map(cb => ({ id: cb.value, name: cb.dataset.name }));
 
