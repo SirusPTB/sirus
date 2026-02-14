@@ -61,34 +61,6 @@
             color: #e2e8f0;
         }
 
-        .year-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .year-selector select {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #2a2f4a;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: #0f1229;
-            color: #e2e8f0;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .year-selector select:hover {
-            border-color: #001f3f;
-        }
-
-        .year-selector select:focus {
-            outline: none;
-            border-color: #001f3f;
-            box-shadow: 0 0 0 3px rgba(0, 31, 63, 0.3);
-        }
-
         .teams-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -275,41 +247,6 @@
             line-height: 1.6;
         }
 
-        .warning-box {
-            background: #3a2a1a;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .warning-box p {
-            color: #fbbf24;
-            line-height: 1.6;
-        }
-
-        .warning-box strong {
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .warning-box ol {
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-
-        .warning-box li {
-            margin-bottom: 8px;
-        }
-
-        .warning-box code {
-            background: #1a1d35;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-            color: #86efac;
-        }
-
         .user-info {
             display: none;
             background: #0f1a2a;
@@ -368,18 +305,6 @@
             transition: width 0.3s;
         }
 
-        .download-option {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #2a2f4a;
-        }
-
-        .download-option p {
-            color: #94a3b8;
-            margin-bottom: 15px;
-        }
-
         .download-btn {
             padding: 12px 24px;
             background: #2a2f4a;
@@ -415,45 +340,13 @@
         </div>
 
         <div class="content">
-            <div class="warning-box">
-                <p><strong>⚠️ Google Calendar Setup Required</strong></p>
-                <p>The Google Calendar API integration requires additional setup. Choose one of these options:</p>
-                
-                <p><strong>Option 1: Add Test Users (Recommended)</strong></p>
-                <ol>
-                    <li>Go to <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" style="color: #86efac;">Google Cloud OAuth Consent Screen</a></li>
-                    <li>Select your project: <code>glass-memento-487401-n2</code></li>
-                    <li>Scroll down to "Test users" section</li>
-                    <li>Click "Add Users"</li>
-                    <li>Add your email: <code><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a9dac0c4c6c787ceccccc5c6c7cee9cec4c8c0c587cac6c4">[email&#160;protected]</a></code></li>
-                    <li>Save and refresh this page</li>
-                </ol>
-
-                <p><strong>Option 2: Publish Your App (For Public Use)</strong></p>
-                <ol>
-                    <li>Go to OAuth consent screen</li>
-                    <li>Click "Publish App"</li>
-                    <li>Note: May require Google verification for sensitive scopes</li>
-                </ol>
-
-                <p><strong>Option 3: Use ICS Download (Works Now!)</strong></p>
-                <p>Scroll down and use the "Download ICS File" button - no setup required!</p>
-            </div>
-
             <div class="info-box">
-                <p><strong>Quick Start:</strong> Select a year and teams below, then use "Download ICS File" to get a calendar file you can import into Google Calendar, Apple Calendar, Outlook, or any calendar app. No sign-in required!</p>
+                <p><strong>Quick Start:</strong> Select your favourite teams below, then use "Download ICS File" to get a calendar file you can import into Google Calendar, Apple Calendar, Outlook, or any calendar app. No sign-in required. Or sign in to Google and import the event automatically.</p>
             </div>
 
             <div class="section">
-                <div class="section-title">Select Season</div>
-                <div class="year-selector">
-                    <select id="yearSelect">
-                        <option value="2025">2025 Season</option>
-                        <option value="2024">2024 Season</option>
-                        <option value="2023">2023 Season</option>
-                        <option value="2022">2022 Season</option>
-                    </select>
-                </div>
+                <div class="section-title">2026 AFL Season</div>
+                <p style="color: #94a3b8; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
             </div>
 
             <div class="section">
@@ -509,11 +402,12 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         const API_BASE = 'https://api.squiggle.com.au';
         const CLIENT_ID = '1017993533846-vddmd49lpivato6chlv2kk7nol2u3srf.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+        const CURRENT_YEAR = 2026;
         
         let teams = [];
         let allTeamsSelected = false;
@@ -656,7 +550,6 @@
                 return;
             }
 
-            const year = document.getElementById('yearSelect').value;
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
                 .map(cb => ({ id: cb.value, name: cb.dataset.name }));
 
@@ -669,7 +562,7 @@
             document.getElementById('generateBtn').disabled = true;
 
             try {
-                const games = await fetchGames(year, selectedTeams);
+                const games = await fetchGames(CURRENT_YEAR, selectedTeams);
 
                 if (games.length === 0) {
                     showStatus('error', 'No games found for the selected teams and year.');
@@ -689,7 +582,7 @@
                     if (!game.date) continue;
 
                     try {
-                        await addEventToCalendar(game, year);
+                        await addEventToCalendar(game, CURRENT_YEAR);
                         addedCount++;
                     } catch (error) {
                         console.error('Failed to add game:', game, error);
@@ -723,7 +616,6 @@
         }
 
         async function downloadICSFile() {
-            const year = document.getElementById('yearSelect').value;
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
                 .map(cb => ({ id: cb.value, name: cb.dataset.name }));
 
@@ -735,15 +627,15 @@
             showStatus('loading', 'Generating ICS file...');
 
             try {
-                const games = await fetchGames(year, selectedTeams);
+                const games = await fetchGames(CURRENT_YEAR, selectedTeams);
 
                 if (games.length === 0) {
-                    showStatus('error', 'No games found for the selected teams and year.');
+                    showStatus('error', 'No games found for the selected teams.');
                     return;
                 }
 
-                const icsContent = generateICS(games, year);
-                downloadICS(icsContent, `AFL_${year}_Calendar.ics`);
+                const icsContent = generateICS(games, CURRENT_YEAR);
+                downloadICS(icsContent, `AFL_${CURRENT_YEAR}_Calendar.ics`);
 
                 showStatus('success', `✓ Downloaded ICS file with ${games.length} games!`);
 
