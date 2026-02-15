@@ -469,7 +469,7 @@
             </div>
 
             <div class="section">
-                <div class="section-title">2026 AFL Season</div>
+                <div class="section-title" id="seasonTitle">AFL Season</div>
                 <p style="color: #666; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
             </div>
 
@@ -519,7 +519,7 @@
         const API_BASE = 'https://api.squiggle.com.au';
         const CLIENT_ID = '1017993533846-vddmd49lpivato6chlv2kk7nol2u3srf.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-        const CURRENT_YEAR = 2026;
+        const CURRENT_YEAR = new Date().getFullYear();
         
         let teams = [];
         let ladder = {};
@@ -1307,6 +1307,9 @@ END:VEVENT
 
         // Initialize on page load
         window.onload = () => {
+            // Update season title with current year
+            document.getElementById('seasonTitle').textContent = `${CURRENT_YEAR} AFL Season`;
+            
             loadTeams();
             // Delay initialization to ensure Google script is loaded
             setTimeout(initializeGoogleAuth, 1000);
