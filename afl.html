@@ -1086,7 +1086,49 @@
                     return;
                 }
 
-                showStatus('loading', `Adding ${games.length} games to your Google Calendar...`);
+                // Check for existing events to avoid duplicates
+                showStatus('loading', 'Checking for existing events...');
+                const existingEvents = await getAFLEventsFromCalendar();
+                
+                // Create a set of existing game identifiers (team names + date)
+                const existingGameKeys = new Set();
+                existingEvents.forEach(event => {
+                    if (event.start && event.summary) {
+                        let eventDate;
+                        if (event.start.dateTime) {
+                            eventDate = new Date(event.start.dateTime);
+                        } else if (event.start.date) {
+                            eventDate = new Date(event.start.date);
+                        }
+                        
+                        if (eventDate) {
+                            const dateKey = `${eventDate.getFullYear()}-${eventDate.getMonth()}-${eventDate.getDate()}`;
+                            const summaryKey = event.summary.toLowerCase().replace(/[^a-z]/g, '');
+                            existingGameKeys.add(`${summaryKey}-${dateKey}`);
+                        }
+                    }
+                });
+
+                // Filter out games that already exist
+                const gamesToAdd = games.filter(game => {
+                    if (!game.date) return false;
+                    
+                    const gameDate = new Date(game.date);
+                    const dateKey = `${gameDate.getFullYear()}-${gameDate.getMonth()}-${gameDate.getDate()}`;
+                    const summaryKey = `${game.hteam}${game.ateam}`.toLowerCase().replace(/[^a-z]/g, '');
+                    const gameKey = `${summaryKey}-${dateKey}`;
+                    
+                    return !existingGameKeys.has(gameKey);
+                });
+
+                if (gamesToAdd.length === 0) {
+                    showStatus('error', 'All selected games already exist in your calendar. No new events added.');
+                    document.getElementById('generateBtn').disabled = !accessToken;
+                    return;
+                }
+
+                const skippedCount = games.length - gamesToAdd.length;
+                showStatus('loading', `Adding ${gamesToAdd.length} new games to your Google Calendar...${skippedCount > 0 ? ` (${skippedCount} already exist)` : ''}`);
                 document.getElementById('progressBar').classList.add('show');
                 
                 // Scroll to progress bar
@@ -1096,8 +1138,8 @@
                 let addedCount = 0;
                 let failedCount = 0;
 
-                for (let i = 0; i < games.length; i++) {
-                    const game = games[i];
+                for (let i = 0; i < gamesToAdd.length; i++) {
+                    const game = gamesToAdd[i];
                     if (!game.date) continue;
 
                     try {
@@ -1109,7 +1151,7 @@
                     }
 
                     // Update progress
-                    const progress = ((i + 1) / games.length) * 100;
+                    const progress = ((i + 1) / gamesToAdd.length) * 100;
                     document.getElementById('progressFill').style.width = progress + '%';
 
                     // Rate limiting - wait 100ms between requests
