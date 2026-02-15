@@ -59,9 +59,21 @@
 
         .teams-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .teams-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .team-checkbox {
@@ -385,10 +397,6 @@
 
             .content {
                 padding: 20px;
-            }
-
-            .teams-grid {
-                grid-template-columns: 1fr;
             }
 
             .manage-btn-container {
