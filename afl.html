@@ -784,7 +784,7 @@
                 // Get latest game data
                 const games = await fetchGames(CURRENT_YEAR, selectedTeams);
                 
-                showStatus('loading', `Updating ${existingEvents.length} events...`);
+                showStatus('loading', `Found ${existingEvents.length} AFL events. Updating with latest data...`);
                 document.getElementById('progressBar').classList.add('show');
                 
                 // Scroll to progress bar
@@ -792,31 +792,40 @@
 
                 let updatedCount = 0;
                 let failedCount = 0;
-                const processedGameIds = new Set(); // Track which games we've already updated
+                const processedEventIds = new Set(); // Track which events we've already updated (by event ID not game ID)
 
                 for (let i = 0; i < existingEvents.length; i++) {
                     const event = existingEvents[i];
                     
+                    // Skip if we've already processed this specific calendar event
+                    if (processedEventIds.has(event.id)) {
+                        continue;
+                    }
+                    
                     // Find matching game by parsing event summary
-                    const game = games.find(g => 
-                        event.summary && event.summary.includes(g.hteam) && event.summary.includes(g.ateam)
-                    );
+                    // Match both "Team A vs Team B" and "Team B vs Team A"
+                    const game = games.find(g => {
+                        if (!event.summary) return false;
+                        
+                        const summaryLower = event.summary.toLowerCase();
+                        const hteamLower = g.hteam.toLowerCase();
+                        const ateamLower = g.ateam.toLowerCase();
+                        
+                        // Check if both teams are in the summary (regardless of order)
+                        return summaryLower.includes(hteamLower) && summaryLower.includes(ateamLower);
+                    });
 
                     if (game && game.date) {
-                        // Check if we've already updated this game to avoid duplicates
-                        if (processedGameIds.has(game.id)) {
-                            console.log('Skipping duplicate event for game:', game.hteam, 'vs', game.ateam);
-                            continue;
-                        }
-                        
                         try {
                             await updateEventInCalendar(event.id, game, CURRENT_YEAR);
-                            processedGameIds.add(game.id); // Mark this game as processed
+                            processedEventIds.add(event.id); // Mark this event as processed
                             updatedCount++;
                         } catch (error) {
                             console.error('Failed to update event:', event, error);
                             failedCount++;
                         }
+                    } else {
+                        console.log('No matching game found for event:', event.summary);
                     }
 
                     const progress = ((i + 1) / existingEvents.length) * 100;
@@ -966,7 +975,7 @@
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
-                colorId: '9'
+                colorId: '7' // Peacock color for AFL games
             };
 
             if (allDay) {
