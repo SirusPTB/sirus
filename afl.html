@@ -245,12 +245,47 @@
         .info-box {
             background: #f9f9f9;
             border-left: 4px solid #003087;
-            padding: 15px;
             border-radius: 4px;
             margin-bottom: 20px;
+            overflow: hidden;
         }
 
-        .info-box p {
+        .info-box-header {
+            padding: 15px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .info-box-header:hover {
+            background: #f0f0f0;
+        }
+
+        .info-box-toggle {
+            transition: transform 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .info-box-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .info-box-content {
+            max-height: 500px;
+            padding: 0 15px 15px 15px;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            overflow: hidden;
+        }
+
+        .info-box-content.collapsed {
+            max-height: 0;
+            padding: 0 15px;
+        }
+
+        .info-box-content p {
             color: #666;
             line-height: 1.6;
         }
@@ -402,7 +437,13 @@
 
         <div class="content">
             <div class="info-box">
-                <p><strong>Quick Start:</strong> Select your favourite teams below, then use "Download ICS File" to get a calendar file you can import into Google Calendar, Apple Calendar, Outlook, or any calendar app. No sign-in required. Or sign in to Google and import the event automatically.</p>
+                <div class="info-box-header" onclick="toggleQuickStart()">
+                    <span><strong>Quick Start</strong></span>
+                    <span class="info-box-toggle collapsed">▼</span>
+                </div>
+                <div class="info-box-content collapsed" id="quickStartContent">
+                    <p>Select your favourite teams below, then use "Download ICS File" to get a calendar file you can import into Google Calendar, Apple Calendar, Outlook, or any calendar app. No sign-in required. Or sign in to Google and import the event automatically.</p>
+                </div>
             </div>
 
             <div class="section">
@@ -485,6 +526,15 @@
         let allTeamsSelected = false;
         let tokenClient;
         let accessToken = null;
+
+        // Toggle Quick Start panel
+        function toggleQuickStart() {
+            const content = document.getElementById('quickStartContent');
+            const toggle = document.querySelector('.info-box-toggle');
+            
+            content.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+        }
 
         // Initialize Google Identity Services
         function initializeGoogleAuth() {
