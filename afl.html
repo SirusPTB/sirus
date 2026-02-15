@@ -969,11 +969,42 @@
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
+            // Map teams to Google Calendar colors (1-11)
+            const teamColors = {
+                'Adelaide': '11',        // Red
+                'Brisbane': '6',         // Orange
+                'Carlton': '9',          // Blue
+                'Collingwood': '8',      // Graphite (dark)
+                'Essendon': '11',        // Red
+                'Fremantle': '10',       // Purple
+                'Geelong': '9',          // Blue
+                'Gold Coast': '11',      // Red
+                'GWS': '6',              // Orange
+                'Hawthorn': '5',         // Yellow/Brown
+                'Melbourne': '11',       // Red
+                'North Melbourne': '9',  // Blue
+                'Port Adelaide': '7',    // Teal
+                'Richmond': '5',         // Yellow
+                'St Kilda': '11',        // Red
+                'Sydney': '11',          // Red
+                'West Coast': '9',       // Blue
+                'Western Bulldogs': '9'  // Blue
+            };
+
+            // Get team logos
+            const homeTeam = teams.find(t => t.name === game.hteam);
+            const awayTeam = teams.find(t => t.name === game.ateam);
+            const homeLogoUrl = homeTeam ? (homeTeam.logo.startsWith('http') ? homeTeam.logo : `https://squiggle.com.au/${homeTeam.logo}`) : '';
+            const awayLogoUrl = awayTeam ? (awayTeam.logo.startsWith('http') ? awayTeam.logo : `https://squiggle.com.au/${awayTeam.logo}`) : '';
+
+            // Create HTML description with embedded logos
+            const htmlDescription = `<div style="font-family: Arial, sans-serif;"><h3 style="color: #003087;">AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}</h3><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${homeLogoUrl}" alt="${game.hteam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Home: ${game.hteam}${homeRank}</strong></div><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${awayLogoUrl}" alt="${game.ateam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Away: ${game.ateam}${awayRank}</strong></div>${game.venue ? `<p><strong>Venue:</strong> ${game.venue}</p>` : ''}</div>`;
+
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
-                colorId: '9'
+                description: htmlDescription,
+                colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
             };
 
             if (allDay) {
@@ -1176,11 +1207,42 @@
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
+            // Map teams to Google Calendar colors (1-11)
+            const teamColors = {
+                'Adelaide': '11',        // Red
+                'Brisbane': '6',         // Orange
+                'Carlton': '9',          // Blue
+                'Collingwood': '8',      // Graphite (dark)
+                'Essendon': '11',        // Red
+                'Fremantle': '10',       // Purple
+                'Geelong': '9',          // Blue
+                'Gold Coast': '11',      // Red
+                'GWS': '6',              // Orange
+                'Hawthorn': '5',         // Yellow/Brown
+                'Melbourne': '11',       // Red
+                'North Melbourne': '9',  // Blue
+                'Port Adelaide': '7',    // Teal
+                'Richmond': '5',         // Yellow
+                'St Kilda': '11',        // Red
+                'Sydney': '11',          // Red
+                'West Coast': '9',       // Blue
+                'Western Bulldogs': '9'  // Blue
+            };
+
+            // Get team logos
+            const homeTeam = teams.find(t => t.name === game.hteam);
+            const awayTeam = teams.find(t => t.name === game.ateam);
+            const homeLogoUrl = homeTeam ? (homeTeam.logo.startsWith('http') ? homeTeam.logo : `https://squiggle.com.au/${homeTeam.logo}`) : '';
+            const awayLogoUrl = awayTeam ? (awayTeam.logo.startsWith('http') ? awayTeam.logo : `https://squiggle.com.au/${awayTeam.logo}`) : '';
+
+            // Create HTML description with embedded logos
+            const htmlDescription = `<div style="font-family: Arial, sans-serif;"><h3 style="color: #003087;">AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}</h3><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${homeLogoUrl}" alt="${game.hteam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Home: ${game.hteam}${homeRank}</strong></div><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${awayLogoUrl}" alt="${game.ateam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Away: ${game.ateam}${awayRank}</strong></div>${game.venue ? `<p><strong>Venue:</strong> ${game.venue}</p>` : ''}</div>`;
+
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
-                colorId: '9' // Blue color for AFL games
+                description: htmlDescription,
+                colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
             };
 
             if (allDay) {
