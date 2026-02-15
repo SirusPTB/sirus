@@ -816,7 +816,9 @@
                         
                         if (!teamsMatch) return false;
                         
-                        // Also check if dates are close (within same day)
+                        // Also check if dates match (within same day)
+                        if (!event.start) return false;
+                        
                         const gameDate = new Date(g.date);
                         let eventDate;
                         
