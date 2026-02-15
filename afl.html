@@ -817,7 +817,7 @@
                         }
                         
                         try {
-                            await updateEventInCalendar(event.id, game, CURRENT_YEAR);
+                            await updateEventInCalendar(event.id, game, CURRENT_YEAR, selectedTeams);
                             processedGameIds.add(game.id); // Mark this game as processed
                             updatedCount++;
                         } catch (error) {
@@ -947,7 +947,7 @@
             return aflEvents;
         }
 
-        async function updateEventInCalendar(eventId, game, year) {
+        async function updateEventInCalendar(eventId, game, year, selectedTeams) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
 
@@ -968,6 +968,30 @@
             const awayStanding = ladder[game.ateam];
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
+
+            // Determine which team is the user's team and which is the opponent
+            const selectedTeamNames = selectedTeams.map(t => t.name);
+            let userTeam, opponentTeam, userRank, opponentRank;
+            
+            if (selectedTeamNames.includes(game.hteam) && !selectedTeamNames.includes(game.ateam)) {
+                // User selected home team only
+                userTeam = game.hteam;
+                opponentTeam = game.ateam;
+                userRank = homeRank;
+                opponentRank = awayRank;
+            } else if (selectedTeamNames.includes(game.ateam) && !selectedTeamNames.includes(game.hteam)) {
+                // User selected away team only
+                userTeam = game.ateam;
+                opponentTeam = game.hteam;
+                userRank = awayRank;
+                opponentRank = homeRank;
+            } else {
+                // User selected both teams or default behavior - keep home team first
+                userTeam = game.hteam;
+                opponentTeam = game.ateam;
+                userRank = homeRank;
+                opponentRank = awayRank;
+            }
 
             // Map teams to Google Calendar colors (1-11)
             const teamColors = {
@@ -992,13 +1016,13 @@
             };
 
 
-            const event = {
+                summary: allDay ? `${userTeam} vs ${opponentTeam}` : `${userTeam} vs ${opponentTeam} (${timezone})`,
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
 Home: ${game.hteam}${homeRank}
 Away: ${game.ateam}${awayRank}${game.venue ? `
-Venue: ${game.venue}` : ''}`,
+                colorId: teamColors[userTeam] || '9' // Use user's team color
                 colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
             };
 
@@ -1102,7 +1126,7 @@ Venue: ${game.venue}` : ''}`,
                     if (!game.date) continue;
 
                     try {
-                        await addEventToCalendar(game, CURRENT_YEAR);
+                        await addEventToCalendar(game, CURRENT_YEAR, selectedTeams);
                         addedCount++;
                     } catch (error) {
                         console.error('Failed to add game:', game, error);
@@ -1180,7 +1204,7 @@ Venue: ${game.venue}` : ''}`,
             return games;
         }
 
-        async function addEventToCalendar(game, year) {
+        async function addEventToCalendar(game, year, selectedTeams) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
 
@@ -1201,6 +1225,30 @@ Venue: ${game.venue}` : ''}`,
             const awayStanding = ladder[game.ateam];
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
+
+            // Determine which team is the user's team and which is the opponent
+            const selectedTeamNames = selectedTeams.map(t => t.name);
+            let userTeam, opponentTeam, userRank, opponentRank;
+            
+            if (selectedTeamNames.includes(game.hteam) && !selectedTeamNames.includes(game.ateam)) {
+                // User selected home team only
+                userTeam = game.hteam;
+                opponentTeam = game.ateam;
+                userRank = homeRank;
+                opponentRank = awayRank;
+            } else if (selectedTeamNames.includes(game.ateam) && !selectedTeamNames.includes(game.hteam)) {
+                // User selected away team only
+                userTeam = game.ateam;
+                opponentTeam = game.hteam;
+                userRank = awayRank;
+                opponentRank = homeRank;
+            } else {
+                // User selected both teams or default behavior - keep home team first
+                userTeam = game.hteam;
+                opponentTeam = game.ateam;
+                userRank = homeRank;
+                opponentRank = awayRank;
+            }
 
             // Map teams to Google Calendar colors (1-11)
             const teamColors = {
@@ -1226,13 +1274,13 @@ Venue: ${game.venue}` : ''}`,
 
 
             const event = {
-                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
+                summary: allDay ? `${userTeam} vs ${opponentTeam}` : `${userTeam} vs ${opponentTeam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
 Home: ${game.hteam}${homeRank}
 Away: ${game.ateam}${awayRank}${game.venue ? `
 Venue: ${game.venue}` : ''}`,
-                colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
+                colorId: teamColors[userTeam] || '9' // Use user's team color
             };
 
             if (allDay) {
