@@ -802,17 +802,38 @@
                         continue;
                     }
                     
-                    // Find matching game by parsing event summary
+                    // Find matching game by parsing event summary and matching date
                     // Match both "Team A vs Team B" and "Team B vs Team A"
                     const game = games.find(g => {
-                        if (!event.summary) return false;
+                        if (!event.summary || !g.date) return false;
                         
                         const summaryLower = event.summary.toLowerCase();
                         const hteamLower = g.hteam.toLowerCase();
                         const ateamLower = g.ateam.toLowerCase();
                         
                         // Check if both teams are in the summary (regardless of order)
-                        return summaryLower.includes(hteamLower) && summaryLower.includes(ateamLower);
+                        const teamsMatch = summaryLower.includes(hteamLower) && summaryLower.includes(ateamLower);
+                        
+                        if (!teamsMatch) return false;
+                        
+                        // Also check if dates are close (within same day)
+                        const gameDate = new Date(g.date);
+                        let eventDate;
+                        
+                        if (event.start.dateTime) {
+                            eventDate = new Date(event.start.dateTime);
+                        } else if (event.start.date) {
+                            eventDate = new Date(event.start.date);
+                        } else {
+                            return false;
+                        }
+                        
+                        // Compare dates (same day)
+                        const sameDay = gameDate.getFullYear() === eventDate.getFullYear() &&
+                                       gameDate.getMonth() === eventDate.getMonth() &&
+                                       gameDate.getDate() === eventDate.getDate();
+                        
+                        return sameDay;
                     });
 
                     if (game && game.date) {
@@ -876,7 +897,7 @@
                     return;
                 }
 
-                showStatus('loading', `Removing ${events.length} events...`);
+                showStatus('loading', `Removing ${events.length} AFL events from your calendar...`);
                 document.getElementById('progressBar').classList.add('show');
                 
                 // Scroll to progress bar
