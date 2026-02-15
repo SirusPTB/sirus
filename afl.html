@@ -363,7 +363,7 @@
 
         .download-btn {
             padding: 12px 24px;
-            background: #333;
+            background: #1b5e20;
             color: white;
             border: none;
             border-radius: 4px;
@@ -403,9 +403,9 @@
             }
         }
 
-        .download-btn:hover {
-            background: #000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        .download-btn:hover:not(:disabled) {
+            background: #2e7d32;
+            box-shadow: 0 2px 8px rgba(27, 94, 32, 0.3);
         }
 
         .download-btn:disabled {
@@ -505,7 +505,7 @@
             </div>
 
             <div class="section">
-                <div class="section-title">📥 Download Calendar File</div>
+                <div class="section-title" style="text-align: center;">📥 Download Calendar File</div>
                 <button class="download-btn" id="downloadBtn" disabled style="width: 50%; margin: 0 auto; display: block; padding: 16px; font-size: 1.1rem; font-weight: 600;">Download ICS File</button>
                 <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
             </div>
@@ -699,13 +699,22 @@
                 `;
             }).join('');
 
-            // Enable download button when teams are loaded
-            document.getElementById('downloadBtn').disabled = false;
+            // Start with download button disabled
+            document.getElementById('downloadBtn').disabled = true;
 
             // Add event listeners to checkboxes
             document.querySelectorAll('.team-checkbox input').forEach(cb => {
-                cb.addEventListener('change', updateSelectAllButton);
+                cb.addEventListener('change', () => {
+                    updateSelectAllButton();
+                    updateDownloadButtonState();
+                });
             });
+        }
+
+        function updateDownloadButtonState() {
+            const checkboxes = document.querySelectorAll('.team-checkbox input');
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            document.getElementById('downloadBtn').disabled = !anyChecked;
         }
 
         function updateSelectAllButton() {
@@ -728,6 +737,7 @@
                 cb.checked = !allTeamsSelected;
             });
             updateSelectAllButton();
+            updateDownloadButtonState();
         });
 
         document.getElementById('generateBtn').addEventListener('click', addToGoogleCalendar);
@@ -1279,6 +1289,14 @@ END:VEVENT
             } else {
                 statusEl.textContent = message;
             }
+
+            // Scroll to show the status message
+            setTimeout(() => {
+                statusEl.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 100);
 
             if (type === 'success' || type === 'error') {
                 setTimeout(() => {
