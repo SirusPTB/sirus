@@ -991,19 +991,14 @@
                 'Western Bulldogs': '9'  // Blue
             };
 
-            // Get team logos
-            const homeTeam = teams.find(t => t.name === game.hteam);
-            const awayTeam = teams.find(t => t.name === game.ateam);
-            const homeLogoUrl = homeTeam ? (homeTeam.logo.startsWith('http') ? homeTeam.logo : `https://squiggle.com.au/${homeTeam.logo}`) : '';
-            const awayLogoUrl = awayTeam ? (awayTeam.logo.startsWith('http') ? awayTeam.logo : `https://squiggle.com.au/${awayTeam.logo}`) : '';
-
-            // Create HTML description with embedded logos
-            const htmlDescription = `<div style="font-family: Arial, sans-serif;"><h3 style="color: #003087;">AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}</h3><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${homeLogoUrl}" alt="${game.hteam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Home: ${game.hteam}${homeRank}</strong></div><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${awayLogoUrl}" alt="${game.ateam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Away: ${game.ateam}${awayRank}</strong></div>${game.venue ? `<p><strong>Venue:</strong> ${game.venue}</p>` : ''}</div>`;
 
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: htmlDescription,
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
+Home: ${game.hteam}${homeRank}
+Away: ${game.ateam}${awayRank}${game.venue ? `
+Venue: ${game.venue}` : ''}`,
                 colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
             };
 
@@ -1229,19 +1224,14 @@
                 'Western Bulldogs': '9'  // Blue
             };
 
-            // Get team logos
-            const homeTeam = teams.find(t => t.name === game.hteam);
-            const awayTeam = teams.find(t => t.name === game.ateam);
-            const homeLogoUrl = homeTeam ? (homeTeam.logo.startsWith('http') ? homeTeam.logo : `https://squiggle.com.au/${homeTeam.logo}`) : '';
-            const awayLogoUrl = awayTeam ? (awayTeam.logo.startsWith('http') ? awayTeam.logo : `https://squiggle.com.au/${awayTeam.logo}`) : '';
-
-            // Create HTML description with embedded logos
-            const htmlDescription = `<div style="font-family: Arial, sans-serif;"><h3 style="color: #003087;">AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}</h3><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${homeLogoUrl}" alt="${game.hteam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Home: ${game.hteam}${homeRank}</strong></div><div style="display: flex; align-items: center; margin: 10px 0;"><img src="${awayLogoUrl}" alt="${game.ateam}" style="width: 40px; height: 40px; margin-right: 10px;"><strong>Away: ${game.ateam}${awayRank}</strong></div>${game.venue ? `<p><strong>Venue:</strong> ${game.venue}</p>` : ''}</div>`;
 
             const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: htmlDescription,
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
+Home: ${game.hteam}${homeRank}
+Away: ${game.ateam}${awayRank}${game.venue ? `
+Venue: ${game.venue}` : ''}`,
                 colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
             };
 
