@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AFL Fixture to Calendar</title>
-    <link rel="icon" type="image/png" href="afl.png">
     <style>
         * {
             margin: 0;
@@ -59,21 +58,9 @@
 
         .teams-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
-        }
-
-        @media (max-width: 1024px) {
-            .teams-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .teams-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .team-checkbox {
@@ -315,8 +302,8 @@
         .user-info {
             display: none;
             padding: 15px;
-            background: #e8f5e9;
-            border: 1px solid #a5d6a7;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
             border-radius: 4px;
             margin-bottom: 20px;
         }
@@ -331,7 +318,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #2e7d32;
+            color: #333;
             font-weight: 500;
         }
 
@@ -397,6 +384,10 @@
 
             .content {
                 padding: 20px;
+            }
+
+            .teams-grid {
+                grid-template-columns: 1fr;
             }
 
             .manage-btn-container {
@@ -478,7 +469,7 @@
             </div>
 
             <div class="section">
-                <div class="section-title" id="seasonTitle">AFL Season</div>
+                <div class="section-title">2026 AFL Season</div>
                 <p style="color: #666; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
             </div>
 
@@ -520,10 +511,6 @@
             </div>
 
             <div class="status" id="statusMsg"></div>
-            
-            <div style="text-align: center; padding: 20px 0; margin-top: 30px; color: #666; font-size: 0.9rem; border-top: 1px solid #e0e0e0;">
-                Copyright © 2026 AFL-CAL
-            </div>
         </div>
     </div>
 
@@ -532,7 +519,7 @@
         const API_BASE = 'https://api.squiggle.com.au';
         const CLIENT_ID = '1017993533846-vddmd49lpivato6chlv2kk7nol2u3srf.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-        const CURRENT_YEAR = new Date().getFullYear();
+        const CURRENT_YEAR = 2026;
         
         let teams = [];
         let ladder = {};
@@ -712,19 +699,22 @@
                 `;
             }).join('');
 
-            // Download button is always enabled
-            document.getElementById('downloadBtn').disabled = false;
+            // Start with download button disabled
+            document.getElementById('downloadBtn').disabled = true;
 
             // Add event listeners to checkboxes
             document.querySelectorAll('.team-checkbox input').forEach(cb => {
                 cb.addEventListener('change', () => {
                     updateSelectAllButton();
+                    updateDownloadButtonState();
                 });
             });
         }
 
         function updateDownloadButtonState() {
-            // Download button is always enabled - no state changes needed
+            const checkboxes = document.querySelectorAll('.team-checkbox input');
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            document.getElementById('downloadBtn').disabled = !anyChecked;
         }
 
         function updateSelectAllButton() {
@@ -747,6 +737,7 @@
                 cb.checked = !allTeamsSelected;
             });
             updateSelectAllButton();
+            updateDownloadButtonState();
         });
 
         document.getElementById('generateBtn').addEventListener('click', addToGoogleCalendar);
@@ -817,7 +808,7 @@
                         }
                         
                         try {
-                            await updateEventInCalendar(event.id, game, CURRENT_YEAR, selectedTeams);
+                            await updateEventInCalendar(event.id, game, CURRENT_YEAR);
                             processedGameIds.add(game.id); // Mark this game as processed
                             updatedCount++;
                         } catch (error) {
@@ -947,7 +938,7 @@
             return aflEvents;
         }
 
-        async function updateEventInCalendar(eventId, game, year, selectedTeams) {
+        async function updateEventInCalendar(eventId, game, year) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
 
@@ -969,61 +960,11 @@
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
-            // Determine which team is the user's team and which is the opponent
-            const selectedTeamNames = selectedTeams.map(t => t.name);
-            let userTeam, opponentTeam, userRank, opponentRank;
-            
-            if (selectedTeamNames.includes(game.hteam) && !selectedTeamNames.includes(game.ateam)) {
-                // User selected home team only
-                userTeam = game.hteam;
-                opponentTeam = game.ateam;
-                userRank = homeRank;
-                opponentRank = awayRank;
-            } else if (selectedTeamNames.includes(game.ateam) && !selectedTeamNames.includes(game.hteam)) {
-                // User selected away team only
-                userTeam = game.ateam;
-                opponentTeam = game.hteam;
-                userRank = awayRank;
-                opponentRank = homeRank;
-            } else {
-                // User selected both teams or default behavior - keep home team first
-                userTeam = game.hteam;
-                opponentTeam = game.ateam;
-                userRank = homeRank;
-                opponentRank = awayRank;
-            }
-
-            // Map teams to Google Calendar colors (1-11)
-            const teamColors = {
-                'Adelaide': '11',        // Red
-                'Brisbane': '6',         // Orange
-                'Carlton': '9',          // Blue
-                'Collingwood': '8',      // Graphite (dark)
-                'Essendon': '11',        // Red
-                'Fremantle': '10',       // Purple
-                'Geelong': '7',          // Peacock (Teal)
-                'Gold Coast': '11',      // Red
-                'GWS': '6',              // Orange
-                'Hawthorn': '5',         // Yellow/Brown
-                'Melbourne': '11',       // Red
-                'North Melbourne': '9',  // Blue
-                'Port Adelaide': '7',    // Teal
-                'Richmond': '5',         // Yellow
-                'St Kilda': '11',        // Red
-                'Sydney': '11',          // Red
-                'West Coast': '9',       // Blue
-                'Western Bulldogs': '9'  // Blue
-            };
-
-
-                summary: allDay ? `${userTeam} vs ${opponentTeam}` : `${userTeam} vs ${opponentTeam} (${timezone})`,
+            const event = {
                 summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
-Home: ${game.hteam}${homeRank}
-Away: ${game.ateam}${awayRank}${game.venue ? `
-                colorId: teamColors[userTeam] || '9' // Use user's team color
-                colorId: teamColors[game.hteam] || '9' // Use home team color, default to blue
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
+                colorId: '9'
             };
 
             if (allDay) {
@@ -1126,7 +1067,7 @@ Away: ${game.ateam}${awayRank}${game.venue ? `
                     if (!game.date) continue;
 
                     try {
-                        await addEventToCalendar(game, CURRENT_YEAR, selectedTeams);
+                        await addEventToCalendar(game, CURRENT_YEAR);
                         addedCount++;
                     } catch (error) {
                         console.error('Failed to add game:', game, error);
@@ -1204,7 +1145,7 @@ Away: ${game.ateam}${awayRank}${game.venue ? `
             return games;
         }
 
-        async function addEventToCalendar(game, year, selectedTeams) {
+        async function addEventToCalendar(game, year) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
 
@@ -1226,61 +1167,11 @@ Away: ${game.ateam}${awayRank}${game.venue ? `
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
-            // Determine which team is the user's team and which is the opponent
-            const selectedTeamNames = selectedTeams.map(t => t.name);
-            let userTeam, opponentTeam, userRank, opponentRank;
-            
-            if (selectedTeamNames.includes(game.hteam) && !selectedTeamNames.includes(game.ateam)) {
-                // User selected home team only
-                userTeam = game.hteam;
-                opponentTeam = game.ateam;
-                userRank = homeRank;
-                opponentRank = awayRank;
-            } else if (selectedTeamNames.includes(game.ateam) && !selectedTeamNames.includes(game.hteam)) {
-                // User selected away team only
-                userTeam = game.ateam;
-                opponentTeam = game.hteam;
-                userRank = awayRank;
-                opponentRank = homeRank;
-            } else {
-                // User selected both teams or default behavior - keep home team first
-                userTeam = game.hteam;
-                opponentTeam = game.ateam;
-                userRank = homeRank;
-                opponentRank = awayRank;
-            }
-
-            // Map teams to Google Calendar colors (1-11)
-            const teamColors = {
-                'Adelaide': '11',        // Red
-                'Brisbane': '6',         // Orange
-                'Carlton': '9',          // Blue
-                'Collingwood': '8',      // Graphite (dark)
-                'Essendon': '11',        // Red
-                'Fremantle': '10',       // Purple
-                'Geelong': '7',          // Peacock (Teal)
-                'Gold Coast': '11',      // Red
-                'GWS': '6',              // Orange
-                'Hawthorn': '5',         // Yellow/Brown
-                'Melbourne': '11',       // Red
-                'North Melbourne': '9',  // Blue
-                'Port Adelaide': '7',    // Teal
-                'Richmond': '5',         // Yellow
-                'St Kilda': '11',        // Red
-                'Sydney': '11',          // Red
-                'West Coast': '9',       // Blue
-                'Western Bulldogs': '9'  // Blue
-            };
-
-
             const event = {
-                summary: allDay ? `${userTeam} vs ${opponentTeam}` : `${userTeam} vs ${opponentTeam} (${timezone})`,
+                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
                 location: game.venue || 'TBA',
-                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}
-Home: ${game.hteam}${homeRank}
-Away: ${game.ateam}${awayRank}${game.venue ? `
-Venue: ${game.venue}` : ''}`,
-                colorId: teamColors[userTeam] || '9' // Use user's team color
+                description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
+                colorId: '9' // Blue color for AFL games
             };
 
             if (allDay) {
@@ -1399,14 +1290,6 @@ END:VEVENT
                 statusEl.textContent = message;
             }
 
-            // Scroll to show the status message
-            setTimeout(() => {
-                statusEl.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-            }, 100);
-
             if (type === 'success' || type === 'error') {
                 setTimeout(() => {
                     statusEl.style.display = 'none';
@@ -1416,9 +1299,6 @@ END:VEVENT
 
         // Initialize on page load
         window.onload = () => {
-            // Update season title with current year
-            document.getElementById('seasonTitle').textContent = `${CURRENT_YEAR} AFL Season`;
-            
             loadTeams();
             // Delay initialization to ensure Google script is loaded
             setTimeout(initializeGoogleAuth, 1000);
