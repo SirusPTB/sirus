@@ -13,41 +13,36 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0a0e27;
+            background: #2c2c2c;
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 800px;
+            width: 90%;
+            max-width: 1400px;
             margin: 0 auto;
-            background: #1a1d35;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            border: 1px solid #2a2f4a;
         }
 
         .header {
-            background: #001f3f;
+            background: #003087;
             color: white;
             padding: 40px 30px;
             text-align: center;
-            border-bottom: 2px solid #003d7a;
         }
 
         .header h1 {
             font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1rem;
+            margin-bottom: 0;
+            font-weight: 700;
         }
 
         .content {
-            padding: 40px 30px;
+            padding: 30px;
         }
 
         .section {
@@ -55,10 +50,10 @@
         }
 
         .section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.3rem;
+            font-weight: 700;
             margin-bottom: 15px;
-            color: #e2e8f0;
+            color: #000;
         }
 
         .teams-grid {
@@ -72,16 +67,16 @@
             display: flex;
             align-items: center;
             padding: 12px;
-            border: 2px solid #2a2f4a;
-            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s;
-            background: #d1d5db;
+            background: white;
         }
 
         .team-checkbox:hover {
-            border-color: #001f3f;
-            background: #e5e7eb;
+            border-color: #003087;
+            background: #fef5f7;
         }
 
         .team-checkbox input[type="checkbox"] {
@@ -89,6 +84,7 @@
             cursor: pointer;
             width: 18px;
             height: 18px;
+            accent-color: #003087;
         }
 
         .team-checkbox label {
@@ -98,7 +94,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #1f2937;
+            color: #333;
+            font-weight: 500;
         }
 
         .team-logo {
@@ -108,24 +105,27 @@
         }
 
         .team-checkbox input[type="checkbox"]:checked + label {
-            font-weight: 600;
-            color: #001f3f;
+            font-weight: 700;
+            color: #003087;
         }
 
         .select-all-btn {
             padding: 10px 20px;
-            background: #2a2f4a;
-            color: #e2e8f0;
-            border: none;
-            border-radius: 8px;
+            background: #f5f5f5;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 0.95rem;
-            transition: background 0.3s;
+            font-weight: 600;
+            transition: all 0.3s;
             margin-bottom: 15px;
         }
 
         .select-all-btn:hover {
-            background: #3a3f5a;
+            background: #003087;
+            color: white;
+            border-color: #003087;
         }
 
         .auth-section {
@@ -133,16 +133,17 @@
         }
 
         .auth-btn {
-            width: 100%;
+            width: 50%;
+            margin: 0 auto;
             padding: 16px;
             background: #4285f4;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.3s;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -150,78 +151,73 @@
         }
 
         .auth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(66, 133, 244, 0.3);
             background: #357ae8;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
         }
 
         .auth-btn:disabled {
-            background: #2a2f4a;
+            background: #ccc;
             cursor: not-allowed;
-            transform: none;
         }
 
         .generate-btn {
-            width: 100%;
+            width: 50%;
+            margin: 0 auto;
+            display: block;
             padding: 16px;
-            background: #001f3f;
+            background: #003087;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.3s;
+            transition: all 0.3s;
         }
 
         .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 31, 63, 0.5);
-            background: #003d7a;
-        }
-
-        .generate-btn:active {
-            transform: translateY(0);
+            background: #002366;
+            box-shadow: 0 2px 8px rgba(226, 25, 55, 0.3);
         }
 
         .generate-btn:disabled {
-            background: #2a2f4a;
+            background: #ccc;
             cursor: not-allowed;
-            transform: none;
         }
 
         .status {
             margin-top: 20px;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 4px;
             text-align: center;
             display: none;
+            font-weight: 600;
         }
 
         .status.loading {
             display: block;
-            background: #1a3a52;
-            color: #7dd3fc;
-            border: 1px solid #2a5a7a;
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #90caf9;
         }
 
         .status.success {
             display: block;
-            background: #1a3a2a;
-            color: #86efac;
-            border: 1px solid #2a5a3a;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #81c784;
         }
 
         .status.error {
             display: block;
-            background: #3a1a1a;
-            color: #fca5a5;
-            border: 1px solid #5a2a2a;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
         }
 
         .spinner {
-            border: 3px solid #2a2f4a;
-            border-top: 3px solid #001f3f;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #003087;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -235,15 +231,15 @@
         }
 
         .info-box {
-            background: #0f1a2a;
-            border-left: 4px solid #001f3f;
+            background: #f9f9f9;
+            border-left: 4px solid #003087;
             padding: 15px;
             border-radius: 4px;
             margin-bottom: 20px;
         }
 
         .info-box p {
-            color: #94a3b8;
+            color: #666;
             line-height: 1.6;
         }
 
@@ -256,6 +252,15 @@
             border: 1px solid #2a2f4a;
         }
 
+        .user-info {
+            display: none;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
         .user-info.show {
             display: flex;
             align-items: center;
@@ -266,32 +271,36 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: #94a3b8;
+            color: #333;
+            font-weight: 500;
         }
 
         .signout-btn {
             padding: 8px 16px;
-            background: transparent;
-            color: #fca5a5;
-            border: 1px solid #5a2a2a;
-            border-radius: 6px;
+            background: white;
+            color: #003087;
+            border: 1px solid #003087;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 0.9rem;
-            transition: background 0.3s;
+            font-weight: 600;
+            transition: all 0.3s;
         }
 
         .signout-btn:hover {
-            background: #3a1a1a;
+            background: #003087;
+            color: white;
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e5e7eb;
+            background: #f5f5f5;
             border-radius: 4px;
             margin-top: 10px;
             overflow: hidden;
             display: none;
+            border: 1px solid #e0e0e0;
         }
 
         .progress-bar.show {
@@ -300,26 +309,36 @@
 
         .progress-fill {
             height: 100%;
-            background: #3b82f6;
+            background: #003087;
             width: 0%;
             transition: width 0.3s;
         }
 
         .download-btn {
             padding: 12px 24px;
-            background: #2a2f4a;
-            color: #e2e8f0;
+            background: #333;
+            color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 1rem;
-            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            font-weight: 600;
+            transition: all 0.3s;
         }
 
         .download-btn:hover {
-            background: #3a7a4a;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(42, 90, 58, 0.3);
+            background: #000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .download-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .manage-btn {
+            transition: all 0.3s;
+            font-weight: 600;
         }
 
         .manage-btn:disabled {
@@ -328,8 +347,8 @@
         }
 
         .manage-btn:not(:disabled):hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0.9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
@@ -345,7 +364,6 @@
             </div>
 
             <div class="section">
-                <div class="section-title">🔗 Direct Google Calendar Integration</div>
                 
                 <div class="user-info" id="userInfo">
                     <div class="user-details">
@@ -369,7 +387,7 @@
 
             <div class="section">
                 <div class="section-title">2026 AFL Season</div>
-                <p style="color: #94a3b8; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
+                <p style="color: #666; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
             </div>
 
             <div class="section">
@@ -385,17 +403,17 @@
 
             <div class="section">
                 <div style="margin-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 10px; color: #94a3b8; cursor: pointer;">
-                        <input type="checkbox" id="allDayEventsCheckbox" style="width: 18px; height: 18px; cursor: pointer;">
+                    <label style="display: flex; align-items: center; gap: 10px; color: #666; cursor: pointer;">
+                        <input type="checkbox" id="allDayEventsCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #003087;">
                         <span>Create as all-day events (better for year view)</span>
                     </label>
                 </div>
 
                 <button class="generate-btn" id="generateBtn" disabled>Add to Google Calendar</button>
 
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="manage-btn" id="updateBtn" disabled style="flex: 1; padding: 12px; background: #2a4a5a; color: #7dd3fc; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.3s;">Update Existing Events</button>
-                    <button class="manage-btn" id="removeBtn" disabled style="flex: 1; padding: 12px; background: #4a2a2a; color: #fca5a5; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem; transition: background 0.3s;">Remove All AFL Events</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px; width: 50%; margin-left: auto; margin-right: auto;">
+                    <button class="manage-btn" id="updateBtn" disabled style="flex: 1; padding: 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Update Existing Events</button>
+                    <button class="manage-btn" id="removeBtn" disabled style="flex: 1; padding: 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Remove All AFL Events</button>
                 </div>
 
                 <div class="progress-bar" id="progressBar">
@@ -405,8 +423,8 @@
 
             <div class="section">
                 <div class="section-title">📥 Download Calendar File</div>
-                <button class="download-btn" id="downloadBtn" disabled style="width: 100%; padding: 16px; font-size: 1.1rem; font-weight: 600; background: #2a5a3a; color: #86efac; border: 2px solid #3a7a4a;">Download ICS File</button>
-                <p style="text-align: center; color: #94a3b8; margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
+                <button class="download-btn" id="downloadBtn" disabled style="width: 50%; margin: 0 auto; display: block; padding: 16px; font-size: 1.1rem; font-weight: 600;">Download ICS File</button>
+                <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
             </div>
 
             <div class="status" id="statusMsg"></div>
