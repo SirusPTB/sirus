@@ -1067,7 +1067,7 @@
                     if (!game.date) continue;
 
                     try {
-                        await addEventToCalendar(game, CURRENT_YEAR);
+                        await addEventToCalendar(game, CURRENT_YEAR, selectedTeams);
                         addedCount++;
                     } catch (error) {
                         console.error('Failed to add game:', game, error);
@@ -1119,7 +1119,7 @@
                     return;
                 }
 
-                const icsContent = generateICS(games, CURRENT_YEAR);
+                const icsContent = generateICS(games, CURRENT_YEAR, selectedTeams);
                 downloadICS(icsContent, `AFL_${CURRENT_YEAR}_Calendar.ics`);
 
                 showStatus('success', `✓ Downloaded ICS file with ${games.length} games!`);
@@ -1145,7 +1145,7 @@
             return games;
         }
 
-        async function addEventToCalendar(game, year) {
+        async function addEventToCalendar(game, year, selectedTeams) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
 
@@ -1167,8 +1167,35 @@
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
+            // Determine which team to show first (user's selected team)
+            const selectedTeamNames = selectedTeams.map(t => t.name);
+            let firstTeam, secondTeam, firstRank, secondRank;
+            
+            // Check if home team is selected
+            const homeSelected = selectedTeamNames.includes(game.hteam);
+            const awaySelected = selectedTeamNames.includes(game.ateam);
+            
+            // If only one team is selected, show it first
+            if (homeSelected && !awaySelected) {
+                firstTeam = game.hteam;
+                secondTeam = game.ateam;
+                firstRank = homeRank;
+                secondRank = awayRank;
+            } else if (awaySelected && !homeSelected) {
+                firstTeam = game.ateam;
+                secondTeam = game.hteam;
+                firstRank = awayRank;
+                secondRank = homeRank;
+            } else {
+                // Both or neither selected, default to home team first
+                firstTeam = game.hteam;
+                secondTeam = game.ateam;
+                firstRank = homeRank;
+                secondRank = awayRank;
+            }
+
             const event = {
-                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
+                summary: allDay ? `${firstTeam} vs ${secondTeam}` : `${firstTeam} vs ${secondTeam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 colorId: '7' // Peacock color for AFL games
@@ -1207,7 +1234,7 @@
             return await response.json();
         }
 
-        function generateICS(games, year) {
+        function generateICS(games, year, selectedTeams) {
             const now = new Date();
             const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
@@ -1221,6 +1248,8 @@ X-WR-TIMEZONE:Australia/Melbourne
 X-WR-CALDESC:AFL ${year} Season Fixtures
 `;
 
+            const selectedTeamNames = selectedTeams.map(t => t.name);
+
             games.forEach(game => {
                 if (!game.date) return;
 
@@ -1231,7 +1260,25 @@ X-WR-CALDESC:AFL ${year} Season Fixtures
                 const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
                 const dtend = formatICSDate(endDate);
 
-                const summary = `${game.hteam} vs ${game.ateam}`;
+                // Determine which team to show first (user's selected team)
+                let firstTeam, secondTeam;
+                
+                const homeSelected = selectedTeamNames.includes(game.hteam);
+                const awaySelected = selectedTeamNames.includes(game.ateam);
+                
+                if (homeSelected && !awaySelected) {
+                    firstTeam = game.hteam;
+                    secondTeam = game.ateam;
+                } else if (awaySelected && !homeSelected) {
+                    firstTeam = game.ateam;
+                    secondTeam = game.hteam;
+                } else {
+                    // Both or neither selected, default to home team first
+                    firstTeam = game.hteam;
+                    secondTeam = game.ateam;
+                }
+
+                const summary = `${firstTeam} vs ${secondTeam}`;
                 const location = game.venue || 'TBA';
                 const roundName = game.round ? `Round ${game.round}` : 'TBA';
                 
