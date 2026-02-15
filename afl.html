@@ -1112,8 +1112,9 @@
                         
                         if (eventDate) {
                             const dateKey = `${eventDate.getFullYear()}-${eventDate.getMonth()}-${eventDate.getDate()}`;
-                            const summaryKey = event.summary.toLowerCase().replace(/[^a-z]/g, '');
-                            existingGameKeys.add(`${summaryKey}-${dateKey}`);
+                            // Extract team names and sort them alphabetically to handle any order
+                            const summary = event.summary.toLowerCase().replace(/[^a-z]/g, '');
+                            existingGameKeys.add(`${summary}-${dateKey}`);
                         }
                     }
                 });
@@ -1124,10 +1125,16 @@
                     
                     const gameDate = new Date(game.date);
                     const dateKey = `${gameDate.getFullYear()}-${gameDate.getMonth()}-${gameDate.getDate()}`;
-                    const summaryKey = `${game.hteam}${game.ateam}`.toLowerCase().replace(/[^a-z]/g, '');
-                    const gameKey = `${summaryKey}-${dateKey}`;
                     
-                    return !existingGameKeys.has(gameKey);
+                    // Create keys for both possible team orders
+                    const team1 = game.hteam.toLowerCase().replace(/[^a-z]/g, '');
+                    const team2 = game.ateam.toLowerCase().replace(/[^a-z]/g, '');
+                    
+                    // Check both possible orderings
+                    const gameKey1 = `${team1}${team2}-${dateKey}`;
+                    const gameKey2 = `${team2}${team1}-${dateKey}`;
+                    
+                    return !existingGameKeys.has(gameKey1) && !existingGameKeys.has(gameKey2);
                 });
 
                 if (gamesToAdd.length === 0) {
