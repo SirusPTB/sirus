@@ -712,22 +712,19 @@
                 `;
             }).join('');
 
-            // Start with download button disabled
-            document.getElementById('downloadBtn').disabled = true;
+            // Download button is always enabled
+            document.getElementById('downloadBtn').disabled = false;
 
             // Add event listeners to checkboxes
             document.querySelectorAll('.team-checkbox input').forEach(cb => {
                 cb.addEventListener('change', () => {
                     updateSelectAllButton();
-                    updateDownloadButtonState();
                 });
             });
         }
 
         function updateDownloadButtonState() {
-            const checkboxes = document.querySelectorAll('.team-checkbox input');
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            document.getElementById('downloadBtn').disabled = !anyChecked;
+            // Download button is always enabled - no state changes needed
         }
 
         function updateSelectAllButton() {
@@ -750,7 +747,6 @@
                 cb.checked = !allTeamsSelected;
             });
             updateSelectAllButton();
-            updateDownloadButtonState();
         });
 
         document.getElementById('generateBtn').addEventListener('click', addToGoogleCalendar);
