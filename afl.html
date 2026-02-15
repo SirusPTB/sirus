@@ -533,6 +533,7 @@
         let allTeamsSelected = false;
         let tokenClient;
         let accessToken = null;
+        let isAddingEvents = false; // Flag to prevent concurrent add operations
 
         // Toggle Quick Start panel
         function toggleQuickStart() {
@@ -1059,6 +1060,12 @@
                 return;
             }
 
+            // Prevent concurrent add operations
+            if (isAddingEvents) {
+                showStatus('error', 'Already adding events. Please wait for the current operation to complete.');
+                return;
+            }
+
             // Validate token is still valid
             if (!isTokenValid()) {
                 showStatus('error', 'Your session has expired. Please sign in again.');
@@ -1074,6 +1081,7 @@
                 return;
             }
 
+            isAddingEvents = true; // Set flag to prevent concurrent operations
             showStatus('loading', 'Fetching games from Squiggle API...');
             document.getElementById('generateBtn').disabled = true;
 
@@ -1083,6 +1091,7 @@
                 if (games.length === 0) {
                     showStatus('error', 'No games found for the selected teams and year.');
                     document.getElementById('generateBtn').disabled = !accessToken;
+                    isAddingEvents = false; // Clear flag
                     return;
                 }
 
@@ -1124,6 +1133,7 @@
                 if (gamesToAdd.length === 0) {
                     showStatus('error', 'All selected games already exist in your calendar. No new events added.');
                     document.getElementById('generateBtn').disabled = !accessToken;
+                    isAddingEvents = false; // Clear flag
                     return;
                 }
 
@@ -1168,11 +1178,13 @@
                 }
 
                 document.getElementById('generateBtn').disabled = !accessToken;
+                isAddingEvents = false; // Clear flag when done
 
             } catch (error) {
                 document.getElementById('progressBar').classList.remove('show');
                 showStatus('error', 'Failed to fetch games. Please try again.');
                 document.getElementById('generateBtn').disabled = !accessToken;
+                isAddingEvents = false; // Clear flag on error
             }
         }
 
