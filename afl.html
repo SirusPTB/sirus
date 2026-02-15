@@ -1100,6 +1100,7 @@
                 const existingEvents = await getAFLEventsFromCalendar();
                 
                 // Create a set of existing game identifiers (team names + date)
+                // We need to handle that team order might be different in existing events
                 const existingGameKeys = new Set();
                 existingEvents.forEach(event => {
                     if (event.start && event.summary) {
@@ -1112,9 +1113,20 @@
                         
                         if (eventDate) {
                             const dateKey = `${eventDate.getFullYear()}-${eventDate.getMonth()}-${eventDate.getDate()}`;
-                            // Extract team names and sort them alphabetically to handle any order
-                            const summary = event.summary.toLowerCase().replace(/[^a-z]/g, '');
-                            existingGameKeys.add(`${summary}-${dateKey}`);
+                            
+                            // Extract both team names from the summary
+                            // Summary format is "Team A vs Team B" or "Team A vs Team B (AEDT)"
+                            const summaryParts = event.summary.split(' vs ');
+                            if (summaryParts.length >= 2) {
+                                // Get first team
+                                const team1 = summaryParts[0].trim().toLowerCase().replace(/[^a-z]/g, '');
+                                // Get second team (remove timezone if present)
+                                const team2 = summaryParts[1].replace(/\([^)]*\)/g, '').trim().toLowerCase().replace(/[^a-z]/g, '');
+                                
+                                // Sort team names alphabetically so order doesn't matter
+                                const sortedTeams = [team1, team2].sort().join('');
+                                existingGameKeys.add(`${sortedTeams}-${dateKey}`);
+                            }
                         }
                     }
                 });
@@ -1126,15 +1138,14 @@
                     const gameDate = new Date(game.date);
                     const dateKey = `${gameDate.getFullYear()}-${gameDate.getMonth()}-${gameDate.getDate()}`;
                     
-                    // Create keys for both possible team orders
+                    // Normalize team names and sort alphabetically
                     const team1 = game.hteam.toLowerCase().replace(/[^a-z]/g, '');
                     const team2 = game.ateam.toLowerCase().replace(/[^a-z]/g, '');
+                    const sortedTeams = [team1, team2].sort().join('');
                     
-                    // Check both possible orderings
-                    const gameKey1 = `${team1}${team2}-${dateKey}`;
-                    const gameKey2 = `${team2}${team1}-${dateKey}`;
+                    const gameKey = `${sortedTeams}-${dateKey}`;
                     
-                    return !existingGameKeys.has(gameKey1) && !existingGameKeys.has(gameKey2);
+                    return !existingGameKeys.has(gameKey);
                 });
 
                 if (gamesToAdd.length === 0) {
