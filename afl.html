@@ -62,6 +62,12 @@
             gap: 10px;
             margin-bottom: 20px;
         }
+        
+        @media (min-width: 900px) {
+            .teams-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
 
         .team-checkbox {
             display: flex;
@@ -506,7 +512,7 @@
 
             <div class="section">
                 <div class="section-title" style="text-align: center;">📥 Download Calendar File</div>
-                <button class="download-btn" id="downloadBtn" disabled style="width: 50%; margin: 0 auto; display: block; padding: 16px; font-size: 1.1rem; font-weight: 600;">Download ICS File</button>
+                <button class="download-btn" id="downloadBtn" style="width: 50%; margin: 0 auto; display: block; padding: 16px; font-size: 1.1rem; font-weight: 600;">Download ICS File</button>
                 <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
             </div>
 
@@ -699,9 +705,6 @@
                 `;
             }).join('');
 
-            // Start with download button disabled
-            document.getElementById('downloadBtn').disabled = true;
-
             // Add event listeners to checkboxes
             document.querySelectorAll('.team-checkbox input').forEach(cb => {
                 cb.addEventListener('change', () => {
@@ -712,9 +715,7 @@
         }
 
         function updateDownloadButtonState() {
-            const checkboxes = document.querySelectorAll('.team-checkbox input');
-            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-            document.getElementById('downloadBtn').disabled = !anyChecked;
+            // Download button is always enabled
         }
 
         function updateSelectAllButton() {
