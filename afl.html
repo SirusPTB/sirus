@@ -601,8 +601,8 @@
                 return `afl-${year}-${game.id}`;
             }
             const round = game.round || 'unknown';
-            const home = game.hteam.replace(/\s+/g, '-').toLowerCase();
-            const away = game.ateam.replace(/\s+/g, '-').toLowerCase();
+            const home = (game.hteam || 'unknown').replace(/\s+/g, '-').toLowerCase();
+            const away = (game.ateam || 'unknown').replace(/\s+/g, '-').toLowerCase();
             return `afl-${year}-r${round}-${home}-vs-${away}`;
         }
         
@@ -934,7 +934,7 @@
                     // Find matching game by parsing event summary and matching date
                     // Match both "Team A vs Team B" and "Team B vs Team A"
                     const game = games.find(g => {
-                        if (!event.summary || !g.date) return false;
+                        if (!event.summary || !g.date || !g.hteam || !g.ateam) return false;
                         
                         const summaryLower = event.summary.toLowerCase();
                         const hteamLower = g.hteam.toLowerCase();
@@ -1235,6 +1235,12 @@
         }
 
         async function updateEventInCalendar(eventId, game, year, selectedTeams) {
+            // Validate game has required fields
+            if (!game || !game.date || !game.hteam || !game.ateam) {
+                console.error('Invalid game data:', game);
+                throw new Error('Game missing required fields (date, hteam, or ateam)');
+            }
+            
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
 
@@ -1437,7 +1443,7 @@
 
                 // Filter out games that already exist
                 const gamesToAdd = games.filter(game => {
-                    if (!game.date) return false;
+                    if (!game.date || !game.hteam || !game.ateam) return false;
                     
                     const gameDate = new Date(game.date);
                     const dateKey = `${gameDate.getFullYear()}-${gameDate.getMonth()}-${gameDate.getDate()}`;
@@ -1472,7 +1478,13 @@
 
                 for (let i = 0; i < gamesToAdd.length; i++) {
                     const game = gamesToAdd[i];
-                    if (!game.date) continue;
+                    
+                    // Skip games with missing critical data
+                    if (!game || !game.date || !game.hteam || !game.ateam) {
+                        console.warn('Skipping invalid game:', game);
+                        failedCount++;
+                        continue;
+                    }
 
                     try {
                         await addEventToCalendar(game, CURRENT_YEAR, selectedTeams);
@@ -1554,9 +1566,18 @@
                     throw new Error('Invalid data format from API');
                 }
                 
-                // Filter games by selected teams
-                let games = data.games;
-                // Only filter if not all teams are selected
+                // Filter out games with missing critical data
+                let games = data.games.filter(game => {
+                    if (!game.hteam || !game.ateam) {
+                        console.warn('Skipping game with missing team data:', game);
+                        return false;
+                    }
+                    return true;
+                });
+                
+                console.log(`API returned ${data.games.length} games, ${games.length} valid games after filtering`);
+                
+                // Only filter by selected teams if not all teams are selected
                 if (selectedTeams.length < teams.length && teams.length > 0) {
                     const selectedTeamIds = selectedTeams
                         .filter(t => t && t.id) // Filter out any null/undefined team objects
@@ -1564,6 +1585,7 @@
                     games = games.filter(game => 
                         selectedTeamIds.includes(game.hteamid) || selectedTeamIds.includes(game.ateamid)
                     );
+                    console.log(`Filtered to ${games.length} games for selected teams`);
                 }
 
                 return games;
@@ -1574,6 +1596,12 @@
         }
 
         async function addEventToCalendar(game, year, selectedTeams) {
+            // Validate game has required fields
+            if (!game || !game.date || !game.hteam || !game.ateam) {
+                console.error('Invalid game data:', game);
+                throw new Error('Game missing required fields (date, hteam, or ateam)');
+            }
+            
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
 
