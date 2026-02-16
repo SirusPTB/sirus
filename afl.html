@@ -204,6 +204,49 @@
             cursor: not-allowed;
         }
 
+        .manage-btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 1200px) {
+            .manage-btn-container {
+                width: 70%;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .manage-btn-container {
+                width: 90%;
+                flex-direction: column;
+            }
+        }
+
+        .manage-btn {
+            flex: 1;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .manage-btn:hover:not(:disabled) {
+            opacity: 0.9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .manage-btn:disabled {
+            background: #ccc !important;
+            cursor: not-allowed;
+        }
+
         .status {
             margin-top: 20px;
             padding: 15px;
@@ -501,9 +544,10 @@
 
                 <button class="generate-btn" id="generateBtn" disabled>Add to Google Calendar</button>
 
-                <div class="manage-btn-container" style="display: flex; gap: 10px; margin-top: 10px; width: 50%; margin-left: auto; margin-right: auto;">
-                    <button class="manage-btn" id="updateBtn" disabled style="flex: 1; padding: 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Update Existing Events</button>
-                    <button class="manage-btn" id="removeBtn" disabled style="flex: 1; padding: 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Remove Selected Team Events</button>
+                <div class="manage-btn-container">
+                    <button class="manage-btn" id="updateBtn" disabled style="background: #2196F3;">Update Existing Events</button>
+                    <button class="manage-btn" id="removeBtn" disabled style="background: #f44336;">Remove Selected Team Events</button>
+                    <button class="manage-btn" id="removeAllBtn" disabled style="background: #d32f2f; font-weight: 700;">Remove All AFL Events</button>
                 </div>
 
                 <div class="progress-bar" id="progressBar">
@@ -656,6 +700,7 @@
             document.getElementById('generateBtn').disabled = false;
             document.getElementById('updateBtn').disabled = false;
             document.getElementById('removeBtn').disabled = false;
+            document.getElementById('removeAllBtn').disabled = false;
             
             // Get user info
             getUserInfo();
@@ -721,6 +766,7 @@
             document.getElementById('generateBtn').disabled = true;
             document.getElementById('updateBtn').disabled = true;
             document.getElementById('removeBtn').disabled = true;
+            document.getElementById('removeAllBtn').disabled = true;
             document.getElementById('userInfo').classList.remove('show');
         });
 
@@ -828,6 +874,7 @@
         document.getElementById('downloadBtn').addEventListener('click', downloadICSFile);
         document.getElementById('updateBtn').addEventListener('click', updateGoogleCalendarEvents);
         document.getElementById('removeBtn').addEventListener('click', removeAllAFLEvents);
+        document.getElementById('removeAllBtn').addEventListener('click', removeAllAFLEventsRegardless);
 
         async function updateGoogleCalendarEvents() {
             if (!accessToken) {
@@ -1063,6 +1110,93 @@
                 document.getElementById('progressBar').classList.remove('show');
                 showStatus('error', 'Failed to remove events. Please try again.');
                 document.getElementById('removeBtn').disabled = false;
+            }
+        }
+
+        async function removeAllAFLEventsRegardless() {
+            if (!accessToken) {
+                showStatus('error', 'Please sign in with Google first.');
+                return;
+            }
+
+            // Validate token is still valid
+            if (!isTokenValid()) {
+                showStatus('error', 'Your session has expired. Please sign in again.');
+                clearSession();
+                return;
+            }
+
+            // Show confirmation dialog with stronger warning
+            const confirmDelete = confirm(
+                '⚠️ WARNING: This will delete ALL AFL events from your calendar, regardless of which teams are selected.\n\n' +
+                'This action cannot be undone.\n\n' +
+                'Are you sure you want to continue?'
+            );
+
+            if (!confirmDelete) {
+                return;
+            }
+
+            showStatus('loading', 'Fetching all AFL events from your calendar...');
+            document.getElementById('removeAllBtn').disabled = true;
+
+            try {
+                const allEvents = await getAFLEventsFromCalendar();
+                
+                if (allEvents.length === 0) {
+                    showStatus('error', 'No AFL events found in your calendar.');
+                    document.getElementById('removeAllBtn').disabled = false;
+                    return;
+                }
+
+                showStatus('loading', `Removing all ${allEvents.length} AFL events from your calendar...`);
+                document.getElementById('progressBar').classList.add('show');
+                
+                // Scroll to progress bar
+                document.getElementById('progressBar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                let removedCount = 0;
+                let failedCount = 0;
+
+                for (let i = 0; i < allEvents.length; i++) {
+                    try {
+                        await deleteEventFromCalendar(allEvents[i].id);
+                        
+                        // Remove the stored event ID mapping
+                        const storedEventIds = getStoredEventIds();
+                        for (const [aflEventId, data] of Object.entries(storedEventIds)) {
+                            if (data.calendarEventId === allEvents[i].id) {
+                                removeStoredEventId(aflEventId);
+                                break;
+                            }
+                        }
+                        
+                        removedCount++;
+                    } catch (error) {
+                        console.error('Failed to delete event:', allEvents[i], error);
+                        failedCount++;
+                    }
+
+                    const progress = ((i + 1) / allEvents.length) * 100;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                document.getElementById('progressBar').classList.remove('show');
+                document.getElementById('progressFill').style.width = '0%';
+
+                if (removedCount > 0) {
+                    showStatus('success', `✓ Removed all ${removedCount} AFL events!${failedCount > 0 ? ` (${failedCount} failed)` : ''}`);
+                } else {
+                    showStatus('error', 'No events were removed.');
+                }
+
+                document.getElementById('removeAllBtn').disabled = false;
+
+            } catch (error) {
+                document.getElementById('progressBar').classList.remove('show');
+                showStatus('error', 'Failed to remove events. Please try again.');
+                document.getElementById('removeAllBtn').disabled = false;
             }
         }
 
@@ -1673,6 +1807,7 @@ END:VEVENT
                     document.getElementById('generateBtn').disabled = false;
                     document.getElementById('updateBtn').disabled = false;
                     document.getElementById('removeBtn').disabled = false;
+                    document.getElementById('removeAllBtn').disabled = false;
                     
                     // Restore user info if available
                     if (storedUserName) {
@@ -1713,6 +1848,7 @@ END:VEVENT
             document.getElementById('generateBtn').disabled = true;
             document.getElementById('updateBtn').disabled = true;
             document.getElementById('removeBtn').disabled = true;
+            document.getElementById('removeAllBtn').disabled = true;
             document.getElementById('userInfo').classList.remove('show');
         }
         
