@@ -534,6 +534,87 @@
         let tokenClient;
         let accessToken = null;
         let isAddingEvents = false; // Flag to prevent concurrent add operations
+        
+        // Storage for tracking calendar event IDs
+        const EVENT_ID_STORAGE_KEY = 'afl_calendar_event_ids';
+        
+        // Get stored event IDs mapping (AFL game ID -> Google Calendar event ID)
+        function getStoredEventIds() {
+            const stored = localStorage.getItem(EVENT_ID_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : {};
+        }
+        
+        // Save event IDs mapping
+        function saveEventIds(eventIds) {
+            localStorage.setItem(EVENT_ID_STORAGE_KEY, JSON.stringify(eventIds));
+        }
+        
+        // Generate unique ID for AFL game
+        function generateAflEventId(game, year) {
+            // Create a unique ID based on game details
+            // Format: afl-YEAR-GAMEID or afl-YEAR-ROUND-HOME-AWAY
+            if (game.id) {
+                return `afl-${year}-${game.id}`;
+            }
+            const round = game.round || 'unknown';
+            const home = game.hteam.replace(/\s+/g, '-').toLowerCase();
+            const away = game.ateam.replace(/\s+/g, '-').toLowerCase();
+            return `afl-${year}-r${round}-${home}-vs-${away}`;
+        }
+        
+        // Store calendar event ID
+        function storeEventId(aflEventId, googleCalendarEventId, gameDetails) {
+            const eventIds = getStoredEventIds();
+            eventIds[aflEventId] = {
+                calendarEventId: googleCalendarEventId,
+                timestamp: Date.now(),
+                gameDetails: gameDetails // Store game info for reference
+            };
+            saveEventIds(eventIds);
+        }
+        
+        // Get calendar event ID for an AFL game
+        function getCalendarEventId(aflEventId) {
+            const eventIds = getStoredEventIds();
+            return eventIds[aflEventId]?.calendarEventId;
+        }
+        
+        // Remove event ID from storage
+        function removeStoredEventId(aflEventId) {
+            const eventIds = getStoredEventIds();
+            delete eventIds[aflEventId];
+            saveEventIds(eventIds);
+        }
+        
+        // Clear all stored event IDs for a specific year
+        function clearEventIdsForYear(year) {
+            const eventIds = getStoredEventIds();
+            const prefix = `afl-${year}-`;
+            const updatedIds = {};
+            
+            for (const [key, value] of Object.entries(eventIds)) {
+                if (!key.startsWith(prefix)) {
+                    updatedIds[key] = value;
+                }
+            }
+            
+            saveEventIds(updatedIds);
+        }
+        
+        // Get all stored events for a specific year
+        function getStoredEventsForYear(year) {
+            const eventIds = getStoredEventIds();
+            const prefix = `afl-${year}-`;
+            const yearEvents = {};
+            
+            for (const [key, value] of Object.entries(eventIds)) {
+                if (key.startsWith(prefix)) {
+                    yearEvents[key] = value;
+                }
+            }
+            
+            return yearEvents;
+        }
 
         // Toggle Quick Start panel
         function toggleQuickStart() {
@@ -946,6 +1027,16 @@
                 for (let i = 0; i < events.length; i++) {
                     try {
                         await deleteEventFromCalendar(events[i].id);
+                        
+                        // Remove the stored event ID mapping
+                        const storedEventIds = getStoredEventIds();
+                        for (const [aflEventId, data] of Object.entries(storedEventIds)) {
+                            if (data.calendarEventId === events[i].id) {
+                                removeStoredEventId(aflEventId);
+                                break;
+                            }
+                        }
+                        
                         removedCount++;
                     } catch (error) {
                         console.error('Failed to delete event:', events[i], error);
@@ -1096,7 +1187,20 @@
                 throw new Error('Failed to update event');
             }
 
-            return await response.json();
+            const updatedEvent = await response.json();
+            
+            // Update the stored event ID mapping with latest game details
+            const aflEventId = generateAflEventId(game, year);
+            const gameDetails = {
+                round: game.round,
+                homeTeam: game.hteam,
+                awayTeam: game.ateam,
+                venue: game.venue,
+                date: game.date
+            };
+            storeEventId(aflEventId, updatedEvent.id, gameDetails);
+            
+            return updatedEvent;
         }
 
         async function deleteEventFromCalendar(eventId) {
@@ -1413,7 +1517,20 @@
                 throw new Error('Failed to add event');
             }
 
-            return await response.json();
+            const createdEvent = await response.json();
+            
+            // Generate and store the unique AFL event ID mapping
+            const aflEventId = generateAflEventId(game, year);
+            const gameDetails = {
+                round: game.round,
+                homeTeam: game.hteam,
+                awayTeam: game.ateam,
+                venue: game.venue,
+                date: game.date
+            };
+            storeEventId(aflEventId, createdEvent.id, gameDetails);
+            
+            return createdEvent;
         }
 
         function generateICS(games, year, selectedTeams) {
@@ -1598,6 +1715,73 @@ END:VEVENT
             document.getElementById('removeBtn').disabled = true;
             document.getElementById('userInfo').classList.remove('show');
         }
+        
+        // Debugging and utility functions for event ID management
+        // These can be called from browser console
+        
+        // View all stored event IDs
+        window.viewStoredEventIds = function() {
+            const eventIds = getStoredEventIds();
+            console.log('Stored Event IDs:', eventIds);
+            console.log('Total events tracked:', Object.keys(eventIds).length);
+            return eventIds;
+        };
+        
+        // View stored events for a specific year
+        window.viewStoredEventsByYear = function(year) {
+            const yearEvents = getStoredEventsForYear(year);
+            console.log(`Stored events for ${year}:`, yearEvents);
+            console.log(`Total events for ${year}:`, Object.keys(yearEvents).length);
+            return yearEvents;
+        };
+        
+        // Clear all stored event IDs for a specific year
+        window.clearStoredEventsForYear = function(year) {
+            if (confirm(`Are you sure you want to clear all stored event IDs for ${year}?`)) {
+                clearEventIdsForYear(year);
+                console.log(`Cleared all event IDs for ${year}`);
+            }
+        };
+        
+        // Clear all stored event IDs
+        window.clearAllStoredEvents = function() {
+            if (confirm('Are you sure you want to clear ALL stored event IDs?')) {
+                localStorage.removeItem(EVENT_ID_STORAGE_KEY);
+                console.log('Cleared all stored event IDs');
+            }
+        };
+        
+        // Export stored event IDs as JSON
+        window.exportStoredEventIds = function() {
+            const eventIds = getStoredEventIds();
+            const dataStr = JSON.stringify(eventIds, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `afl-event-ids-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        };
+        
+        // Import stored event IDs from JSON
+        window.importStoredEventIds = function(jsonData) {
+            try {
+                const eventIds = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+                saveEventIds(eventIds);
+                console.log('Successfully imported event IDs:', Object.keys(eventIds).length, 'events');
+            } catch (error) {
+                console.error('Failed to import event IDs:', error);
+            }
+        };
+        
+        console.log('Event ID Management Functions Available:');
+        console.log('- viewStoredEventIds() - View all stored event mappings');
+        console.log('- viewStoredEventsByYear(year) - View events for a specific year');
+        console.log('- clearStoredEventsForYear(year) - Clear events for a specific year');
+        console.log('- clearAllStoredEvents() - Clear all stored events');
+        console.log('- exportStoredEventIds() - Export to JSON file');
+        console.log('- importStoredEventIds(jsonData) - Import from JSON');
     </script>
 </body>
 </html>
