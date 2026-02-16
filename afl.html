@@ -1261,7 +1261,8 @@
 
             } catch (error) {
                 document.getElementById('progressBar').classList.remove('show');
-                showStatus('error', 'Failed to fetch games. Please try again.');
+                console.error('Error in addToGoogleCalendar:', error);
+                showStatus('error', `Failed to fetch games: ${error.message}. Please try again.`);
                 document.getElementById('generateBtn').disabled = !accessToken;
                 isAddingEvents = false; // Clear flag on error
             }
@@ -1297,19 +1298,33 @@
         }
 
         async function fetchGames(year, selectedTeams) {
-            const response = await fetch(`${API_BASE}/?q=games;year=${year}`);
-            const data = await response.json();
-            
-            // Filter games by selected teams
-            let games = data.games;
-            if (selectedTeams.length < teams.length) {
-                const selectedTeamIds = selectedTeams.map(t => parseInt(t.id));
-                games = games.filter(game => 
-                    selectedTeamIds.includes(game.hteamid) || selectedTeamIds.includes(game.ateamid)
-                );
-            }
+            try {
+                const response = await fetch(`${API_BASE}/?q=games;year=${year}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.games || !Array.isArray(data.games)) {
+                    throw new Error('Invalid data format from API');
+                }
+                
+                // Filter games by selected teams
+                let games = data.games;
+                if (selectedTeams.length < teams.length) {
+                    const selectedTeamIds = selectedTeams.map(t => parseInt(t.id));
+                    games = games.filter(game => 
+                        selectedTeamIds.includes(game.hteamid) || selectedTeamIds.includes(game.ateamid)
+                    );
+                }
 
-            return games;
+                return games;
+            } catch (error) {
+                console.error('Error fetching games:', error);
+                throw error;
+            }
         }
 
         async function addEventToCalendar(game, year, selectedTeams) {
