@@ -116,24 +116,6 @@
             color: #003087;
         }
 
-        .select-all-btn {
-            padding: 10px 20px;
-            background: #f5f5f5;
-            color: #333;
-            border: 2px solid #e0e0e0;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-bottom: 15px;
-        }
-
-        .select-all-btn:hover {
-            background: #003087;
-            color: white;
-            border-color: #003087;
-        }
 
         .auth-section {
             margin-bottom: 20px;
@@ -275,6 +257,148 @@
             background: #ffebee;
             color: #c62828;
             border: 1px solid #ef5350;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .toast.error {
+            border-left: 4px solid #f44336;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #ff9800;
+        }
+
+        .toast.info {
+            border-left: 4px solid #2196F3;
+        }
+
+        .toast-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .toast.error .toast-icon {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .toast.warning .toast-icon {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .toast.info .toast-icon {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
+        .toast-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .toast-close:hover {
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.removing {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+
+        @media (max-width: 768px) {
+            .toast-container {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .toast {
+                min-width: 0;
+                max-width: none;
+            }
         }
 
         .spinner {
@@ -480,6 +604,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <div class="container">
         <div class="header">
             <h1>AFL Fixture to Calendar</h1>
@@ -525,7 +652,6 @@
 
             <div class="section">
                 <div class="section-title">Select Teams</div>
-                <button class="select-all-btn" id="selectAllBtn">Select All Teams</button>
                 <div class="teams-grid" id="teamsContainer">
                     <div class="status loading">
                         <div class="spinner"></div>
@@ -574,7 +700,6 @@
         
         let teams = [];
         let ladder = {};
-        let allTeamsSelected = false;
         let tokenClient;
         let accessToken = null;
         let isAddingEvents = false; // Flag to prevent concurrent add operations
@@ -837,7 +962,6 @@
             // Add event listeners to checkboxes
             document.querySelectorAll('.team-checkbox input').forEach(cb => {
                 cb.addEventListener('change', () => {
-                    updateSelectAllButton();
                     updateDownloadButtonState();
                 });
             });
@@ -846,29 +970,6 @@
         function updateDownloadButtonState() {
             // Download button is always enabled
         }
-
-        function updateSelectAllButton() {
-            const checkboxes = document.querySelectorAll('.team-checkbox input');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            const selectAllBtn = document.getElementById('selectAllBtn');
-            
-            if (allChecked) {
-                selectAllBtn.textContent = 'Deselect All Teams';
-                allTeamsSelected = true;
-            } else {
-                selectAllBtn.textContent = 'Select All Teams';
-                allTeamsSelected = false;
-            }
-        }
-
-        document.getElementById('selectAllBtn').addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.team-checkbox input');
-            checkboxes.forEach(cb => {
-                cb.checked = !allTeamsSelected;
-            });
-            updateSelectAllButton();
-            updateDownloadButtonState();
-        });
 
         document.getElementById('generateBtn').addEventListener('click', addToGoogleCalendar);
         document.getElementById('downloadBtn').addEventListener('click', downloadICSFile);
@@ -1796,6 +1897,13 @@ END:VEVENT
         }
 
         function showStatus(type, message) {
+            // Keep the old status display for loading and success messages
+            // Convert error messages to toasts
+            if (type === 'error') {
+                showToast('error', 'Error', message);
+                return;
+            }
+            
             const statusEl = document.getElementById('statusMsg');
             statusEl.className = `status ${type}`;
             statusEl.style.display = 'block';
@@ -1806,11 +1914,58 @@ END:VEVENT
                 statusEl.textContent = message;
             }
 
-            if (type === 'success' || type === 'error') {
+            if (type === 'success') {
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 8000);
             }
+        }
+
+        // Toast notification system
+        function showToast(type, title, message, duration = 6000) {
+            const container = document.getElementById('toastContainer');
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            // Icon based on type
+            let icon = '!';
+            if (type === 'error') icon = '✕';
+            if (type === 'warning') icon = '⚠';
+            if (type === 'info') icon = 'i';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="removeToast(this.parentElement)">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+
+        // Convenience function for error toasts
+        function showErrorToast(message) {
+            showToast('error', 'Error', message);
+        }
+
+        function removeToast(toast) {
+            if (!toast) return;
+            
+            toast.classList.add('removing');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.parentElement.removeChild(toast);
+                }
+            }, 300); // Match animation duration
         }
 
         // Initialize on page load
