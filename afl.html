@@ -503,7 +503,7 @@
 
                 <div class="manage-btn-container" style="display: flex; gap: 10px; margin-top: 10px; width: 50%; margin-left: auto; margin-right: auto;">
                     <button class="manage-btn" id="updateBtn" disabled style="flex: 1; padding: 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Update Existing Events</button>
-                    <button class="manage-btn" id="removeBtn" disabled style="flex: 1; padding: 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Remove All AFL Events</button>
+                    <button class="manage-btn" id="removeBtn" disabled style="flex: 1; padding: 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;">Remove Selected Team Events</button>
                 </div>
 
                 <div class="progress-bar" id="progressBar">
@@ -888,19 +888,46 @@
                 return;
             }
 
+            const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
+                .map(cb => ({ id: cb.value, name: cb.dataset.name }));
+
+            if (selectedTeams.length === 0) {
+                showStatus('error', 'Please select at least one team.');
+                return;
+            }
+
             showStatus('loading', 'Fetching AFL events from your calendar...');
             document.getElementById('removeBtn').disabled = true;
 
             try {
-                const events = await getAFLEventsFromCalendar();
+                const allEvents = await getAFLEventsFromCalendar();
                 
-                if (events.length === 0) {
+                if (allEvents.length === 0) {
                     showStatus('error', 'No AFL events found in your calendar.');
                     document.getElementById('removeBtn').disabled = false;
                     return;
                 }
 
-                showStatus('loading', `Removing ${events.length} AFL events from your calendar...`);
+                // Filter events to only include those with selected teams
+                const selectedTeamNames = selectedTeams.map(t => t.name);
+                const events = allEvents.filter(event => {
+                    if (!event.summary) return false;
+                    
+                    const summaryLower = event.summary.toLowerCase();
+                    // Check if any selected team is in the event summary
+                    return selectedTeamNames.some(teamName => 
+                        summaryLower.includes(teamName.toLowerCase())
+                    );
+                });
+
+                if (events.length === 0) {
+                    showStatus('error', 'No events found for the selected teams.');
+                    document.getElementById('removeBtn').disabled = false;
+                    return;
+                }
+
+                const skippedCount = allEvents.length - events.length;
+                showStatus('loading', `Removing ${events.length} events for selected teams from your calendar...${skippedCount > 0 ? ` (${skippedCount} other AFL events kept)` : ''}`);
                 document.getElementById('progressBar').classList.add('show');
                 
                 // Scroll to progress bar
