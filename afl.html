@@ -841,7 +841,7 @@
 
                     if (game && game.date) {
                         try {
-                            await updateEventInCalendar(event.id, game, CURRENT_YEAR);
+                            await updateEventInCalendar(event.id, game, CURRENT_YEAR, selectedTeams);
                             processedEventIds.add(event.id); // Mark this event as processed
                             updatedCount++;
                         } catch (error) {
@@ -973,7 +973,7 @@
             return aflEvents;
         }
 
-        async function updateEventInCalendar(eventId, game, year) {
+        async function updateEventInCalendar(eventId, game, year, selectedTeams) {
             const gameDate = new Date(game.date);
             const endDate = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
 
@@ -995,8 +995,35 @@
             const homeRank = homeStanding ? ` (#${homeStanding.rank})` : '';
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
+            // Determine which team to show first (user's selected team)
+            const selectedTeamNames = selectedTeams.map(t => t.name);
+            let firstTeam, secondTeam, firstRank, secondRank;
+            
+            // Check if home team is selected
+            const homeSelected = selectedTeamNames.includes(game.hteam);
+            const awaySelected = selectedTeamNames.includes(game.ateam);
+            
+            // If only one team is selected, show it first
+            if (homeSelected && !awaySelected) {
+                firstTeam = game.hteam;
+                secondTeam = game.ateam;
+                firstRank = homeRank;
+                secondRank = awayRank;
+            } else if (awaySelected && !homeSelected) {
+                firstTeam = game.ateam;
+                secondTeam = game.hteam;
+                firstRank = awayRank;
+                secondRank = homeRank;
+            } else {
+                // Both or neither selected, default to home team first
+                firstTeam = game.hteam;
+                secondTeam = game.ateam;
+                firstRank = homeRank;
+                secondRank = awayRank;
+            }
+
             const event = {
-                summary: allDay ? `${game.hteam} vs ${game.ateam}` : `${game.hteam} vs ${game.ateam} (${timezone})`,
+                summary: allDay ? `${firstTeam} vs ${secondTeam}` : `${firstTeam} vs ${secondTeam} (${timezone})`,
                 location: game.venue || 'TBA',
                 description: `AFL ${year} - ${game.round ? `Round ${game.round}` : 'TBA'}\nHome: ${game.hteam}${homeRank}\nAway: ${game.ateam}${awayRank}${game.venue ? `\nVenue: ${game.venue}` : ''}`,
                 colorId: '7' // Peacock color for AFL games
