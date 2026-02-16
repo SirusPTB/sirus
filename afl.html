@@ -890,7 +890,7 @@
             }
 
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
-                .map(cb => ({ id: cb.value, name: cb.dataset.name }));
+                .map(cb => ({ id: cb.value, name: cb.dataset.name })).filter(t => t.id && t.name);
 
             if (selectedTeams.length === 0) {
                 showStatus('error', 'Please select at least one team.');
@@ -1017,7 +1017,7 @@
             }
 
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
-                .map(cb => ({ id: cb.value, name: cb.dataset.name }));
+                .map(cb => ({ id: cb.value, name: cb.dataset.name })).filter(t => t.id && t.name);
 
             if (selectedTeams.length === 0) {
                 showStatus('error', 'Please select at least one team.');
@@ -1038,7 +1038,9 @@
 
                 // Filter events to only include those where the FIRST team is selected
                 // The first team in the title is the one the user selected when creating the event
-                const selectedTeamNames = selectedTeams.map(t => t.name.toLowerCase());
+                const selectedTeamNames = selectedTeams
+                    .filter(t => t && t.name)
+                    .map(t => t.name.toLowerCase());
                 const events = allEvents.filter(event => {
                     if (!event.summary) return false;
                     
@@ -1255,7 +1257,7 @@
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
             // Determine which team to show first (user's selected team)
-            const selectedTeamNames = selectedTeams.map(t => t.name);
+            const selectedTeamNames = selectedTeams.filter(t => t && t.name).map(t => t.name);
             let firstTeam, secondTeam, firstRank, secondRank;
             
             // Check if home team is selected
@@ -1373,8 +1375,11 @@
             }
 
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
-                .map(cb => ({ id: cb.value, name: cb.dataset.name }));
+                .map(cb => ({ id: cb.value, name: cb.dataset.name })).filter(t => t.id && t.name);
 
+            // Debug logging
+            console.log(`Selected ${selectedTeams.length} teams out of ${teams.length} total teams`);
+            
             if (selectedTeams.length === 0) {
                 showStatus('error', 'Please select at least one team.');
                 return;
@@ -1508,7 +1513,7 @@
 
         async function downloadICSFile() {
             const selectedTeams = Array.from(document.querySelectorAll('.team-checkbox input:checked'))
-                .map(cb => ({ id: cb.value, name: cb.dataset.name }));
+                .map(cb => ({ id: cb.value, name: cb.dataset.name })).filter(t => t.id && t.name);
 
             if (selectedTeams.length === 0) {
                 showStatus('error', 'Please select at least one team.');
@@ -1551,8 +1556,11 @@
                 
                 // Filter games by selected teams
                 let games = data.games;
-                if (selectedTeams.length < teams.length) {
-                    const selectedTeamIds = selectedTeams.map(t => parseInt(t.id));
+                // Only filter if not all teams are selected
+                if (selectedTeams.length < teams.length && teams.length > 0) {
+                    const selectedTeamIds = selectedTeams
+                        .filter(t => t && t.id) // Filter out any null/undefined team objects
+                        .map(t => parseInt(t.id));
                     games = games.filter(game => 
                         selectedTeamIds.includes(game.hteamid) || selectedTeamIds.includes(game.ateamid)
                     );
@@ -1588,7 +1596,7 @@
             const awayRank = awayStanding ? ` (#${awayStanding.rank})` : '';
 
             // Determine which team to show first (user's selected team)
-            const selectedTeamNames = selectedTeams.map(t => t.name);
+            const selectedTeamNames = selectedTeams.filter(t => t && t.name).map(t => t.name);
             let firstTeam, secondTeam, firstRank, secondRank;
             
             // Check if home team is selected
@@ -1681,7 +1689,7 @@ X-WR-TIMEZONE:Australia/Melbourne
 X-WR-CALDESC:AFL ${year} Season Fixtures
 `;
 
-            const selectedTeamNames = selectedTeams.map(t => t.name);
+            const selectedTeamNames = selectedTeams.filter(t => t && t.name).map(t => t.name);
 
             games.forEach(game => {
                 if (!game.date) return;
