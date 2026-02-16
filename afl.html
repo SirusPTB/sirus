@@ -908,15 +908,22 @@
                     return;
                 }
 
-                // Filter events to only include those with selected teams
-                const selectedTeamNames = selectedTeams.map(t => t.name);
+                // Filter events to only include those where the FIRST team is selected
+                // The first team in the title is the one the user selected when creating the event
+                const selectedTeamNames = selectedTeams.map(t => t.name.toLowerCase());
                 const events = allEvents.filter(event => {
                     if (!event.summary) return false;
                     
-                    const summaryLower = event.summary.toLowerCase();
-                    // Check if any selected team is in the event summary
-                    return selectedTeamNames.some(teamName => 
-                        summaryLower.includes(teamName.toLowerCase())
+                    // Split the summary by "vs" to get individual teams
+                    const summaryParts = event.summary.split(' vs ');
+                    if (summaryParts.length < 2) return false;
+                    
+                    // Extract the FIRST team name (the user's selected team when event was created)
+                    const firstTeam = summaryParts[0].trim().toLowerCase();
+                    
+                    // Check if the first team matches any selected team
+                    return selectedTeamNames.some(selectedTeam => 
+                        firstTeam.includes(selectedTeam.replace(/\s/g, '').toLowerCase())
                     );
                 });
 
