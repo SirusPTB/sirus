@@ -1,0 +1,3739 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LVR-1</title>
+    <!-- Add link to manifest for PWA -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Add meta tags for iOS support (optional but recommended) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="LVR-1">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon.ico">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        /* Match full graph panel frame to other panels */
+        .graph-container.full-graph {
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding-bottom: 1.2rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #installButton {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #16a34a;
+            border: none;
+            color: #fff;
+            padding: 0.9rem 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #installButton:hover {
+            background: #15803d;
+        }
+
+        @media (max-width: 600px) {
+            #installButton {
+                bottom: 70px;
+                right: 15px;
+                padding: 0.8rem 1.1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @font-face {
+            font-family: 'DSEG7Classic';
+            src: url('DSEG7Classic-Bold.woff2') format('woff2'),
+                url('DSEG7Classic-Bold.woff') format('woff'),
+                url('DSEG7Classic-Bold.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-width: 90vw;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                max-width: 100vw;
+            }
+        }
+
+        .page {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .page::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+        }
+
+        .btn {
+            background: #444;
+            border: none;
+            color: #fff;
+            padding: .9rem 1.3rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            min-height: 36px;
+            min-width: 36px;
+        }
+
+        .btn:hover {
+            background: #555;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-success {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            flex-wrap: wrap;
+        }
+
+        .ble-indicator {
+            font-size: 1.8rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .ble-indicator.disconnected {
+            color: #000000;
+        }
+
+        .ble-indicator.connected {
+            color: #000000;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: clamp(0.8rem, 2vw, 1.2rem);
+            margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+        }
+
+        /* Temperature cards each take 2 columns */
+        .status-grid > .status-card:nth-child(1),
+        .status-grid > .status-card:nth-child(2),
+        .status-grid > .status-card:nth-child(3) {
+            grid-column: span 2;
+        }
+
+        /* Pressure takes 2 columns */
+        .status-card.pressure-card {
+            grid-column: span 2;
+        }
+
+        /* Shot timer takes 2 columns */
+        .status-card.shot-timer-card {
+            grid-column: span 2;
+        }
+
+        /* Steam pressure gauge takes 2 columns */
+        .status-card.steam-pressure-card {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 900px) {
+            .status-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: clamp(0.6rem, 1.5vw, 1rem);
+                margin-bottom: clamp(0.6rem, 1.5vw, 1rem);
+            }
+            
+            .status-grid > .status-card:nth-child(1),
+            .status-grid > .status-card:nth-child(2),
+            .status-grid > .status-card:nth-child(3) {
+                grid-column: span 2;
+            }
+
+            .status-card.pressure-card {
+                grid-column: span 2;
+            }
+
+            .status-card.shot-timer-card {
+                grid-column: span 2;
+            }
+
+            .status-card.steam-pressure-card {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            /* On mobile, all cards take full width */
+            .status-grid > .status-card:nth-child(1),
+            .status-grid > .status-card:nth-child(2),
+            .status-grid > .status-card:nth-child(3),
+            .status-card.shot-timer-card,
+            .status-card.pressure-card,
+            .status-card.steam-pressure-card {
+                grid-column: span 1;
+            }
+        }
+
+        .status-card {
+            background: #1a1a1a;
+            padding: clamp(0.65rem, 1.625vw, 0.975rem);
+            padding-top: clamp(1.43rem, 3.25vw, 1.95rem);
+            padding-bottom: clamp(0.78rem, 1.95vw, 1.17rem);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            gap: clamp(0.325rem, 0.975vw, 0.52rem);
+            border: 2px solid #333;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-height: clamp(78px, 13vh, 117px);
+        }
+
+        .temp-bar-fill {
+            min-width: 2px;
+        }
+
+        .status-card.ready {
+            /* Removed background gradient and box shadow */
+        }
+
+        .status-card.heating {
+            /* Removed background gradient, box shadow, and animation */
+        }
+
+        @keyframes pulse-heating {
+            /* Animation removed */
+        }
+
+
+        /* LABELS: Brew / Steam / Group */
+        .status-label {
+            position: absolute;
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
+            font-size: clamp(0.55rem, 1.3vw, 0.68rem);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 0.78px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        .status-card.ready .status-label {
+            color: #666;
+        }
+
+        .status-card.heating .status-label {
+            color: #666;
+        }
+
+        /* Keep temp values centered as-is */
+        .status-temp {
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
+            font-weight: 300;
+            line-height: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.2em;
+            font-family: 'DSEG7Classic', monospace;
+            justify-content: center;
+        }
+
+        /* Keep steam panel readings left-aligned since they're side-by-side */
+        .steam-readings-row .status-temp {
+            justify-content: flex-start;
+            font-size: clamp(1.04rem, 2.6vw, 1.56rem);
+        }
+
+        /* Numeric value */
+        .temp-value {
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+
+        .status-card.ready .temp-value {
+            color: #fff;
+        }
+
+        .status-card.heating .temp-value {
+            color: #fff;
+        }
+
+        .temp-unit {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.45em;
+            opacity: 0.7;
+            margin-top: 0.2em;
+            color: #666;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .steam-pressure-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.2em;
+            justify-content: flex-start;
+            font-size: clamp(1.04rem, 2.6vw, 1.56rem);
+        }
+
+        .steam-pressure-value {
+            font-family: 'DSEG7Classic', monospace;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .steam-pressure-unit {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.5625em;
+            color: #666;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .steam-readings-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            width: 100%;
+            gap: clamp(1.5rem, 4vw, 3rem);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .steam-readings-row {
+                gap: 1.5rem;
+            }
+        }
+
+        .status-temp-wrap {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .temp-bar {
+            position: relative;
+            width: 100%;
+            height: var(--temp-bar-h);
+            margin-top: clamp(12px, 3vw, 20px);
+            background: #2a2a2a;
+            border-radius: 4px;
+            overflow: visible;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        :root {
+            --temp-bar-h: 6px;
+        }
+
+        @media (max-width: 600px) {
+            :root {
+                --temp-bar-h: 5px;
+            }
+        }
+
+        .temp-bar-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: transparent;
+            transition: width 0.4s ease, background 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .status-card.ready .temp-bar-fill {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            box-shadow: 0 0 10px rgba(22, 163, 74, 0.6);
+        }
+
+        .status-card.heating .temp-bar-fill {
+            background: linear-gradient(90deg, #dc7226, #fb923c);
+            box-shadow: 0 0 10px rgba(220, 114, 38, 0.6);
+        }
+
+        .temp-bar-set {
+            display: none;
+        }
+
+        .temp-bar-set.off-target {
+            display: none;
+        }
+
+        /* Shot timer card styling */
+        .status-card.shot-timer-card {
+            padding-top: clamp(0.975rem, 2.6vw, 1.3rem);
+        }
+
+        .status-card.shot-timer-card .status-label {
+            position: absolute;
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
+            transform: none;
+        }
+
+        /* Pressure card styling */
+        .status-card.pressure-card {
+            padding-top: clamp(0.975rem, 2.6vw, 1.3rem);
+        }
+
+        .status-card.pressure-card .status-label {
+            position: absolute;
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
+            transform: none;
+        }
+
+        .status-card.pressure-card .reading-item {
+            width: 100%;
+        }
+
+        /* Steam pressure card styling */
+        .status-card.steam-pressure-card {
+            padding-top: 0;
+        }
+
+        .status-card.steam-pressure-card .status-label {
+            position: absolute;
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
+            transform: none;
+        }
+
+        .status-card.steam-pressure-card .reading-item {
+            width: 100%;
+        }
+
+        /* Needle gauge styling */
+        .circular-gauge {
+            position: relative;
+            width: clamp(90px, 18vw, 140px);
+            height: clamp(90px, 18vw, 140px);
+            margin: clamp(-2.5rem, -4vw, -2rem) auto 0;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Gauge arc background */
+        .gauge-arc {
+            fill: none;
+            stroke: #2a2a2a;
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+
+        /* Green zone arc (1.0-1.4 bar) */
+        .gauge-green-zone {
+            fill: none;
+            stroke: #16a34a;
+            stroke-width: 6;
+            stroke-linecap: round;
+            opacity: 0.6;
+        }
+
+        /* Gauge tick marks */
+        .gauge-tick {
+            stroke: #444;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+        }
+
+        /* Gauge labels */
+        .gauge-label {
+            fill: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 500;
+        }
+
+        /* Arrow-style needle */
+        .gauge-needle {
+            fill: #ef4444;
+            stroke: #fff;
+            stroke-width: 0.5;
+            transform-origin: 50% 85%;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        .gauge-center-dot {
+            fill: #fff;
+            stroke: #333;
+            stroke-width: 1;
+        }
+
+        .gauge-value-display {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gauge-value {
+            font-size: clamp(1.1rem, 2.8vw, 1.8rem);
+            font-family: 'DSEG7Classic', monospace;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .gauge-unit {
+            font-size: 0.55em;
+            color: #666;
+            opacity: 0.7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 500;
+            margin-top: 0.2em;
+        }
+
+        .container.ble-disconnected .gauge-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .gauge-needle {
+            fill: #666 !important;
+        }
+            box-shadow: 0 0 12px rgba(167, 198, 10, 0.9);
+            z-index: 3;
+        }
+
+        .central-panel {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: clamp(1rem, 3vw, 2rem);
+        }
+
+        @media (max-width: 600px) {
+            .central-panel {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .left-readings,
+        .shot-timer-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+            border: 2px solid #444;
+            border-radius: 16px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            position: relative;
+            padding-top: clamp(2rem, 5vw, 3rem);
+            min-height: clamp(120px, 18vh, 180px);
+            transition: all 0.3s ease;
+        }
+
+        .left-readings:hover,
+        .shot-timer-section:hover {
+            border-color: #555;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .left-readings {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .pressure-display {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0.3em;
+            line-height: 1;
+        }
+
+        .reading-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reading-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .reading-value {
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            transition: color 0.3s ease;
+            color: #fff;
+            min-width: 3ch;
+            text-align: right;
+        }
+
+        .reading-unit {
+            font-size: clamp(1.5rem, 5vw, 2.8rem);
+            color: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1;
+            opacity: 0.7;
+            font-weight: 500;
+            margin-bottom: 0.15em;
+        }
+
+        .shot-time {
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
+            font-family: 'DSEG7Classic', monospace;
+            line-height: 1;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            letter-spacing: 0.05em;
+        }
+
+        .container.ble-disconnected .temp-value {
+            color: #666 !important;
+            text-shadow: none !important;
+        }
+
+        .container.ble-disconnected .temp-unit {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .status-label {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected #shotTime {
+            color: #666 !important;
+            text-shadow: none !important;
+        }
+
+        .container.ble-disconnected .reading-value {
+            color: #666 !important;
+            text-shadow: none !important;
+        }
+
+        .container.ble-disconnected .pressure-unit {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .steam-pressure-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .steam-pressure-unit {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .shot-time {
+            color: #666 !important;
+            text-shadow: none !important;
+        }
+
+        .shot-time.running {
+            color: #fff;
+        }
+
+        @keyframes pulse-shot {
+            /* Animation removed */
+        }
+
+        .shot-time.stopped {
+            color: #666;
+        }
+
+        .panel-label {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            margin-top: 1rem;
+            color: #ccc;
+            font-weight: 500;
+        }
+
+        .graph-container {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: clamp(0.8rem, 2vw, 1.2rem); /* Responsive padding */
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.3s;
+            position: relative;
+            min-height: 0; /* Prevent flex item from expanding beyond bounds */
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            flex: 1;
+            min-height: 0; /* Critical: prevents canvas from overflowing */
+        }
+
+        .graph-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(0.5rem, 2vw, 1rem); /* Responsive gap */
+            margin-top: 0.8rem; /* Match bottom padding for symmetry */
+            margin-bottom: 0; /* Remove bottom margin to prevent spacing issues */
+            padding-bottom: 0; /* Remove padding - use container padding instead */
+            justify-content: center;
+            font-size: clamp(0.75rem, 2vw, 0.9rem); /* Responsive font size */
+            align-items: center;
+            flex-shrink: 0; /* Prevent legend from shrinking */
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .graph-record-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #16a34a;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-slider:hover {
+            background-color: #555;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:hover {
+            background-color: #15803d;
+        }
+
+        .graph-tooltip {
+            position: absolute;
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            pointer-events: none;
+            font: 14px monospace;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+            display: none;
+            min-width: 120px;
+        }
+
+        .settings-row {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border: 2px solid #333;
+        }
+
+        @media (max-width: 600px) {
+            .settings-row {
+                align-items: center;
+            }
+
+            .settings-controls {
+                display: flex;
+                gap: 0.5rem;
+                align-items: center;
+            }
+        }
+
+        .settings-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .settings-label {
+            font-size: 1.6rem;
+        }
+
+        .settings-value {
+            font-size: 2rem;
+            font-family: monospace;
+            color: #06b6d4;
+        }
+
+        .btn-adjust {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .unit-toggle-group {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .unit-toggle-btn {
+            min-width: 120px;
+            font-size: 1.4rem;
+            padding: 1rem 2rem;
+        }
+
+        .pid-zone {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 2px solid #333;
+        }
+
+        .pid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .pid-column h4 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .pid-column h4.aggressive {
+            color: #fb923c;
+        }
+
+        .pid-column h4.conservative {
+            color: #06b6d4;
+        }
+
+        .pid-row {
+            display: grid;
+            grid-template-columns: 30px 40px 90px 40px;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 10px;
+            justify-items: center;
+        }
+
+        .pid-row span {
+            justify-self: start;
+        }
+
+        .pid-input {
+            width: 90px;
+            text-align: center;
+            font-family: monospace;
+            font-size: inherit;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            padding: 4px 6px;
+            overflow: hidden;
+        }
+
+        .pid-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: #333;
+        }
+
+        /* Remove spinner arrows */
+        .pid-input::-webkit-inner-spin-button,
+        .pid-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .pid-input {
+            -moz-appearance: textfield;
+        }
+
+        .btn-pid {
+            width: 40px;
+            height: 30px;
+            font-size: 18px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .full-graph {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .graph-stats {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            color: #06b6d4;
+            font-family: monospace;
+        }
+
+        .disabled-nav {
+            opacity: 0.4;
+            pointer-events: none;
+            cursor: default;
+        }
+
+        /* === FIX MINI GRAPH INITIAL SIZE === */
+        #mainPage .graph-container.nav-graph {
+            flex: none;
+            /* Responsive height that scales with viewport */
+            height: auto;
+            min-height: clamp(180px, 25vh, 300px);
+            max-height: clamp(200px, 30vh, 350px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === FIX MINI GRAPH CANVAS SIZE === */
+        #mainPage #miniGraph {
+            /* Use flex instead of percentage for better stability */
+            flex: 1 1 auto;
+            height: auto !important;
+            min-height: clamp(100px, 15vh, 200px);
+        }
+
+        /* Responsive adjustments for different screen sizes */
+        @media (max-width: 1200px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: clamp(160px, 22vh, 280px);
+                max-height: clamp(180px, 28vh, 320px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: clamp(140px, 20vh, 240px);
+                max-height: clamp(160px, 25vh, 280px);
+            }
+            
+            #mainPage #miniGraph {
+                min-height: clamp(90px, 12vh, 160px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 120px;
+                max-height: 180px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 80px;
+            }
+            
+            .graph-legend {
+                font-size: 0.8rem;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 360px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 100px;
+                max-height: 140px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 60px;
+            }
+            
+            .graph-legend {
+                font-size: 0.75rem;
+                gap: 0.4rem;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1400px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 220px;
+                max-height: 300px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 140px;
+            }
+        }
+
+        .graph-container.nav-graph {
+            border: 2px solid #444;
+            border-radius: 16px;
+            margin-top: 0;
+            /* Remove bottom padding that causes spacing issues */
+            padding-bottom: 1.2rem;
+        }
+
+        .nav-settings {
+            font-size: 1.9rem;
+            line-height: 1;
+            padding: 0.6rem 0.8rem;
+        }
+
+        /* === Black background for settings (three-dot) button === */
+        .nav-settings {
+            background: #000;
+        }
+
+        .nav-settings:hover {
+            background: #111;
+        }
+
+        .pressure-display {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 0.5em;
+            line-height: 1;
+        }
+
+        .pressure-unit {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 1.4em;
+            color: #666;
+            opacity: 0.7;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        /* Add these CSS rules to the <style> block (anywhere after existing rules) */
+
+        #toastContainer {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10000;
+            gap: 12px;
+        }
+
+        .toast {
+            background: #333;
+            color: #fff;
+            padding: 16px 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+            max-width: 90%;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: auto;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-info {
+            background: #1c4aae;
+        }
+
+        .toast-success {
+            background: #16a34a;
+        }
+
+        .toast-error {
+            background: #dc2626;
+        }
+
+        /* Add this rule to the <style> block (anywhere after the existing .temp-bar-set rule) */
+
+        .temp-bar-set.off-target {
+            background: #dc7226 !important;
+            box-shadow: 0 0 12px rgba(252, 148, 45, 0.9) !important;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Add this rule to the <style> block (anywhere after .status-label) */
+
+        .setpoint-display {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 1rem;
+            /* Small but readable */
+            font-family: monospace;
+            color: #9a9a9a;
+            letter-spacing: 0.6px;
+            opacity: 0.9;
+            pointer-events: none;
+            /* Doesn't block clicks/taps */
+            transition: color 0.3s ease;
+        }
+
+        /* Dim when disconnected (matches labels/units) */
+        .container.ble-disconnected .setpoint-display {
+            color: #777 !important;
+        }
+
+        /* Replace the previous .setpoint-display rule with these new rules */
+
+        .setpoint-input {
+            position: absolute;
+            top: 5.2px;
+            right: 6.5px;
+            width: 53.3px;
+            /* Fixed width for stable layout */
+            font-size: 0.65rem;
+            font-family: monospace;
+            color: #9a9a9a;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: right;
+            opacity: 0.9;
+            padding: 2.6px 3.9px;
+            border-radius: 2.6px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Hover state: show it's interactive */
+        .setpoint-input:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #bbb;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Normal state: looks like static text */
+        .setpoint-input {
+            -moz-appearance: textfield;
+            /* Remove spinner arrows on Firefox */
+        }
+
+        /* Remove spinner arrows on Chrome/Safari/Edge */
+        .setpoint-input::-webkit-inner-spin-button,
+        .setpoint-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Focused/editing state: obvious input field */
+        .setpoint-input:focus {
+            outline: none;
+            color: #fff;
+            background: #333;
+            border-color: #2563eb;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+        }
+
+        /* Disconnected: disabled look */
+        .container.ble-disconnected .setpoint-input {
+            color: #777 !important;
+            opacity: 0.6;
+            pointer-events: none;
+            cursor: not-allowed;
+            background: transparent;
+            border-color: transparent;
+        }
+
+        .ble-connected-label {
+            display: none;
+            color: #2ac54c;
+            font-weight: bold;
+            font-size: 1.1rem;
+            align-self: center;
+            white-space: nowrap;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 4px #16a34a;
+            }
+
+            50% {
+                box-shadow: 0 0 12px 4px #16a34a;
+            }
+
+            100% {
+                box-shadow: 0 0 4px #16a34a;
+            }
+        }
+
+        .ble-connected-label::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+            background-color: #16a34a;
+            border-radius: 50%;
+            vertical-align: middle;
+            box-shadow: 0 0 8px #16a34a;
+            animation: pulse-glow 2s ease-in-out infinite;
+            transform: translateY(-2px);
+        }
+
+        /* Match mini graph panel styling to other panels */
+        .graph-container.nav-graph {
+            border: 2px solid #444;
+            border-radius: 16px;
+            margin-top: 0;
+            /* Reduced bottom padding to minimize gap */
+            padding-bottom: 0.8rem;
+        }
+
+        /* Y-axis scale controls */
+        .y-axis-controls {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border-top: 1px solid #333;
+        }
+
+        .axis-control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #333;
+        }
+
+        .axis-control-group label {
+            font-size: 0.9rem;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        .axis-control-group input[type="number"] {
+            width: 70px;
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            text-align: center;
+            -moz-appearance: textfield;
+        }
+
+        /* Remove spinner arrows on Chrome/Safari/Edge */
+        .axis-control-group input[type="number"]::-webkit-inner-spin-button,
+        .axis-control-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .axis-control-group input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .axis-control-group .unit-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            min-width: 30px;
+        }
+
+        .axis-control-group.temp-control {
+            border-color: rgb(194, 58, 58);
+        }
+
+        .axis-control-group.temp-control label {
+            color: rgb(194, 58, 58);
+        }
+
+        .axis-control-group.pressure-control {
+            border-color: #445566;
+        }
+
+        .axis-control-group.pressure-control label {
+            color: #7799bb;
+        }
+
+        .reset-scale-btn {
+            background: #444;
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .reset-scale-btn:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Add the button somewhere visible (e.g., top-right or bottom) -->
+    <button id="installButton" style="display:none" onclick="triggerInstall()">
+        Install App
+    </button>
+
+
+    <div class="container">
+        <div class="page active" id="mainPage">
+            <div class="header">
+                <h2>LVR-1</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary ble-connect-btn" onclick="toggleBLE()">Connect BLE</button>
+                    <span class="ble-connected-label">Connected</span>
+                    <div class="ble-indicator disconnected" title="Bluetooth Status">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                        </svg>
+                    </div>
+                    <button class="btn nav-settings" onclick="showPage('settings')">⋮</button>
+                </div>
+            </div>
+
+            <div class="status-grid">
+
+                <div class="status-card" id="brewStatus">
+                    <input type="number" class="setpoint-input" id="brewSetpointInput" step="0.1" min="0" max="100">
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="brewTempValue">0.0</span>
+                            <span class="temp-unit" id="brewTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="brewTempBar"></div>
+                            <div class="temp-bar-set" id="brewTempSet"></div>
+                        </div>
+                    </div>
+                    <div class="status-label">Brew</div>
+                </div>
+
+                <div class="status-card" id="groupStatus">
+                    <input type="number" class="setpoint-input" id="groupSetpointInput" step="0.1" min="0" max="98">
+                    <div class="status-temp-wrap">
+                        <div class="status-temp">
+                            <span class="temp-value" id="groupTempValue">0.0</span>
+                            <span class="temp-unit" id="groupTempUnit">°C</span>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="groupTempBar"></div>
+                            <div class="temp-bar-set" id="groupTempSet"></div>
+                        </div>
+                    </div>
+                    <div class="status-label">Group</div>
+                </div>
+
+                <div class="status-card" id="steamStatus">
+                    <input type="number" class="setpoint-input" id="steamSetpointInput" step="0.1" min="0" max="140">
+                    <div class="status-temp-wrap">
+                        <div class="steam-readings-row">
+                            <div class="status-temp">
+                                <span class="temp-value" id="steamTempValue">0.0</span>
+                                <span class="temp-unit" id="steamTempUnit">°C</span>
+                            </div>
+                            <div class="steam-pressure-display">
+                                <span class="steam-pressure-value" id="steamPressureValue">0.0</span>
+                                <span class="steam-pressure-unit" id="steamPressureUnit">bar</span>
+                            </div>
+                        </div>
+                        <div class="temp-bar">
+                            <div class="temp-bar-fill" id="steamTempBar"></div>
+                            <div class="temp-bar-set" id="steamTempSet"></div>
+                        </div>
+                    </div>
+                    <div class="status-label">Steam</div>
+                </div>
+
+                <div class="status-card pressure-card">
+                    <div class="status-label">Pressure</div>
+                    <div class="reading-item">
+                        <div class="reading-row pressure-display">
+                            <span class="reading-value" id="pressureDisplay">0.0</span>
+                            <span class="pressure-unit" id="pressureUnit">bar</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-card shot-timer-card">
+                    <div class="status-label">Shot</div>
+                    <div class="shot-time stopped" id="shotTime">00</div>
+                </div>
+
+                <div class="status-card steam-pressure-card">
+                    <div class="status-label">Steam</div>
+                    <div class="circular-gauge">
+                        <svg class="gauge-svg" viewBox="0 0 100 100">
+                            <!-- Background arc (180 degrees) -->
+                            <!-- Center: (50, 85), Radius: 35, from -90° to +90° -->
+                            <path class="gauge-arc" d="M 15 85 A 35 35 0 0 1 85 85" />
+                            
+                            <!-- Green zone arc (1.0-1.4 bar) -->
+                            <!-- Arc goes from left (-90°) to right (+90°), total 180° -->
+                            <!-- 1.0 bar = 1/3 of 3 bar = 33.33% of 180° = 60° from left = -90° + 60° = -30° -->
+                            <!-- x = 50 + 35*cos(-30°) = 50 + 30.31 = 80.31 -->
+                            <!-- y = 85 + 35*sin(-30°) = 85 - 17.5 = 67.5 -->
+                            <!-- 1.4 bar = 1.4/3 = 46.67% of 180° = 84° from left = -90° + 84° = -6° -->
+                            <!-- x = 50 + 35*cos(-6°) = 50 + 34.82 = 84.82 -->
+                            <!-- y = 85 + 35*sin(-6°) = 85 - 3.66 = 81.34 -->
+                            <!-- Wait, need to go from LEFT side: 1.0 bar on left -->
+                            <!-- 1.0 bar = -90° + 60° = -30° -->
+                            <!-- x1 = 50 + 35*cos(180° - 30°) = 50 + 35*cos(150°) = 50 - 30.31 = 19.69 -->
+                            <!-- y1 = 85 - 35*sin(150°) = 85 - 17.5 = 67.5 -->
+                            <!-- 1.4 bar = -90° + 84° = -6° -->
+                            <!-- x2 = 50 + 35*cos(180° - 6°) = 50 + 35*cos(174°) = 50 - 34.82 = 15.18 -->
+                            <!-- y2 = 85 - 35*sin(174°) = 85 - 3.66 = 81.34 -->
+                            <!-- Actually simpler: from -90° + (1/3)*180° to -90° + (1.4/3)*180° -->
+                            <path class="gauge-green-zone" d="M 19.69 67.5 A 35 35 0 0 1 28.48 55.65" />
+                            
+                            <!-- Tick marks at 0, 1, 1.5, 2, 3 bar -->
+                            <!-- 0 bar (left): horizontal tick -->
+                            <line class="gauge-tick" x1="15" y1="85" x2="10" y2="85" />
+                            <!-- 1 bar: angled tick -->
+                            <line class="gauge-tick" x1="28.5" y1="66.5" x2="22" y2="65" />
+                            <!-- 1.5 bar: vertical tick (moved down) -->
+                            <line class="gauge-tick" x1="50" y1="50" x2="50" y2="43" />
+                            <!-- 2 bar: angled tick (mirrored) -->
+                            <line class="gauge-tick" x1="71.5" y1="66.5" x2="78" y2="65" />
+                            <!-- 3 bar (right): horizontal tick -->
+                            <line class="gauge-tick" x1="85" y1="85" x2="90" y2="85" />
+                            
+                            <!-- Pressure labels (0 on left, 3 on right) -->
+                            <text class="gauge-label" x="10" y="90" text-anchor="middle" font-size="6">0</text>
+                            <text class="gauge-label" x="12" y="63" text-anchor="middle" font-size="6">1</text>
+                            <text class="gauge-label" x="50" y="40" text-anchor="middle" font-size="6">1.5</text>
+                            <text class="gauge-label" x="88" y="63" text-anchor="middle" font-size="6">2</text>
+                            <text class="gauge-label" x="88" y="90" text-anchor="middle" font-size="6">3</text>
+                            
+                            <!-- Arrow-style needle (pivot at bottom) -->
+                            <g id="steamGaugeNeedle">
+                                <path class="gauge-needle" d="M 50,85 L 48,53 L 50,50 L 52,53 Z" />
+                            </g>
+                            
+                            <!-- Center dot at bottom -->
+                            <circle class="gauge-center-dot" cx="50" cy="85" r="4" />
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="graph-container nav-graph" onclick="showPage('graph')">
+                <canvas id="miniGraph"></canvas>
+                <div class="graph-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(194, 58, 58);"></div>
+                        <span>Brew Temp</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #7799bb;"></div>
+                        <span>Group Pressure</span>
+                    </div>
+                    <div class="graph-record-toggle-wrapper" onclick="event.stopPropagation();">
+                        <span>Always Record</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="graphRecordToggle" onchange="toggleGraphRecording()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="graph-tooltip"></div>
+            </div>
+
+            <div style="flex: 0.3;"></div>
+
+        </div>
+
+        <div class="page" id="settingsPage">
+            <div class="header">
+                <h2>Settings</h2>
+                <div class="btn-group">
+                    <div class="ble-indicator disconnected" title="Bluetooth Status">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                        </svg>
+                    </div>
+                    <button class="btn" onclick="showPage('main')">Back</button>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-label">Brew:</div>
+                <div class="settings-controls">
+                    <div class="settings-value" id="brewSetpointDisplay">93.0 °C</div>
+                    <button class="btn btn-danger btn-adjust" onclick="adjustSetpoint('brew', -0.1)">−</button>
+                    <button class="btn btn-success btn-adjust" onclick="adjustSetpoint('brew', 0.1)">+</button>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-label">Steam:</div>
+                <div class="settings-controls">
+                    <div class="settings-value" id="steamSetpointDisplay">125.0 °C</div>
+                    <button class="btn btn-danger btn-adjust" onclick="adjustSetpoint('steam', -0.1)">−</button>
+                    <button class="btn btn-success btn-adjust" onclick="adjustSetpoint('steam', 0.1)">+</button>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-label">Group:</div>
+                <div class="settings-controls">
+                    <div class="settings-value" id="groupSetpointDisplay">92.0 °C</div>
+                    <button class="btn btn-danger btn-adjust" onclick="adjustSetpoint('group', -0.1)">−</button>
+                    <button class="btn btn-success btn-adjust" onclick="adjustSetpoint('group', 0.1)">+</button>
+                </div>
+            </div>
+
+            <div class="unit-toggle-group">
+                <button class="btn unit-toggle-btn" id="tempUnitBtn" onclick="toggleTempUnit()">°C</button>
+                <button class="btn unit-toggle-btn" id="pressureUnitBtn" onclick="togglePressureUnit()">bar</button>
+                <button class="btn btn-primary" style="padding: 0.9rem 1.3rem; font-size: 1rem;"
+                    onclick="showPage('pid')">PID Settings</button>
+            </div>
+        </div>
+
+        <div class="page" id="graphPage">
+            <div class="header">
+                <h2>Temperature History</h2>
+                <div class="btn-group">
+                    <div class="ble-indicator disconnected" title="Bluetooth Status">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                        </svg>
+                    </div>
+                    <button class="btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+                    <button class="btn" onclick="saveData()">Save</button>
+                    <button class="btn" onclick="document.getElementById('loadFileInput').click()">Load</button>
+                    <button class="btn" onclick="clearData()">Clear</button>
+                    <button class="btn" onclick="showPage('main')">Back</button>
+                </div>
+            </div>
+
+            <div class="graph-container full-graph">
+                <canvas id="fullGraph"></canvas>
+                <div class="graph-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(194, 58, 58)"></div>
+                        <span>Brew Temperature</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #5588aa;"></div>
+                        <span>Group Pressure</span>
+                    </div>
+                </div>
+
+                <div class="graph-tooltip"></div>
+
+                <div class="y-axis-controls">
+                    <div class="axis-control-group temp-control">
+                        <label>Temp Min:</label>
+                        <input type="number" id="tempMinInput" step="1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="tempScaleUnit">°C</span>
+                    </div>
+                    <div class="axis-control-group temp-control">
+                        <label>Temp Max:</label>
+                        <input type="number" id="tempMaxInput" step="1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="tempScaleUnit2">°C</span>
+                    </div>
+                    <div class="axis-control-group pressure-control">
+                        <label>Press Min:</label>
+                        <input type="number" id="pressMinInput" step="0.1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="pressScaleUnit">bar</span>
+                    </div>
+                    <div class="axis-control-group pressure-control">
+                        <label>Press Max:</label>
+                        <input type="number" id="pressMaxInput" step="0.1" min="0" placeholder="Auto">
+                        <span class="unit-label" id="pressScaleUnit2">bar</span>
+                    </div>
+                    <button class="reset-scale-btn" onclick="resetYAxisScale()">Reset Scale</button>
+                </div>
+            </div>
+
+            <input type="file" id="loadFileInput" accept="application/json,.json" style="display:none;">
+        </div>
+
+        <div class="page" id="pidPage">
+            <div class="header">
+                <h2>PID Gains</h2>
+                <div class="btn-group">
+                    <button class="btn btn-danger" onclick="resetAllPID()">Reset Defaults</button>
+                    <div class="ble-indicator disconnected" title="Bluetooth Status">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
+                        </svg>
+                    </div>
+                    <button class="btn" onclick="showPage('settings')">Back</button>
+                </div>
+            </div>
+            <div id="pidZones"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONSTANTS - Configuration values
+        // ============================================================================
+        const CONSTANTS = {
+            // Timing
+            HEARTBEAT_INTERVAL: 5000,
+            RECONNECT_DELAY: 2000,
+            MAX_RECONNECT_ATTEMPTS: 5,
+            
+            // Data management
+            MAX_HISTORY_POINTS: 3000, // ~5 hours at 6 samples/min
+            
+            // Temperature limits (Celsius)
+            TEMP_LIMITS: {
+                BREW: { MIN: 80, MAX: 100, DEFAULT: 93.0 },
+                STEAM: { MIN: 110, MAX: 140, DEFAULT: 125.0 },
+                GROUP: { MIN: 80, MAX: 98, DEFAULT: 92.0 }
+            },
+            
+            // BLE Configuration
+            BLE: {
+                SERVICE_UUID: '4fafc201-1fb5-459e-8fcc-c5c9c331914b',
+                CHARACTERISTIC_UUID: 'beb5483e-36e1-4688-b7f5-ea07361b26a8',
+                DEVICE_NAME: 'LVR-1'
+            }
+        };
+
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
+        /**
+         * Debounce function to limit rapid function calls
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Clamp value between min and max
+         */
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        /**
+         * Validate setpoint value
+         */
+        function validateSetpoint(value, zone) {
+            const limits = CONSTANTS.TEMP_LIMITS[zone.toUpperCase()];
+            
+            if (!limits) {
+                return { valid: false, value: null, error: `Invalid zone: ${zone}` };
+            }
+
+            if (isNaN(value) || value === null || value === undefined) {
+                return { valid: false, value: null, error: 'Temperature must be a valid number' };
+            }
+
+            const numValue = parseFloat(value);
+
+            if (numValue < limits.MIN || numValue > limits.MAX) {
+                return {
+                    valid: false,
+                    value: null,
+                    error: `${zone.charAt(0).toUpperCase() + zone.slice(1)} temperature must be between ${limits.MIN}°C and ${limits.MAX}°C`
+                };
+            }
+
+            return { valid: true, value: Math.round(numValue * 10) / 10, error: null };
+        }
+
+        /**
+         * Validate PID gain value
+         */
+        function validatePIDGain(value, param) {
+            if (isNaN(value) || value === null || value === undefined) {
+                return { valid: false, value: null, error: `${param} must be a valid number` };
+            }
+
+            const numValue = parseFloat(value);
+
+            if (numValue < 0) {
+                return { valid: false, value: null, error: `${param} cannot be negative` };
+            }
+
+            if (numValue > 100) {
+                return { valid: false, value: null, error: `${param} seems unusually high (>100). Please verify.` };
+            }
+
+            const decimals = param.toLowerCase().includes('ki') ? 2 : 2;
+            return { valid: true, value: Math.round(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals), error: null };
+        }
+
+        let deferredPrompt; // Stores the install event if it fires
+
+        // Capture the event if it does fire (for mobile/reliability)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('Install prompt ready'); // Check DevTools Console
+            // Show the install button now that we can actually install
+            const installBtn = document.getElementById('installButton');
+            if (installBtn) installBtn.style.display = 'block';
+        });
+
+        function triggerInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        console.log('App installed');
+                        // Hide the button after successful installation
+                        const installBtn = document.getElementById('installButton');
+                        if (installBtn) installBtn.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                showToast('To install the app:<br><br>• On desktop Chrome/Edge: Click the menu (⋮) → "Install page as app"<br><br>• On mobile: Tap Share → "Add to Home Screen"', 15000, 'info');
+            }
+        }
+
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            document.getElementById('installButton').style.display = 'none';
+        }
+
+        let isConnecting = false;
+        let reconnectAttempts = 0;
+
+        let state = {
+            bleDevice: null,
+            bleConnected: false,
+            characteristic: null,
+            heartbeatInterval: null,
+            brewTemp: 0.0,
+            steamTemp: 0.0,
+            groupTemp: 0.0,
+            groupPressure: 0.0,
+            steamPressure: 0.0,
+            brewSetpoint: 93.0,
+            steamSetpoint: 125.0,
+            groupSetpoint: 92.0,
+            brewReady: false,
+            steamReady: false,
+            groupReady: false,
+            useFahrenheit: false,
+            pressureIsBar: true,
+            shotRunning: false,
+            tempHistory: [],
+            pressureHistory: [],
+            dataCollectionPaused: false,
+            alwaysRecordGraph: false,
+            pidGains: {
+                brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
+                steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
+                group: { consKp: 1.40, consKi: 0.03, consKd: 0.80, aggKp: 5.00, aggKi: 0.12, aggKd: 2.00 }
+            },
+            // Custom Y-axis scales (stored in Celsius and bar)
+            customTempMin: null,
+            customTempMax: null,
+            customPressMin: null,
+            customPressMax: null
+        };
+
+        let miniHoveredIndex = -1;
+        let fullHoveredIndex = -1;
+
+        const miniTooltip = document.querySelector('.nav-graph .graph-tooltip');
+        const fullTooltip = document.querySelector('.full-graph .graph-tooltip');
+
+        async function doConnectGATT() {
+            const device = state.bleDevice;
+            if (!device) throw new Error('No device');
+
+            const server = await device.gatt.connect();
+
+            if (!device.gatt.connected) {
+                throw new Error('GATT not connected');
+            }
+
+            let service;
+            for (let i = 0; i < 5; i++) {
+                try {
+                    service = await server.getPrimaryService(CONSTANTS.BLE.SERVICE_UUID);
+                    break;
+                } catch (e) {
+                    console.warn('Service not ready, retrying...', i);
+                    await new Promise(r => setTimeout(r, 400));
+                }
+            }
+
+            if (!service) {
+                throw new Error('Service not found after multiple attempts');
+            }
+
+            const characteristic = await service.getCharacteristic(CONSTANTS.BLE.CHARACTERISTIC_UUID);
+
+            // Cleanup old listeners
+            if (state.characteristic) {
+                state.characteristic.removeEventListener(
+                    'characteristicvaluechanged',
+                    handleBLEData
+                );
+            }
+
+            await characteristic.startNotifications();
+            characteristic.addEventListener(
+                'characteristicvaluechanged',
+                handleBLEData
+            );
+
+            state.characteristic = characteristic;
+            state.bleConnected = true;
+            isConnecting = false;
+            updateBLEUI();
+
+            console.log('BLE connected and ready');
+            
+            // Start heartbeat ping
+            startHeartbeat();
+
+        }
+
+        async function connectBLE() {
+            if (!state.bleDevice || state.bleConnected) return false;
+
+            try {
+                await doConnectGATT();
+                reconnectAttempts = 0;
+                console.log('Silent reconnect succeeded');
+                return true;
+            } catch (err) {
+                console.warn('Silent reconnect failed:', err);
+                state.bleConnected = false;
+                state.characteristic = null;
+                updateBLEUI();
+                return false;
+            }
+        }
+
+        function disconnectBLE() {
+            // Stop heartbeat
+            stopHeartbeat();
+            
+            try {
+                if (state.characteristic) {
+                    state.characteristic.removeEventListener(
+                        'characteristicvaluechanged',
+                        handleBLEData
+                    );
+                }
+
+                if (state.bleDevice?.gatt?.connected) {
+                    state.bleDevice.gatt.disconnect();
+                }
+            } catch { }
+
+            state.characteristic = null;
+            state.bleConnected = false;
+            
+            // Reset all live data including shot timer
+            resetLiveData();
+            
+            updateBLEUI();
+        }
+
+        /**
+         * Handle and categorize BLE errors with specific user guidance
+         */
+        function handleBLEError(error) {
+            console.error('BLE Error:', error);
+            
+            let message = 'Connection error occurred';
+            let duration = 5000;
+            let type = 'error';
+
+            if (error.name === 'NotFoundError') {
+                message = 'Connection cancelled';
+                type = 'info';
+                duration = 3000;
+            } else if (error.name === 'NetworkError') {
+                message = 'Device not responding.<br>Check that LVR-1 is:<br>• Powered on<br>• Within Bluetooth range<br>• Not connected to another device';
+                duration = 10000;
+            } else if (error.name === 'SecurityError') {
+                message = 'Bluetooth permission denied.<br>Please allow Bluetooth access and reload the page.';
+                duration = 10000;
+            } else if (error.name === 'NotSupportedError' || error.message.includes('not supported')) {
+                message = 'Web Bluetooth not supported.<br>Please use Chrome, Edge, or Opera browser.';
+                duration = 10000;
+            } else if (error.message && error.message.includes('GATT')) {
+                message = 'Connection unstable.<br>Moving device closer may help.<br>Retrying automatically...';
+                duration = 6000;
+            } else if (error.message && error.message.includes('User cancelled')) {
+                message = 'Connection cancelled by user';
+                type = 'info';
+                duration = 3000;
+            } else if (error.message && error.message.includes('Service not found')) {
+                message = 'LVR-1 service not available.<br>Device may need to be restarted.';
+                duration = 8000;
+            } else if (error.message) {
+                message = `Connection error:<br>${error.message}`;
+                duration = 8000;
+            }
+
+            showToast(message, duration, type);
+        }
+
+        async function toggleBLE() {
+            // Check for Web Bluetooth support
+            if (!navigator.bluetooth) {
+                showToast('Web Bluetooth not supported.<br>Please use Chrome, Edge, or Opera browser.', 10000, 'error');
+                return;
+            }
+
+            if (state.bleConnected) {
+                disconnectBLE();
+                updateBLEUI();
+            } else {
+                let success = false;
+                isConnecting = true;
+
+                // Step 1: Try silent reconnect if we have a known device
+                if (state.bleDevice) {
+                    success = await connectBLE();
+                }
+
+                // Step 2: If silent failed or no device → prompt for pairing (user gesture)
+                if (!success) {
+                    state.bleDevice = null; // Forget old device
+
+                    try {
+                        const device = await navigator.bluetooth.requestDevice({
+                            filters: [{ name: CONSTANTS.BLE.DEVICE_NAME }],
+                            optionalServices: [CONSTANTS.BLE.SERVICE_UUID]
+                        });
+
+                        // Clean up any old listener
+                        if (state.bleDevice) {
+                            state.bleDevice.removeEventListener('gattserverdisconnected', handleDisconnect);
+                        }
+
+                        state.bleDevice = device;
+                        device.addEventListener('gattserverdisconnected', handleDisconnect);
+
+                        await doConnectGATT(); // This sets connected=true and updates UI on success
+                        console.log('Connected via pairing prompt');
+                        return;
+
+                    } catch (err) {
+                        if (state.bleConnected) return;
+                        state.bleConnected = false;
+                        updateBLEUI();
+                        handleBLEError(err);
+                    } finally {
+                        isConnecting = false;
+                    }
+                }
+            }
+        }
+
+        function resetLiveData() {
+            state.brewTemp = 0;
+            state.steamTemp = 0;
+            state.groupTemp = 0;
+            state.groupPressure = 0;
+            state.steamPressure = 0;
+
+            state.brewReady = false;
+            state.steamReady = false;
+            state.groupReady = false;
+
+            state.shotRunning = false;
+            const shotElem = document.getElementById('shotTime');
+            if (shotElem) {
+                shotElem.textContent = '00';
+                shotElem.classList.add('stopped');
+                shotElem.classList.remove('running');
+            }
+
+            state.tempHistory = [];
+            state.pressureHistory = [];
+            const sampleCountElem = document.getElementById('sampleCount');
+            if (sampleCountElem) {
+                sampleCountElem.textContent = '0';
+            }
+            miniHoveredIndex = -1;
+            drawMiniGraph();
+            drawFullGraph();
+            updateDisplay();  // or your existing UI refresh
+        }
+
+        function handleDisconnect() {
+
+            if (isConnecting) {
+                console.warn('Ignoring disconnect during connect');
+                return;
+            }
+
+            console.warn('BLE disconnected');
+            
+            // Stop heartbeat
+            stopHeartbeat();
+
+            state.bleConnected = false;
+            state.characteristic = null;
+
+            updateBLEUI();
+            resetLiveData();
+            
+            // Return to main page when disconnected
+            // Can't call showPage() here because it's not defined yet in the code
+            document.querySelectorAll('.page').forEach(page =>
+                page.classList.remove('active')
+            );
+            const mainPage = document.getElementById('mainPage');
+            if (mainPage) {
+                mainPage.classList.add('active');
+            }
+            
+            // Redraw mini graph after switching to main page
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    drawMiniGraph();
+                });
+            });
+            
+            // Attempt auto-reconnect with exponential backoff
+            if (reconnectAttempts < CONSTANTS.MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                const delay = CONSTANTS.RECONNECT_DELAY * reconnectAttempts;
+                console.log(`Auto-reconnect attempt ${reconnectAttempts}/${CONSTANTS.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+                
+                showToast(`Connection lost. Reconnecting in ${delay/1000} seconds... (Attempt ${reconnectAttempts}/${CONSTANTS.MAX_RECONNECT_ATTEMPTS})`, delay, 'info');
+                
+                setTimeout(async () => {
+                    if (!state.bleConnected) {
+                        console.log('Attempting auto-reconnect...');
+                        const success = await connectBLE();
+                        if (success) {
+                            showToast('Reconnected successfully!', 5000, 'success');
+                            reconnectAttempts = 0;
+                        }
+                    }
+                }, delay);
+            } else {
+                showToast('Connection lost. Maximum reconnection attempts reached.<br>Please click Connect to try again.', 10000, 'error');
+                reconnectAttempts = 0; // Reset for next manual attempt
+            }
+        }
+
+        function updateBLEUI() {
+            const connected = state.bleConnected;
+
+            // Button vs label on main page
+            document.querySelectorAll('.ble-connect-btn').forEach(btn => {
+                btn.style.display = connected ? 'none' : 'block';
+            });
+
+            document.querySelectorAll('.ble-connected-label').forEach(label => {
+                label.style.display = connected ? 'block' : 'none';
+            });
+
+            // Indicators on all pages
+            document.querySelectorAll('.ble-indicator').forEach(ind => {
+                ind.classList.toggle('connected', connected);
+                ind.classList.toggle('disconnected', !connected);
+            });
+
+            // Grey overlay for values when disconnected
+            const container = document.querySelector('.container');
+            container.classList.toggle('ble-disconnected', !connected);
+        }
+
+        function handleBLEData(event) {
+            const text = new TextDecoder().decode(event.target.value);
+            console.log('Raw BLE data received:', text);
+
+            if (!state.bleConnected) {
+                state.bleConnected = true;
+                updateBLEUI();
+            }
+
+            let data;
+
+            try { data = JSON.parse(text); }
+            catch (e) { console.error('Parse error:', e); return; }
+
+            // PID packet
+            if (data.pid) {
+                if (data.pid.brew) Object.assign(state.pidGains.brew, data.pid.brew);
+                if (data.pid.steam) Object.assign(state.pidGains.steam, data.pid.steam);
+                if (data.pid.group) Object.assign(state.pidGains.group, data.pid.group);
+                renderPIDSettings();
+                return;
+            }
+
+            // Live data
+            Object.assign(state, {
+                brewTemp: data.brewTemp ?? state.brewTemp,
+                steamTemp: data.steamTemp ?? state.steamTemp,
+                groupTemp: data.groupTemp ?? state.groupTemp,
+                groupPressure: data.groupPressure ?? state.groupPressure,
+                steamPressure: data.SteamPressure ?? state.steamPressure,
+                brewSetpoint: data.brewSetpoint ?? state.brewSetpoint,
+                steamSetpoint: data.steamSetpoint ?? state.steamSetpoint,
+                groupSetpoint: data.groupSetpoint ?? state.groupSetpoint,
+                brewReady: data.brewReady ?? state.brewReady,
+                steamReady: data.steamReady ?? state.steamReady,
+                groupReady: data.groupReady ?? state.groupReady,
+                useFahrenheit: data.useFahrenheit ?? state.useFahrenheit,
+                pressureIsBar: data.pressureIsBar ?? state.pressureIsBar,
+            });
+
+            // If units changed from device, update y-axis labels and redraw graphs
+            if ('useFahrenheit' in data || 'pressureIsBar' in data) {
+                updateYAxisScaleInputs();
+                drawMiniGraph();
+                if (document.getElementById('graphPage').classList.contains('active')) {
+                    drawFullGraph();
+                }
+            }
+
+            // Shot timer sync + graph control
+            if ('shotRunning' in data && 'shotSeconds' in data) {
+
+                const wasRunning = state.shotRunning;
+                state.shotRunning = data.shotRunning;
+
+                const secs = Math.max(0, Math.min(98, data.shotSeconds % 99));
+                const shotElem = document.getElementById('shotTime');
+                shotElem.textContent = String(secs).padStart(2, '0');
+                shotElem.classList.toggle('running', state.shotRunning);
+                shotElem.classList.toggle('stopped', !state.shotRunning);
+
+                if (!wasRunning && state.shotRunning) {
+                    state.tempHistory = [];
+                    state.pressureHistory = [];
+                    miniHoveredIndex = -1;
+                    drawMiniGraph();
+                }
+
+            }
+
+
+            // Graph history — during shot OR if always-record is enabled
+            if (!state.dataCollectionPaused && (state.shotRunning || state.alwaysRecordGraph)) {
+                state.tempHistory.push(state.brewTemp);
+                state.pressureHistory.push(state.groupPressure);
+
+                // Memory management: limit history to prevent memory leaks
+                // Using constant for configuration
+                if (state.tempHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
+                    state.tempHistory.shift();
+                }
+                if (state.pressureHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
+                    state.pressureHistory.shift();
+                }
+
+                drawMiniGraph();
+                drawFullGraph();
+                
+                // Update sample count display
+                const sampleCountElem = document.getElementById('sampleCount');
+                if (sampleCountElem) {
+                    sampleCountElem.textContent = state.tempHistory.length.toString();
+                }
+            }
+
+            updateDisplay();
+        }
+
+        async function sendBLECommand(command) {
+            if (!state.characteristic) return;
+
+            try {
+                const encoder = new TextEncoder();
+                await state.characteristic.writeValueWithoutResponse(encoder.encode(JSON.stringify(command)));
+                console.log('Sent command:', command);
+            } catch (error) {
+                console.error('BLE write failed:', error);
+            }
+        }
+
+        function startHeartbeat() {
+            // Clear any existing heartbeat interval
+            stopHeartbeat();
+            
+            // Send heartbeat ping using constant interval
+            state.heartbeatInterval = setInterval(() => {
+                if (state.bleConnected && state.characteristic) {
+                    sendBLECommand({ type: 'ping' });
+                    console.log('Heartbeat ping sent');
+                } else {
+                    // Stop heartbeat if connection is lost
+                    stopHeartbeat();
+                }
+            }, CONSTANTS.HEARTBEAT_INTERVAL);
+            
+            console.log(`Heartbeat started (${CONSTANTS.HEARTBEAT_INTERVAL}ms interval)`);
+        }
+
+        function stopHeartbeat() {
+            if (state.heartbeatInterval) {
+                clearInterval(state.heartbeatInterval);
+                state.heartbeatInterval = null;
+                console.log('Heartbeat stopped');
+            }
+        }
+
+        function showPage(pageName) {
+            if (pageName !== 'main' && !state.bleConnected) {
+                showToast('Please connect to the device via BLE to access this page.', 5000, 'info');
+                return;
+            }
+
+            document.querySelectorAll('.page').forEach(page =>
+                page.classList.remove('active')
+            );
+
+            const pageEl = document.getElementById(pageName + 'Page');
+            pageEl.classList.add('active');
+
+            // 🔥 FORCE mini graph resize AFTER layout resolves
+            if (pageName === 'main') {
+                // Force layout recalculation to fix spacing issues
+                const miniContainer = document.querySelector('.graph-container.nav-graph');
+                if (miniContainer) {
+                    // Temporarily force height recalculation
+                    miniContainer.style.minHeight = '0';
+                    miniContainer.style.height = 'auto';
+                }
+                
+                // Triple RAF to ensure layout is fully settled
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            drawMiniGraph();
+                        });
+                    });
+                });
+            }
+
+            if (pageName === 'pid') {
+                document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
+                sendBLECommand({ type: 'get_pid' });
+            }
+
+            if (pageName === 'graph') {
+                updateYAxisScaleInputs(); // Ensure unit labels and values are current
+                drawFullGraph();
+            }
+        }
+
+
+        function cToF(c) { return c * 9 / 5 + 32; }
+
+        function toggleTempUnit() {
+            state.useFahrenheit = !state.useFahrenheit;
+            document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
+            if (state.bleConnected) {
+                sendBLECommand({ type: 'unit', unitType: 'temp', value: state.useFahrenheit });
+            }
+            updateDisplay();
+            updateYAxisScaleInputs();
+            drawMiniGraph();
+            if (document.getElementById('graphPage').classList.contains('active')) {
+                drawFullGraph();
+            }
+        }
+
+        function togglePressureUnit() {
+            state.pressureIsBar = !state.pressureIsBar;
+            document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
+            if (state.bleConnected) {
+                sendBLECommand({ type: 'unit', unitType: 'pressure', value: state.pressureIsBar });
+            }
+            updateDisplay();
+            updateYAxisScaleInputs();
+            drawMiniGraph();
+            if (document.getElementById('graphPage').classList.contains('active')) {
+                drawFullGraph();
+            }
+        }
+
+
+
+        function updateDisplay() {
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+
+            // When disconnected, show 0.0 regardless of unit (instead of converting 0°C to 32°F)
+            const displayTemp = (tempC) => {
+                if (!state.bleConnected) return '0.0';
+                return (state.useFahrenheit ? cToF(tempC) : tempC).toFixed(1);
+            };
+
+            document.getElementById('brewTempValue').textContent = displayTemp(state.brewTemp);
+            document.getElementById('brewTempUnit').textContent = tempUnit;
+
+            document.getElementById('steamTempValue').textContent = displayTemp(state.steamTemp);
+            document.getElementById('steamTempUnit').textContent = tempUnit;
+
+            document.getElementById('steamPressureValue').textContent = state.steamPressure.toFixed(1);
+            document.getElementById('steamPressureUnit').textContent = 'bar';
+
+            // Update the steam pressure gauge needle
+            const steamPressureValue = state.pressureIsBar ? state.steamPressure : state.steamPressure * 14.5038;
+            
+            // Update needle gauge (0-3 bar range, or 0-43.5 psi)
+            const maxPressure = state.pressureIsBar ? 3 : 43.5; // 3 bar = ~43.5 psi
+            const pressurePercent = Math.min(100, (steamPressureValue / maxPressure) * 100);
+            const needleAngle = -90 + (pressurePercent / 100) * 180; // Map 0-100% to -90 to +90 degrees
+            const gaugeNeedle = document.getElementById('steamGaugeNeedle');
+            if (gaugeNeedle) {
+                gaugeNeedle.style.transform = `rotate(${needleAngle}deg)`;
+                gaugeNeedle.style.transformOrigin = '50% 85%';
+            }
+
+            document.getElementById('groupTempValue').textContent = displayTemp(state.groupTemp);
+            document.getElementById('groupTempUnit').textContent = tempUnit;
+            document.getElementById('brewStatus').className = 'status-card ' + (state.bleConnected && state.brewReady ? 'ready' : state.bleConnected && !state.brewReady ? 'heating' : '');
+            document.getElementById('steamStatus').className = 'status-card ' + (state.bleConnected && state.steamReady ? 'ready' : state.bleConnected && !state.steamReady ? 'heating' : '');
+            document.getElementById('groupStatus').className = 'status-card ' + (state.bleConnected && state.groupReady ? 'ready' : state.bleConnected && !state.groupReady ? 'heating' : '');
+
+            const pressureValue = state.pressureIsBar ? state.groupPressure : state.groupPressure * 14.5038;
+            document.getElementById('pressureDisplay').textContent = pressureValue.toFixed(1);
+            document.getElementById('pressureUnit').textContent = state.pressureIsBar ? 'bar' : 'psi';
+
+            document.getElementById('brewSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.brewSetpoint) : state.brewSetpoint).toFixed(1);
+            document.getElementById('steamSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.steamSetpoint) : state.steamSetpoint).toFixed(1);
+            document.getElementById('groupSetpointDisplay').textContent =
+                (state.useFahrenheit ? cToF(state.groupSetpoint) : state.groupSetpoint).toFixed(1);
+
+            const displayPrecision = 1;
+
+            const inputs = {
+                brew: document.getElementById('brewSetpointInput'),
+                steam: document.getElementById('steamSetpointInput'),
+                group: document.getElementById('groupSetpointInput')
+            };
+
+            Object.keys(inputs).forEach(zone => {
+                const el = inputs[zone];
+                if (!el) return;
+
+                const rawSetpoint = state[zone + 'Setpoint'];
+                const displayedValue = (state.useFahrenheit ? cToF(rawSetpoint) : rawSetpoint)
+                    .toFixed(displayPrecision);
+
+                if (document.activeElement !== el) {
+                    el.value = displayedValue;
+                }
+            });
+
+            updateTempBar(
+                state.brewTemp,
+                state.brewSetpoint,
+                0,
+                110,
+                'brewTempBar',
+                'brewTempSet'
+            );
+
+            updateTempBar(
+                state.steamTemp,
+                state.steamSetpoint,
+                0,
+                150,
+                'steamTempBar',
+                'steamTempSet'
+            );
+
+            updateTempBar(
+                state.groupTemp,
+                state.groupSetpoint,
+                0,
+                110,
+                'groupTempBar',
+                'groupTempSet'
+            );
+
+            const zones = ['brew', 'steam', 'group'];
+
+            zones.forEach(zone => {
+                const currentTemp = state[zone + 'Temp'];
+                const setpoint = state[zone + 'Setpoint'];
+                const diff = Math.abs(currentTemp - setpoint);
+
+                const setEl = document.getElementById(zone + 'TempSet');
+                if (setEl) {
+                    setEl.classList.toggle('off-target', diff > 3);
+                }
+            });
+
+            // Update unit toggle buttons to reflect current state
+            const tempUnitBtn = document.getElementById('tempUnitBtn');
+            const pressureUnitBtn = document.getElementById('pressureUnitBtn');
+            if (tempUnitBtn) tempUnitBtn.textContent = state.useFahrenheit ? '°F' : '°C';
+            if (pressureUnitBtn) pressureUnitBtn.textContent = state.pressureIsBar ? 'bar' : 'psi';
+
+        }
+
+        function adjustSetpoint(zone, delta) {
+            if (zone === 'brew') {
+                state.brewSetpoint = Math.max(80, Math.min(100, state.brewSetpoint + delta));
+                sendBLECommand({ type: 'setpoint', zone: 'brew', value: state.brewSetpoint });
+            } else if (zone === 'steam') {
+                state.steamSetpoint = Math.max(110, Math.min(140, state.steamSetpoint + delta));
+                sendBLECommand({ type: 'setpoint', zone: 'steam', value: state.steamSetpoint });
+            } else if (zone === 'group') {
+                state.groupSetpoint = Math.max(80, Math.min(98, state.groupSetpoint + delta));
+                sendBLECommand({ type: 'setpoint', zone: 'group', value: state.groupSetpoint });
+            }
+            updateDisplay();
+        }
+
+        function setupHiDPICanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.round(rect.width * dpr);
+            canvas.height = Math.round(rect.height * dpr);
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return ctx;
+        }
+
+        function handleGraphHover(event, canvasId) {
+            event.preventDefault();
+            const canvas = document.getElementById(canvasId);
+            const rect = canvas.getBoundingClientRect();
+            const isTouch = event.touches !== undefined;
+            const clientX = isTouch ? event.touches[0].clientX : event.clientX;
+            const relX = clientX - rect.left;
+
+            if (relX < 0 || relX > rect.width) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const isMini = canvasId === 'miniGraph';
+
+            let paddingLeft, paddingRight, paddingTop, paddingBottom;
+            if (isMini) {
+                paddingLeft = 40;
+                paddingRight = 40;
+                paddingTop = 40;
+                paddingBottom = 40;
+            } else {
+                paddingLeft = 65;
+                paddingRight = 65;
+                paddingTop = 30;
+                paddingBottom = 30;
+            }
+
+            const plotStart = paddingLeft;
+            const plotEnd = rect.width - paddingRight;
+            if (relX < plotStart || relX > plotEnd) {
+                handleGraphLeave(canvasId);
+                return;
+            }
+
+            const fraction = (relX - plotStart) / (plotEnd - plotStart);
+            const maxIndex = state.tempHistory.length - 1;
+            if (maxIndex < 0) return;
+
+            const index = Math.round(fraction * maxIndex);
+            if (isMini) miniHoveredIndex = index;
+            else fullHoveredIndex = index;
+
+            const tempValues = state.tempHistory;
+            const pressValues = state.pressureHistory;
+
+            const tempMinRaw = Math.min(...tempValues);
+            const tempMaxRaw = Math.max(...tempValues);
+            const defaultTempRange = isMini ? 10 : 20;
+            let tempRange = (tempMaxRaw - tempMinRaw) || defaultTempRange;
+            const tempPad = tempRange * 0.05;
+            let tempMin = tempMinRaw - tempPad;
+            let tempMax = tempMaxRaw + tempPad;
+
+            const pressMinRaw = Math.min(...pressValues);
+            const pressMaxRaw = Math.max(...pressValues);
+            const defaultPressRange = isMini ? 3 : 5;
+            let pressRange = (pressMaxRaw - pressMinRaw) || defaultPressRange;
+            const pressPad = pressRange * 0.1;
+            let pressMin = pressMinRaw - pressPad;
+            if (isMini) pressMin = Math.max(0, pressMin);
+            let pressMax = pressMaxRaw + pressPad;
+
+            const plotWidth = rect.width - paddingLeft - paddingRight;
+            const plotHeight = rect.height - paddingTop - paddingBottom;
+
+            const x_canvas = paddingLeft + fraction * plotWidth;
+
+            const fractionTemp = (tempValues[index] - tempMin) / (tempMax - tempMin);
+            const y_temp_canvas = isMini
+                ? rect.height - paddingBottom - fractionTemp * plotHeight
+                : paddingTop + (1 - fractionTemp) * plotHeight;
+
+            const fractionPress = (pressValues[index] - pressMin) / (pressMax - pressMin);
+            const y_press_canvas = isMini
+                ? rect.height - paddingBottom - fractionPress * plotHeight
+                : paddingTop + (1 - fractionPress) * plotHeight;
+
+            const container = canvas.parentElement.getBoundingClientRect();
+
+            const pointX = rect.left - container.left + x_canvas;
+            const pointYTemp = rect.top - container.top + y_temp_canvas;
+            const pointYPress = rect.top - container.top + y_press_canvas;
+
+            const centerY = (pointYTemp + pointYPress) / 2;
+
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
+            const tempVal = state.useFahrenheit ? cToF(tempValues[index]) : tempValues[index];
+            const pressVal = pressValues[index] * pressureConv;
+            const timeSec = index;
+
+            const html = `
+                <strong>Time: ${timeSec}s</strong><br>
+                Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
+                Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
+            `;
+
+            const tooltip = isMini ? miniTooltip : fullTooltip;
+            tooltip.innerHTML = html;
+
+            tooltip.style.left = '-9999px';
+            tooltip.style.top = '-9999px';
+            tooltip.style.display = 'block';
+
+            const tooltipWidth = tooltip.offsetWidth;
+            const tooltipHeight = tooltip.offsetHeight;
+
+            let tooltipX = pointX + 14;
+            let tooltipY = centerY - tooltipHeight / 2;
+
+            const containerRect = canvas.parentElement.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height;
+
+            if (tooltipX + tooltipWidth > containerWidth - 8) {
+                tooltipX = pointX - tooltipWidth - 14;
+            }
+
+            tooltipY = Math.max(
+                8,
+                Math.min(containerHeight - tooltipHeight - 8, tooltipY)
+            );
+
+            tooltip.style.left = Math.round(tooltipX) + 'px';
+            tooltip.style.top = Math.round(tooltipY) + 'px';
+
+            if (isMini) drawMiniGraph();
+            else drawFullGraph();
+        }
+
+        function handleGraphLeave(canvasId) {
+            const isMini = canvasId === 'miniGraph';
+            if (isMini) {
+                miniHoveredIndex = -1;
+                miniTooltip.style.display = 'none';
+                drawMiniGraph();
+            } else {
+                fullHoveredIndex = -1;
+                fullTooltip.style.display = 'none';
+                drawFullGraph();
+            }
+        }
+
+        function toggleGraphRecording() {
+            const checkbox = document.getElementById('graphRecordToggle');
+            state.alwaysRecordGraph = checkbox.checked;
+            
+            // If turning off and not in a shot, clear the history
+            if (!state.alwaysRecordGraph && !state.shotRunning) {
+                state.tempHistory = [];
+                state.pressureHistory = [];
+                drawMiniGraph();
+                drawFullGraph();
+            }
+        }
+
+        function drawMiniGraph() {
+            const canvas = document.getElementById('miniGraph');
+            if (!canvas) return;
+
+            const ctx = setupHiDPICanvas(canvas);
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            if (state.tempHistory.length < 2) {
+                ctx.fillStyle = '#888';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const message = state.bleConnected
+                    ? 'Waiting for shot to start.....'
+                    : 'Connect to view live graph';
+                ctx.fillText(message, width / 2, height / 2);
+                return;
+            }
+
+            const padding = 40;
+
+            let tempMin = Math.min(...state.tempHistory);
+            let tempMax = Math.max(...state.tempHistory);
+            let tempRange = tempMax - tempMin || 10;
+            let tempPad = tempRange * 0.05;
+            tempMin -= tempPad;
+            tempMax += tempPad;
+            tempRange = tempMax - tempMin;
+
+            let pressureMin = Math.min(...state.pressureHistory);
+            let pressureMax = Math.max(...state.pressureHistory);
+            let pressureRange = pressureMax - pressureMin || 3;
+            let pressurePad = pressureRange * 0.1;
+            pressureMin = Math.max(0, pressureMin - pressurePad);
+            pressureMax += pressurePad;
+            pressureRange = pressureMax - pressureMin;
+
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
+            const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
+            const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
+            const dispTempRange = dispTempMax - dispTempMin;
+
+            const dispPressureMin = pressureMin * pressureConv;
+            const dispPressureMax = pressureMax * pressureConv;
+            const dispPressureRange = dispPressureMax - dispPressureMin;
+
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (i / 4) * (height - padding * 2);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#800';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#445566';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width - padding, padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            ctx.fillStyle = '#f88';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            const miniTicks = 2;
+            for (let i = 0; i <= miniTicks; i++) {
+                const fraction = i / miniTicks;
+                const y = padding + fraction * (height - padding * 2);
+                const val = dispTempMax - fraction * dispTempRange;
+                ctx.fillText(val.toFixed(1), padding - 8, y);
+            }
+            ctx.fillText(tempUnit, padding - 8, padding + 10);
+
+            ctx.fillStyle = '#7799bb';
+            ctx.textAlign = 'left';
+            for (let i = 0; i <= miniTicks; i++) {
+                const fraction = i / miniTicks;
+                const y = padding + fraction * (height - padding * 2);
+                const val = dispPressureMax - fraction * dispPressureRange;
+                ctx.fillText(val.toFixed(pressureDecimals), width - padding + 8, y);
+            }
+            ctx.fillText(pressureUnit, width - padding + 8, padding + 10);
+
+            const plot = (data, color, minV, rangeV) => {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                data.forEach((v, i) => {
+                    const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+                    const fraction = (v - minV) / rangeV;
+                    const y = height - padding - fraction * (height - padding * 2);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            };
+
+            plot(state.tempHistory, 'rgb(194, 58, 58)', tempMin, tempRange);
+            plot(state.pressureHistory, '#5588aa', pressureMin, pressureRange);
+
+            if (miniHoveredIndex >= 0 && miniHoveredIndex < state.tempHistory.length) {
+                const index = miniHoveredIndex;
+                const x = padding + (index / (state.tempHistory.length - 1)) * (width - padding * 2);
+
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                const yTemp = height - padding - fractionTemp * (height - padding * 2);
+                ctx.fillStyle = 'rgb(194, 58, 58)';
+                ctx.beginPath();
+                ctx.arc(x, yTemp, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                const yPress = height - padding - fractionPress * (height - padding * 2);
+                ctx.fillStyle = '#5588aa';
+                ctx.beginPath();
+                ctx.arc(x, yPress, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#888';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Time →', width / 2, height - 6);
+        }
+
+        function updateYAxisScaleInputs() {
+            // Update unit labels - do this FIRST, independent of input elements
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            
+            // Always update all four unit labels immediately
+            const tempScaleUnit = document.getElementById('tempScaleUnit');
+            const tempScaleUnit2 = document.getElementById('tempScaleUnit2');
+            const pressScaleUnit = document.getElementById('pressScaleUnit');
+            const pressScaleUnit2 = document.getElementById('pressScaleUnit2');
+            
+            if (tempScaleUnit) {
+                tempScaleUnit.textContent = tempUnit;
+            }
+            if (tempScaleUnit2) {
+                tempScaleUnit2.textContent = tempUnit;
+            }
+            if (pressScaleUnit) {
+                pressScaleUnit.textContent = pressureUnit;
+            }
+            if (pressScaleUnit2) {
+                pressScaleUnit2.textContent = pressureUnit;
+            }
+            
+            // Update input values to display in current units
+            const tempMinInput = document.getElementById('tempMinInput');
+            const tempMaxInput = document.getElementById('tempMaxInput');
+            const pressMinInput = document.getElementById('pressMinInput');
+            const pressMaxInput = document.getElementById('pressMaxInput');
+            
+            if (!tempMinInput || !tempMaxInput || !pressMinInput || !pressMaxInput) {
+                return; // Elements not yet loaded
+            }
+            
+            // Don't update if user is currently editing
+            if (document.activeElement !== tempMinInput) {
+                if (state.customTempMin !== null) {
+                    tempMinInput.value = state.useFahrenheit ? 
+                        Math.round(cToF(state.customTempMin)) : 
+                        Math.round(state.customTempMin);
+                } else {
+                    tempMinInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== tempMaxInput) {
+                if (state.customTempMax !== null) {
+                    tempMaxInput.value = state.useFahrenheit ? 
+                        Math.round(cToF(state.customTempMax)) : 
+                        Math.round(state.customTempMax);
+                } else {
+                    tempMaxInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== pressMinInput) {
+                if (state.customPressMin !== null) {
+                    pressMinInput.value = state.pressureIsBar ? 
+                        state.customPressMin.toFixed(1) : 
+                        (state.customPressMin * 14.5038).toFixed(0);
+                } else {
+                    pressMinInput.value = '';
+                }
+            }
+            
+            if (document.activeElement !== pressMaxInput) {
+                if (state.customPressMax !== null) {
+                    pressMaxInput.value = state.pressureIsBar ? 
+                        state.customPressMax.toFixed(1) : 
+                        (state.customPressMax * 14.5038).toFixed(0);
+                } else {
+                    pressMaxInput.value = '';
+                }
+            }
+        }
+
+        function resetYAxisScale() {
+            state.customTempMin = null;
+            state.customTempMax = null;
+            state.customPressMin = null;
+            state.customPressMax = null;
+            
+            document.getElementById('tempMinInput').value = '';
+            document.getElementById('tempMaxInput').value = '';
+            document.getElementById('pressMinInput').value = '';
+            document.getElementById('pressMaxInput').value = '';
+            
+            drawFullGraph();
+        }
+
+        function setupYAxisScaleInputs() {
+            const tempMinInput = document.getElementById('tempMinInput');
+            const tempMaxInput = document.getElementById('tempMaxInput');
+            const pressMinInput = document.getElementById('pressMinInput');
+            const pressMaxInput = document.getElementById('pressMaxInput');
+            
+            const handleTempMin = () => {
+                const val = parseFloat(tempMinInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to Celsius for storage
+                    state.customTempMin = state.useFahrenheit ? (val - 32) * 5 / 9 : val;
+                } else {
+                    state.customTempMin = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handleTempMax = () => {
+                const val = parseFloat(tempMaxInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to Celsius for storage
+                    state.customTempMax = state.useFahrenheit ? (val - 32) * 5 / 9 : val;
+                } else {
+                    state.customTempMax = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handlePressMin = () => {
+                const val = parseFloat(pressMinInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    // Convert to bar for storage
+                    state.customPressMin = state.pressureIsBar ? val : val / 14.5038;
+                } else {
+                    state.customPressMin = null;
+                }
+                drawFullGraph();
+            };
+            
+            const handlePressMax = () => {
+                const val = parseFloat(pressMaxInput.value);
+                if (!isNaN(val) && val >= 0) {
+                    state.customPressMax = state.pressureIsBar ? val : val / 14.5038;
+                } else {
+                    state.customPressMax = null;
+                }
+                drawFullGraph();
+            };
+            
+            // Add 'input' event for real-time updates as user types
+            tempMinInput.addEventListener('input', handleTempMin);
+            tempMinInput.addEventListener('change', handleTempMin);
+            tempMinInput.addEventListener('blur', handleTempMin);
+            
+            tempMaxInput.addEventListener('input', handleTempMax);
+            tempMaxInput.addEventListener('change', handleTempMax);
+            tempMaxInput.addEventListener('blur', handleTempMax);
+            
+            pressMinInput.addEventListener('input', handlePressMin);
+            pressMinInput.addEventListener('change', handlePressMin);
+            pressMinInput.addEventListener('blur', handlePressMin);
+            
+            pressMaxInput.addEventListener('input', handlePressMax);
+            pressMaxInput.addEventListener('change', handlePressMax);
+            pressMaxInput.addEventListener('blur', handlePressMax);
+        }
+
+        function drawFullGraph() {
+            const canvas = document.getElementById('fullGraph');
+            if (!canvas) return;
+
+            const ctx = setupHiDPICanvas(canvas);
+            const width = canvas.getBoundingClientRect().width;
+            const height = canvas.getBoundingClientRect().height;
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            if (state.tempHistory.length < 2) {
+                ctx.fillStyle = '#666';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Collecting temperature data...', width / 2, height / 2);
+                return;
+            }
+
+            const paddingTop = 30;
+            const paddingBottom = 30;
+            const paddingLeft = 65;
+            const paddingRight = 65;
+            const plotWidth = width - paddingLeft - paddingRight;
+            const plotHeight = height - paddingTop - paddingBottom;
+
+            // Use custom scales if set, otherwise auto-calculate
+            // Support setting min, max, or both independently
+            let tempMin, tempMax, tempRange;
+            
+            // First calculate auto values
+            let autoTempMin = Math.min(...state.tempHistory);
+            let autoTempMax = Math.max(...state.tempHistory);
+            let autoTempRange = autoTempMax - autoTempMin || 20;
+            let tempPad = autoTempRange * 0.05;
+            autoTempMin -= tempPad;
+            autoTempMax += tempPad;
+            
+            // Use custom or auto for each
+            tempMin = state.customTempMin !== null ? state.customTempMin : autoTempMin;
+            tempMax = state.customTempMax !== null ? state.customTempMax : autoTempMax;
+            tempRange = tempMax - tempMin;
+
+            let pressureMin, pressureMax, pressureRange;
+            
+            // First calculate auto values
+            let autoPressMin = Math.min(...state.pressureHistory);
+            let autoPressMax = Math.max(...state.pressureHistory);
+            let autoPressRange = autoPressMax - autoPressMin || 5;
+            let pressPad = autoPressRange * 0.1;
+            autoPressMin = Math.max(0, autoPressMin - pressPad);
+            autoPressMax += pressPad;
+            
+            // Use custom or auto for each
+            pressureMin = state.customPressMin !== null ? state.customPressMin : autoPressMin;
+            pressureMax = state.customPressMax !== null ? state.customPressMax : autoPressMax;
+            pressureRange = pressureMax - pressureMin;
+
+            const tempUnit = state.useFahrenheit ? '°F' : '°C';
+            const pressureUnit = state.pressureIsBar ? 'bar' : 'psi';
+            const pressureConv = state.pressureIsBar ? 1 : 14.5038;
+            const pressureDecimals = state.pressureIsBar ? 1 : 0;
+
+            const dispTempMin = state.useFahrenheit ? cToF(tempMin) : tempMin;
+            const dispTempMax = state.useFahrenheit ? cToF(tempMax) : tempMax;
+            const dispTempRange = dispTempMax - dispTempMin;
+
+            const dispPressureMin = pressureMin * pressureConv;
+            const dispPressureMax = pressureMax * pressureConv;
+            const dispPressureRange = dispPressureMax - dispPressureMin;
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 5; i++) {
+                const y = paddingTop + (i / 5) * plotHeight;
+                ctx.beginPath();
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(width - paddingRight, y);
+                ctx.stroke();
+
+                const x = paddingLeft + (i / 5) * plotWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, paddingTop);
+                ctx.lineTo(x, height - paddingBottom);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(paddingLeft, paddingTop, plotWidth, plotHeight);
+
+            ctx.strokeStyle = '#800';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, paddingTop);
+            ctx.lineTo(paddingLeft, height - paddingBottom);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#445566';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width - paddingRight, paddingTop);
+            ctx.lineTo(width - paddingRight, height - paddingBottom);
+            ctx.stroke();
+
+            ctx.fillStyle = '#f88';
+            ctx.font = '14px monospace';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            const fullTicks = 4;
+            for (let i = 0; i <= fullTicks; i++) {
+                const fraction = i / fullTicks;
+                const y = paddingTop + fraction * plotHeight;
+                const val = dispTempMax - fraction * dispTempRange;
+                ctx.fillText(val.toFixed(1), paddingLeft - 10, y);
+            }
+            ctx.fillText(tempUnit, paddingLeft - 10, paddingTop + 15);
+
+            ctx.fillStyle = '#7799bb';
+            ctx.textAlign = 'left';
+            for (let i = 0; i <= fullTicks; i++) {
+                const fraction = i / fullTicks;
+                const y = paddingTop + fraction * plotHeight;
+                const val = dispPressureMax - fraction * dispPressureRange;
+                ctx.fillText(val.toFixed(pressureDecimals), width - paddingRight + 10, y);
+            }
+            ctx.fillText(pressureUnit, width - paddingRight + 10, paddingTop + 15);
+
+            const plot = (data, color, minV, rangeV) => {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                data.forEach((v, i) => {
+                    const x = paddingLeft + (i / (data.length - 1)) * plotWidth;
+                    const fraction = (v - minV) / rangeV;
+                    const y = paddingTop + (1 - fraction) * plotHeight;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            };
+
+            plot(state.tempHistory, 'rgb(194, 58, 58)', tempMin, tempRange);
+            plot(state.pressureHistory, '#5588aa', pressureMin, pressureRange);
+
+            if (fullHoveredIndex >= 0 && fullHoveredIndex < state.tempHistory.length) {
+                const index = fullHoveredIndex;
+                const x = paddingLeft + (index / (state.tempHistory.length - 1)) * plotWidth;
+
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([6, 6]);
+                ctx.beginPath();
+                ctx.moveTo(x, paddingTop);
+                ctx.lineTo(x, height - paddingBottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
+                const yTemp = paddingTop + (1 - fractionTemp) * plotHeight;
+                ctx.fillStyle = 'rgb(194, 58, 58)';
+                ctx.beginPath();
+                ctx.arc(x, yTemp, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
+                const yPress = paddingTop + (1 - fractionPress) * plotHeight;
+                ctx.fillStyle = '#5588aa';
+                ctx.beginPath();
+                ctx.arc(x, yPress, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+
+        }
+
+        function togglePause() {
+            state.dataCollectionPaused = !state.dataCollectionPaused;
+            const btn = document.getElementById('pauseBtn');
+            btn.textContent = state.dataCollectionPaused ? 'Resume' : 'Pause';
+        }
+
+        function saveData() {
+            if (state.tempHistory.length === 0) {
+                showToast('No data to save yet.', 4000, 'info'); return;
+            }
+
+            const data = {
+                tempHistory: state.tempHistory,
+                pressureHistory: state.pressureHistory,
+                savedAt: new Date().toISOString(),
+                note: 'LVR-1 graph data (brew temperature and group pressure)'
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lvr1-graph-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearData() {
+            if (!confirm('Clear all recorded graph data? This cannot be undone.')) return;
+
+            state.tempHistory = [];
+            state.pressureHistory = [];
+            miniHoveredIndex = -1;
+            fullHoveredIndex = -1;
+            miniTooltip.style.display = 'none';
+            fullTooltip.style.display = 'none';
+
+            drawMiniGraph();
+            drawFullGraph();
+            showToast('Graph data cleared.', 4000, 'success');
+            document.getElementById('sampleCount').textContent = '0';
+        }
+
+        document.getElementById('loadFileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+
+                    if (!Array.isArray(data.tempHistory) || !Array.isArray(data.pressureHistory)) {
+                        throw new Error('Invalid format');
+                    }
+
+                    const len = Math.min(data.tempHistory.length, data.pressureHistory.length);
+                    state.tempHistory = data.tempHistory.slice(-len).map(Number);
+                    state.pressureHistory = data.pressureHistory.slice(-len).map(Number);
+
+                    miniHoveredIndex = -1;
+                    fullHoveredIndex = -1;
+                    miniTooltip.style.display = 'none';
+                    fullTooltip.style.display = 'none';
+
+                    drawMiniGraph();
+                    drawFullGraph();
+                    showToast('Data loaded successfully!<br>' + state.tempHistory.length + ' samples', 5000, 'success');
+                } catch (err) {
+                    showToast('Failed to load file:<br>' + err.message, 8000, 'error');
+                }
+            };
+            reader.readAsText(file);
+
+            e.target.value = '';
+        });
+
+        function updatePIDFromInput(input, zone, param) {
+            if (!state.bleConnected) {
+                showToast('Please connect to device before changing PID gains', 3000, 'info');
+                return;
+            }
+
+            let val = parseFloat(input.value);
+            
+            // Validate the PID gain
+            const validation = validatePIDGain(val, param);
+            
+            if (!validation.valid) {
+                showToast(validation.error, 5000, 'error');
+                // Reset to current value
+                input.value = state.pidGains[zone][param].toFixed(2);
+                return;
+            }
+
+            state.pidGains[zone][param] = validation.value;
+            input.value = validation.value.toFixed(2);
+
+            sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
+            showToast(`${param} updated to ${validation.value.toFixed(2)}`, 2000, 'success');
+        }
+
+        function adjustPID(zone, param, delta) {
+            let newVal = Math.max(0, state.pidGains[zone][param] + delta);
+
+            if (param.includes('Ki')) {
+                newVal = Math.round(newVal * 100) / 100;
+            } else {
+                newVal = Math.round(newVal * 10) / 10;
+            }
+            
+            // Validate the new value
+            const validation = validatePIDGain(newVal, param);
+            
+            if (!validation.valid) {
+                // Silently ignore invalid adjustments when holding button
+                return;
+            }
+
+            state.pidGains[zone][param] = validation.value;
+
+            const input = document.getElementById(`${zone}-${param}`);
+            if (input) {
+                input.value = validation.value.toFixed(2);
+            }
+
+            sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
+        }
+
+        // Track hold intervals for PID buttons
+        let pidHoldInterval = null;
+        let pidHoldTimeout = null;
+
+        function startPIDHold(zone, param, delta) {
+            // Immediate first adjustment
+            adjustPID(zone, param, delta);
+            
+            // Wait 500ms before starting continuous adjustments
+            pidHoldTimeout = setTimeout(() => {
+                pidHoldInterval = setInterval(() => {
+                    adjustPID(zone, param, delta);
+                }, 100); // Adjust every 100ms while held
+            }, 500);
+        }
+
+        function stopPIDHold() {
+            if (pidHoldTimeout) {
+                clearTimeout(pidHoldTimeout);
+                pidHoldTimeout = null;
+            }
+            if (pidHoldInterval) {
+                clearInterval(pidHoldInterval);
+                pidHoldInterval = null;
+            }
+        }
+
+        function renderPIDSettings() {
+            const container = document.getElementById('pidZones');
+            container.innerHTML = '';
+
+            ['brew', 'steam', 'group'].forEach(zone => {
+                const div = document.createElement('div');
+                div.className = 'pid-zone';
+
+                let html = `
+                    <h3>${zone.charAt(0).toUpperCase() + zone.slice(1)} Boiler</h3>
+                    <div class="pid-grid">
+                        <div class="pid-column">
+                            <h4 class="aggressive">Aggressive</h4>
+                            <div class="pid-row">
+                                <span>Kp:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKp" data-delta="-0.1">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKp" 
+                                       value="${state.pidGains[zone].aggKp.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKp')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKp" data-delta="0.1">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Ki:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKi" data-delta="-0.01">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKi" 
+                                       value="${state.pidGains[zone].aggKi.toFixed(2)}" 
+                                       step="0.01" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKi')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKi" data-delta="0.01">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Kd:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKd" data-delta="-0.1">−</button>
+                                <input type="number" class="pid-input" id="${zone}-aggKd" 
+                                       value="${state.pidGains[zone].aggKd.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'aggKd')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="aggKd" data-delta="0.1">+</button>
+                            </div>
+                        </div>
+                        <div class="pid-column">
+                            <h4 class="conservative">Conservative</h4>
+                            <div class="pid-row">
+                                <span>Kp:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKp" data-delta="-0.1">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKp" 
+                                       value="${state.pidGains[zone].consKp.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKp')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKp" data-delta="0.1">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Ki:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKi" data-delta="-0.01">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKi" 
+                                       value="${state.pidGains[zone].consKi.toFixed(2)}" 
+                                       step="0.01" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKi')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKi" data-delta="0.01">+</button>
+                            </div>
+                            <div class="pid-row">
+                                <span>Kd:</span>
+                                <button class="btn btn-danger btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKd" data-delta="-0.1">−</button>
+                                <input type="number" class="pid-input" id="${zone}-consKd" 
+                                       value="${state.pidGains[zone].consKd.toFixed(2)}" 
+                                       step="0.1" min="0"
+                                       onchange="updatePIDFromInput(this, '${zone}', 'consKd')">
+                                <button class="btn btn-success btn-pid pid-hold-btn" data-zone="${zone}" data-param="consKd" data-delta="0.1">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+
+            // Add press-and-hold event listeners to all PID buttons
+            document.querySelectorAll('.pid-hold-btn').forEach(btn => {
+                const zone = btn.dataset.zone;
+                const param = btn.dataset.param;
+                const delta = parseFloat(btn.dataset.delta);
+
+                // Mouse events
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    startPIDHold(zone, param, delta);
+                });
+                btn.addEventListener('mouseup', stopPIDHold);
+                btn.addEventListener('mouseleave', stopPIDHold);
+
+                // Touch events
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    startPIDHold(zone, param, delta);
+                });
+                btn.addEventListener('touchend', stopPIDHold);
+                btn.addEventListener('touchcancel', stopPIDHold);
+            });
+        }
+
+        function resetAllPID() {
+            if (!confirm("Are you sure you want to reset ALL PID gains to factory defaults?\n\nThis will overwrite the current settings on the webpage and (if connected) on the device.\n\nThis action cannot be undone.")) {
+                return;
+            }
+
+            const defaults = {
+                consKp: 1.00,
+                consKi: 0.05,
+                consKd: 0.25,
+                aggKp: 4.00,
+                aggKi: 0.20,
+                aggKd: 1.00
+            };
+
+            ['brew', 'steam', 'group'].forEach(zone => {
+                state.pidGains[zone] = { ...defaults };
+
+                if (state.bleConnected) {
+                    sendBLECommand({
+                        type: 'pid',
+                        zone: zone,
+                        gains: state.pidGains[zone]
+                    });
+                }
+            });
+
+            renderPIDSettings();
+            showToast('All PID gains reset to factory defaults.', 5000, 'success');
+        }
+
+        function setupGraphObservers() {
+            const miniContainer = document.querySelector('.graph-container.nav-graph');
+            if (miniContainer) {
+                // Debounce the redraw to prevent rapid updates
+                const debouncedMiniDraw = debounce(() => {
+                    drawMiniGraph();
+                }, 100);
+                
+                new ResizeObserver(() => {
+                    debouncedMiniDraw();
+                }).observe(miniContainer);
+            }
+
+            const fullContainer = document.querySelector('.graph-container.full-graph');
+            if (fullContainer) {
+                // Debounce the redraw to prevent rapid updates
+                const debouncedFullDraw = debounce(() => {
+                    drawFullGraph();
+                }, 100);
+                
+                new ResizeObserver(() => {
+                    debouncedFullDraw();
+                }).observe(fullContainer);
+            }
+        }
+
+        const miniCanvas = document.getElementById('miniGraph');
+        const fullCanvas = document.getElementById('fullGraph');
+
+        miniCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'miniGraph'));
+        miniCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'miniGraph'), { passive: false });
+        miniCanvas.addEventListener('mouseleave', () => handleGraphLeave('miniGraph'));
+        miniCanvas.addEventListener('touchend', () => handleGraphLeave('miniGraph'));
+        miniCanvas.addEventListener('touchcancel', () => handleGraphLeave('miniGraph'));
+
+        fullCanvas.addEventListener('mousemove', (e) => handleGraphHover(e, 'fullGraph'));
+        fullCanvas.addEventListener('touchmove', (e) => handleGraphHover(e, 'fullGraph'), { passive: false });
+        fullCanvas.addEventListener('mouseleave', () => handleGraphLeave('fullGraph'));
+        fullCanvas.addEventListener('touchend', () => handleGraphLeave('fullGraph'));
+        fullCanvas.addEventListener('touchcancel', () => handleGraphLeave('fullGraph'));
+
+        setupGraphObservers();
+
+        // Add window resize listener for additional responsiveness
+        const debouncedWindowResize = debounce(() => {
+            const activePage = document.querySelector('.page.active');
+            if (activePage && activePage.id === 'mainPage') {
+                drawMiniGraph();
+            } else if (activePage && activePage.id === 'graphPage') {
+                drawFullGraph();
+            }
+        }, 200);
+        
+        window.addEventListener('resize', debouncedWindowResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const activePage = document.querySelector('.page.active');
+                if (activePage && activePage.id === 'mainPage') {
+                    drawMiniGraph();
+                } else if (activePage && activePage.id === 'graphPage') {
+                    drawFullGraph();
+                }
+            }, 100);
+        });
+
+        window.addEventListener('load', () => {
+            drawMiniGraph();
+            updateDisplay();
+        });
+
+        document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
+        document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
+
+        updateDisplay();
+        updateBLEUI();
+        drawMiniGraph();
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(function (error) {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        function updateTempBar(value, setpoint, min, max, barId, setId) {
+            const clampedValue = Math.max(min, Math.min(max, value));
+            const clampedSet = Math.max(min, Math.min(max, setpoint));
+
+            const valuePct = ((clampedValue - min) / (max - min)) * 100;
+            const setPct = ((clampedSet - min) / (max - min)) * 100;
+
+            document.getElementById(barId).style.width = valuePct + '%';
+            document.getElementById(setId).style.left = setPct + '%';
+        }
+
+        function showToast(message, duration = 5000, type = 'info') {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = message.replace(/\n/g, '<br>');
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 400);
+            }, duration);
+        }
+
+        function initSetpointInputs() {
+            const zones = {
+                brew: { el: document.getElementById('brewSetpointInput') },
+                steam: { el: document.getElementById('steamSetpointInput') },
+                group: { el: document.getElementById('groupSetpointInput') }
+            };
+
+            Object.keys(zones).forEach(zoneName => {
+                const { el } = zones[zoneName];
+                if (!el) return;
+
+                // Store zone name on the element itself to avoid closure issues
+                el.dataset.zone = zoneName;
+
+                // Shared handler for change/blur (triggers on enter, tab, or click away)
+                const handler = (event) => {
+                    // Get zone from the element that triggered the event
+                    const zone = event.target.dataset.zone;
+                    
+                    if (!state.bleConnected) {
+                        showToast('Please connect to device before changing setpoints', 3000, 'info');
+                        updateSmallSetpoints();
+                        return;
+                    }
+
+                    let rawValue = parseFloat(el.value);
+                    if (isNaN(rawValue)) {
+                        showToast('Please enter a valid number', 3000, 'error');
+                        updateSmallSetpoints(); // Reset to current if invalid
+                        return;
+                    }
+
+                    // Convert back to °C if currently in °F
+                    let valueInC = state.useFahrenheit ? (rawValue - 32) * 5 / 9 : rawValue;
+
+                    // Validate the setpoint
+                    const validation = validateSetpoint(valueInC, zone);
+                    
+                    if (!validation.valid) {
+                        showToast(validation.error, 5000, 'error');
+                        updateSmallSetpoints(); // Reset to current value
+                        return;
+                    }
+
+                    // Update state and send to device
+                    state[zone + 'Setpoint'] = validation.value;
+                    sendBLECommand({ type: 'setpoint', zone: zone, value: validation.value });
+
+                    // Show success feedback
+                    const displayValue = state.useFahrenheit ? 
+                        ((validation.value * 9 / 5) + 32).toFixed(1) : 
+                        validation.value.toFixed(1);
+                    const unit = state.useFahrenheit ? '°F' : '°C';
+                    showToast(`${zone.charAt(0).toUpperCase() + zone.slice(1)} setpoint updated to ${displayValue}${unit}`, 2000, 'success');
+
+                    // Refresh UI (updates input with clamped/converted value + unit changes)
+                    updateDisplay();
+                };
+
+                el.addEventListener('change', handler);
+                el.addEventListener('blur', handler);
+
+                // Optional: allow Enter key to confirm (change already fires on Enter)
+                el.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        el.blur(); // Trigger blur handler
+                    }
+                });
+            });
+        }
+        initSetpointInputs();
+        setupYAxisScaleInputs();
+        updateYAxisScaleInputs();
+
+    </script>
+
+    <div id="toastContainer"></div>
+
+</body>
+
+</html>
