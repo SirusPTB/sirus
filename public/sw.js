@@ -2,7 +2,7 @@
 // All precache paths are now RELATIVE (no leading '/') to match the service worker scope /sirus/public/
 // This ensures fetches resolve correctly to /sirus/public/index.html, /sirus/public/manifest.json, etc.
 
-const CACHE_VERSION = '2026-01-09-v43'; // Bumped again to force fresh cache
+const CACHE_VERSION = '2026-01-09-v44'; // Bumped again to force fresh cache
 const CACHE_NAME = `lvr1-cache-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [

@@ -258,21 +258,21 @@
 
         .status-card {
             background: #1a1a1a;
-            padding: clamp(1rem, 2.5vw, 1.5rem);
-            padding-top: clamp(2.2rem, 5vw, 3rem);
-            padding-bottom: clamp(1.2rem, 3vw, 1.8rem);
-            border-radius: 16px;
+            padding: clamp(0.65rem, 1.625vw, 0.975rem);
+            padding-top: clamp(1.43rem, 3.25vw, 1.95rem);
+            padding-bottom: clamp(0.78rem, 1.95vw, 1.17rem);
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             width: 100%;
-            gap: clamp(0.5rem, 1.5vw, 0.8rem);
+            gap: clamp(0.325rem, 0.975vw, 0.52rem);
             border: 2px solid #333;
             text-align: center;
             transition: all 0.3s ease;
-            min-height: clamp(120px, 20vh, 180px);
+            min-height: clamp(78px, 13vh, 117px);
         }
 
         .temp-bar-fill {
@@ -295,13 +295,13 @@
         /* LABELS: Brew / Steam / Group */
         .status-label {
             position: absolute;
-            top: clamp(8px, 2vw, 12px);
-            left: clamp(10px, 2.5vw, 16px);
-            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
+            font-size: clamp(0.55rem, 1.3vw, 0.68rem);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-weight: 600;
             color: #666;
-            letter-spacing: 1.2px;
+            letter-spacing: 0.78px;
             text-transform: uppercase;
             transition: color 0.3s ease;
         }
@@ -316,7 +316,7 @@
 
         /* Keep temp values centered as-is */
         .status-temp {
-            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
             font-weight: 300;
             line-height: 1;
             display: flex;
@@ -329,7 +329,7 @@
         /* Keep steam panel readings left-aligned since they're side-by-side */
         .steam-readings-row .status-temp {
             justify-content: flex-start;
-            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-size: clamp(1.04rem, 2.6vw, 1.56rem);
         }
 
         /* Numeric value */
@@ -363,7 +363,7 @@
             align-items: baseline;
             gap: 0.2em;
             justify-content: flex-start;
-            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-size: clamp(1.04rem, 2.6vw, 1.56rem);
         }
 
         .steam-pressure-value {
@@ -374,7 +374,7 @@
 
         .steam-pressure-unit {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 0.45em;
+            font-size: 0.5625em;
             color: #666;
             opacity: 0.7;
             font-weight: 500;
@@ -454,25 +454,25 @@
 
         /* Shot timer card styling */
         .status-card.shot-timer-card {
-            padding-top: clamp(1.5rem, 4vw, 2rem);
+            padding-top: clamp(0.975rem, 2.6vw, 1.3rem);
         }
 
         .status-card.shot-timer-card .status-label {
             position: absolute;
-            top: clamp(8px, 2vw, 12px);
-            left: clamp(10px, 2.5vw, 16px);
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
             transform: none;
         }
 
         /* Pressure card styling */
         .status-card.pressure-card {
-            padding-top: clamp(1.5rem, 4vw, 2rem);
+            padding-top: clamp(0.975rem, 2.6vw, 1.3rem);
         }
 
         .status-card.pressure-card .status-label {
             position: absolute;
-            top: clamp(8px, 2vw, 12px);
-            left: clamp(10px, 2.5vw, 16px);
+            top: clamp(5.2px, 1.3vw, 7.8px);
+            left: clamp(6.5px, 1.625vw, 10.4px);
             transform: none;
         }
 
@@ -548,7 +548,7 @@
         }
 
         .reading-value {
-            font-size: clamp(3rem, 10vw, 5.5rem);
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
             transition: color 0.3s ease;
@@ -568,7 +568,7 @@
         }
 
         .shot-time {
-            font-size: clamp(3.5rem, 12vw, 6rem);
+            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
             transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -1042,11 +1042,11 @@
 
         .pressure-unit {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: clamp(1.5rem, 5vw, 2.8rem);
+            font-size: 1.4em;
             color: #666;
             opacity: 0.7;
             font-weight: 500;
-            margin-bottom: 0.15em;
+            margin-bottom: 0;
         }
 
         /* Add these CSS rules to the <style> block (anywhere after existing rules) */
@@ -1131,19 +1131,19 @@
 
         .setpoint-input {
             position: absolute;
-            top: 8px;
-            right: 10px;
-            width: 82px;
+            top: 5.2px;
+            right: 6.5px;
+            width: 53.3px;
             /* Fixed width for stable layout */
-            font-size: 1rem;
+            font-size: 0.65rem;
             font-family: monospace;
             color: #9a9a9a;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.15);
             text-align: right;
             opacity: 0.9;
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 2.6px 3.9px;
+            border-radius: 2.6px;
             transition: all 0.3s ease;
             pointer-events: auto;
             cursor: pointer;
