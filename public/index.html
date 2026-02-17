@@ -195,33 +195,84 @@
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(6, 1fr);
+            gap: clamp(0.8rem, 2vw, 1.2rem);
+            margin-bottom: clamp(0.8rem, 2vw, 1.2rem);
+        }
+
+        /* Temperature cards each take 2 columns */
+        .status-grid > .status-card:nth-child(1),
+        .status-grid > .status-card:nth-child(2),
+        .status-grid > .status-card:nth-child(3) {
+            grid-column: span 2;
+        }
+
+        /* Pressure takes 3 columns */
+        .status-card.pressure-card {
+            grid-column: span 3;
+        }
+
+        /* Shot timer takes 3 columns */
+        .status-card.shot-timer-card {
+            grid-column: span 3;
+        }
+
+        @media (max-width: 900px) {
+            .status-grid {
+                grid-template-columns: repeat(6, 1fr);
+                gap: clamp(0.6rem, 1.5vw, 1rem);
+                margin-bottom: clamp(0.6rem, 1.5vw, 1rem);
+            }
+            
+            .status-grid > .status-card:nth-child(1),
+            .status-grid > .status-card:nth-child(2),
+            .status-grid > .status-card:nth-child(3) {
+                grid-column: span 2;
+            }
+
+            .status-card.pressure-card {
+                grid-column: span 3;
+            }
+
+            .status-card.shot-timer-card {
+                grid-column: span 3;
+            }
         }
 
         @media (max-width: 600px) {
             .status-grid {
-                grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-                gap: 0.5rem;
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            /* On mobile, all cards take full width */
+            .status-grid > .status-card:nth-child(1),
+            .status-grid > .status-card:nth-child(2),
+            .status-grid > .status-card:nth-child(3),
+            .status-card.shot-timer-card,
+            .status-card.pressure-card {
+                grid-column: span 1;
             }
         }
 
         .status-card {
             background: #1a1a1a;
-            padding: 1.2rem;
-            padding-top: 2.6rem;
-            border-radius: 12px;
+            padding: clamp(1rem, 2.5vw, 1.5rem);
+            padding-top: clamp(2.2rem, 5vw, 3rem);
+            padding-bottom: clamp(1.2rem, 3vw, 1.8rem);
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             width: 100%;
-            gap: 0.4rem;
+            gap: clamp(0.5rem, 1.5vw, 0.8rem);
             border: 2px solid #333;
-            font-size: 1.1rem;
             text-align: center;
+            transition: all 0.3s ease;
+            min-height: clamp(120px, 20vh, 180px);
         }
 
         .temp-bar-fill {
@@ -229,49 +280,56 @@
         }
 
         .status-card.ready {
-            /* border-color: #16a34a;
-            background: #0f2f1f; */
-            border-color: #333;
-            background: #1a1a1a;
+            /* Removed background gradient and box shadow */
         }
 
         .status-card.heating {
-            border-color: #333;
-            background: #1a1a1a;
+            /* Removed background gradient, box shadow, and animation */
+        }
+
+        @keyframes pulse-heating {
+            /* Animation removed */
         }
 
 
         /* LABELS: Brew / Steam / Group */
         .status-label {
             position: absolute;
-            top: 8px;
-            left: 10px;
-            font-size: 1.00rem;
-            font-family: monospace;
-            font-weight: 300;
-            color: #9a9a9a;
-            letter-spacing: 0.8px;
+            top: clamp(8px, 2vw, 12px);
+            left: clamp(10px, 2.5vw, 16px);
+            font-size: clamp(0.85rem, 2vw, 1.05rem);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             transition: color 0.3s ease;
         }
 
+        .status-card.ready .status-label {
+            color: #666;
+        }
+
+        .status-card.heating .status-label {
+            color: #666;
+        }
+
         /* Keep temp values centered as-is */
         .status-temp {
-            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-size: clamp(2rem, 5vw, 3.2rem);
             font-weight: 300;
             line-height: 1;
             display: flex;
             align-items: flex-start;
-            gap: 0.15em;
+            gap: 0.2em;
             font-family: 'DSEG7Classic', monospace;
-            font-size: 1.8rem;
-            line-height: 1;
             justify-content: center;
         }
 
         /* Keep steam panel readings left-aligned since they're side-by-side */
         .steam-readings-row .status-temp {
             justify-content: flex-start;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
         }
 
         /* Numeric value */
@@ -282,33 +340,44 @@
             transition: color 0.3s ease;
         }
 
+        .status-card.ready .temp-value {
+            color: #fff;
+        }
+
+        .status-card.heating .temp-value {
+            color: #fff;
+        }
+
         .temp-unit {
-            font-family: Arial, sans-serif;
-            font-size: 0.5em;
-            opacity: 0.8;
-            margin-top: 0.15em;
-            color: #9a9a9a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.45em;
+            opacity: 0.7;
+            margin-top: 0.2em;
+            color: #666;
             transition: color 0.3s ease;
+            font-weight: 500;
         }
 
         .steam-pressure-display {
             display: flex;
             align-items: baseline;
-            gap: 0.15em;
+            gap: 0.2em;
             justify-content: flex-start;
-            font-size: 1.8rem;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
         }
 
         .steam-pressure-value {
             font-family: 'DSEG7Classic', monospace;
-            color: #7799bb;
+            color: #fff;
             line-height: 1;
         }
 
         .steam-pressure-unit {
-            font-family: Arial, sans-serif;
-            font-size: 0.5em;
-            color: #7799bb;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.45em;
+            color: #666;
+            opacity: 0.7;
+            font-weight: 500;
         }
 
         .steam-readings-row {
@@ -316,7 +385,14 @@
             align-items: baseline;
             justify-content: center;
             width: 100%;
-            gap: 2.5rem;
+            gap: clamp(1.5rem, 4vw, 3rem);
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .steam-readings-row {
+                gap: 1.5rem;
+            }
         }
 
         .status-temp-wrap {
@@ -330,14 +406,21 @@
             position: relative;
             width: 100%;
             height: var(--temp-bar-h);
-            margin-top: 18px;
+            margin-top: clamp(12px, 3vw, 20px);
             background: #2a2a2a;
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: visible;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         :root {
-            --temp-bar-h: 4px;
+            --temp-bar-h: 6px;
+        }
+
+        @media (max-width: 600px) {
+            :root {
+                --temp-bar-h: 5px;
+            }
         }
 
         .temp-bar-fill {
@@ -346,18 +429,56 @@
             top: 0;
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #31127e, #3e70ba);
-            transition: width 0.25s ease;
+            background: transparent;
+            transition: width 0.4s ease, background 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .status-card.ready .temp-bar-fill {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            box-shadow: 0 0 10px rgba(22, 163, 74, 0.6);
+        }
+
+        .status-card.heating .temp-bar-fill {
+            background: linear-gradient(90deg, #dc7226, #fb923c);
+            box-shadow: 0 0 10px rgba(220, 114, 38, 0.6);
         }
 
         .temp-bar-set {
+            display: none;
+        }
+
+        .temp-bar-set.off-target {
+            display: none;
+        }
+
+        /* Shot timer card styling */
+        .status-card.shot-timer-card {
+            padding-top: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .status-card.shot-timer-card .status-label {
             position: absolute;
-            left: 0;
-            top: 50%;
-            width: 10px;
-            height: calc(var(--temp-bar-h) * 3);
-            transform: translateY(-50%);
-            background: #0aab0d;
+            top: clamp(8px, 2vw, 12px);
+            left: clamp(10px, 2.5vw, 16px);
+            transform: none;
+        }
+
+        /* Pressure card styling */
+        .status-card.pressure-card {
+            padding-top: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .status-card.pressure-card .status-label {
+            position: absolute;
+            top: clamp(8px, 2vw, 12px);
+            left: clamp(10px, 2.5vw, 16px);
+            transform: none;
+        }
+
+        .status-card.pressure-card .reading-item {
+            width: 100%;
+        }
             box-shadow: 0 0 12px rgba(167, 198, 10, 0.9);
             z-index: 3;
         }
@@ -365,24 +486,39 @@
         .central-panel {
             margin-bottom: 1.5rem;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
-            gap: 3rem;
+            gap: clamp(1rem, 3vw, 2rem);
+        }
+
+        @media (max-width: 600px) {
+            .central-panel {
+                flex-direction: column;
+                gap: 1rem;
+            }
         }
 
         .left-readings,
         .shot-timer-section {
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
             border: 2px solid #444;
             border-radius: 16px;
-            padding: 2rem;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             flex: 1;
             position: relative;
-            padding-top: 2.4rem;
+            padding-top: clamp(2rem, 5vw, 3rem);
+            min-height: clamp(120px, 18vh, 180px);
+            transition: all 0.3s ease;
+        }
+
+        .left-readings:hover,
+        .shot-timer-section:hover {
+            border-color: #555;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .left-readings {
@@ -393,9 +529,9 @@
 
         .pressure-display {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
-            gap: 0.4em;
+            gap: 0.3em;
             line-height: 1;
         }
 
@@ -412,41 +548,36 @@
         }
 
         .reading-value {
-            font-size: clamp(2rem, 9vw, 4.2rem);
+            font-size: clamp(3rem, 10vw, 5.5rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
             transition: color 0.3s ease;
+            color: #fff;
+            min-width: 3ch;
+            text-align: right;
         }
 
         .reading-unit {
-            font-size: clamp(1.5rem, 6vw, 2.5rem);
-            color: #575859;
-            font-family: Arial, sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.8rem);
+            color: #666;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             line-height: 1;
-        }
-
-        .left-readings,
-        .shot-timer-section {
-            background: #1a1a1a;
-            border: 2px solid #444;
-            border-radius: 16px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
+            opacity: 0.7;
+            font-weight: 500;
+            margin-bottom: 0.15em;
         }
 
         .shot-time {
-            font-size: clamp(2rem, 9vw, 4.2rem);
+            font-size: clamp(3.5rem, 12vw, 6rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            letter-spacing: 0.05em;
         }
 
         .container.ble-disconnected .temp-value {
             color: #666 !important;
+            text-shadow: none !important;
         }
 
         .container.ble-disconnected .temp-unit {
@@ -459,22 +590,37 @@
 
         .container.ble-disconnected #shotTime {
             color: #666 !important;
+            text-shadow: none !important;
         }
 
         .container.ble-disconnected .reading-value {
             color: #666 !important;
+            text-shadow: none !important;
         }
 
         .container.ble-disconnected .pressure-unit {
             color: #666 !important;
         }
 
+        .container.ble-disconnected .steam-pressure-value {
+            color: #666 !important;
+        }
+
+        .container.ble-disconnected .steam-pressure-unit {
+            color: #666 !important;
+        }
+
         .container.ble-disconnected .shot-time {
             color: #666 !important;
+            text-shadow: none !important;
         }
 
         .shot-time.running {
             color: #fff;
+        }
+
+        @keyframes pulse-shot {
+            /* Animation removed */
         }
 
         .shot-time.stopped {
@@ -482,38 +628,43 @@
         }
 
         .panel-label {
-            font-size: 1.6rem;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
             margin-top: 1rem;
             color: #ccc;
+            font-weight: 500;
         }
 
         .graph-container {
             background: #1a1a1a;
             border-radius: 12px;
-            padding: 1.2rem;
+            padding: clamp(0.8rem, 2vw, 1.2rem); /* Responsive padding */
             cursor: pointer;
             flex: 1;
             display: flex;
             flex-direction: column;
             transition: opacity 0.3s;
             position: relative;
+            min-height: 0; /* Prevent flex item from expanding beyond bounds */
         }
 
         canvas {
             width: 100% !important;
             height: auto !important;
             flex: 1;
+            min-height: 0; /* Critical: prevents canvas from overflowing */
         }
 
         .graph-legend {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: .8rem;
-            margin-bottom: 1.2rem;
+            gap: clamp(0.5rem, 2vw, 1rem); /* Responsive gap */
+            margin-top: 0.8rem; /* Match bottom padding for symmetry */
+            margin-bottom: 0; /* Remove bottom margin to prevent spacing issues */
+            padding-bottom: 0; /* Remove padding - use container padding instead */
             justify-content: center;
-            font-size: .9rem;
+            font-size: clamp(0.75rem, 2vw, 0.9rem); /* Responsive font size */
             align-items: center;
+            flex-shrink: 0; /* Prevent legend from shrinking */
         }
 
         .legend-item {
@@ -778,16 +929,92 @@
         /* === FIX MINI GRAPH INITIAL SIZE === */
         #mainPage .graph-container.nav-graph {
             flex: none;
-            /* stop flex height guessing */
-            height: 90vh;
-            /* real height on first layout */
-            min-height: 140px;
-            max-height: 240px;
+            /* Responsive height that scales with viewport */
+            height: auto;
+            min-height: clamp(180px, 25vh, 300px);
+            max-height: clamp(200px, 30vh, 350px);
+            display: flex;
+            flex-direction: column;
         }
 
         /* === FIX MINI GRAPH CANVAS SIZE === */
         #mainPage #miniGraph {
-            height: 90% !important;
+            /* Use flex instead of percentage for better stability */
+            flex: 1 1 auto;
+            height: auto !important;
+            min-height: clamp(100px, 15vh, 200px);
+        }
+
+        /* Responsive adjustments for different screen sizes */
+        @media (max-width: 1200px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: clamp(160px, 22vh, 280px);
+                max-height: clamp(180px, 28vh, 320px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: clamp(140px, 20vh, 240px);
+                max-height: clamp(160px, 25vh, 280px);
+            }
+            
+            #mainPage #miniGraph {
+                min-height: clamp(90px, 12vh, 160px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 120px;
+                max-height: 180px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 80px;
+            }
+            
+            .graph-legend {
+                font-size: 0.8rem;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 360px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 100px;
+                max-height: 140px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 60px;
+            }
+            
+            .graph-legend {
+                font-size: 0.75rem;
+                gap: 0.4rem;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1400px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: 220px;
+                max-height: 300px;
+            }
+            
+            #mainPage #miniGraph {
+                min-height: 140px;
+            }
+        }
+
+        .graph-container.nav-graph {
+            border: 2px solid #444;
+            border-radius: 16px;
+            margin-top: 0;
+            /* Remove bottom padding that causes spacing issues */
+            padding-bottom: 1.2rem;
         }
 
         .nav-settings {
@@ -808,16 +1035,18 @@
         .pressure-display {
             display: flex;
             align-items: flex-end;
+            justify-content: center;
             gap: 0.5em;
             line-height: 1;
         }
 
         .pressure-unit {
-            font-family: Arial, sans-serif;
-            font-size: clamp(1.8rem, 5vw, 2.2rem);
-            color: #9a9a9a;
-            opacity: 0.8;
-            margin-bottom: 0.0em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.8rem);
+            color: #666;
+            opacity: 0.7;
+            font-weight: 500;
+            margin-bottom: 0.15em;
         }
 
         /* Add these CSS rules to the <style> block (anywhere after existing rules) */
@@ -909,14 +1138,23 @@
             font-size: 1rem;
             font-family: monospace;
             color: #9a9a9a;
-            background: transparent;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             text-align: right;
             opacity: 0.9;
             padding: 4px 6px;
             border-radius: 4px;
             transition: all 0.3s ease;
             pointer-events: auto;
+            cursor: pointer;
+        }
+
+        /* Hover state: show it's interactive */
+        .setpoint-input:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #bbb;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
         }
 
         /* Normal state: looks like static text */
@@ -937,6 +1175,7 @@
             outline: none;
             color: #fff;
             background: #333;
+            border-color: #2563eb;
             box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
         }
 
@@ -945,6 +1184,9 @@
             color: #777 !important;
             opacity: 0.6;
             pointer-events: none;
+            cursor: not-allowed;
+            background: transparent;
+            border-color: transparent;
         }
 
         .ble-connected-label {
@@ -989,8 +1231,8 @@
             border: 2px solid #444;
             border-radius: 16px;
             margin-top: 0;
-            /* match other panels */
-            padding-bottom: 1.8rem;
+            /* Reduced bottom padding to minimize gap */
+            padding-bottom: 0.8rem;
         }
 
         /* Y-axis scale controls */
@@ -1162,10 +1404,7 @@
                     <div class="status-label">Steam</div>
                 </div>
 
-            </div>
-
-            <div class="central-panel">
-                <div class="left-readings">
+                <div class="status-card pressure-card">
                     <div class="status-label">Pressure</div>
                     <div class="reading-item">
                         <div class="reading-row pressure-display">
@@ -1175,10 +1414,11 @@
                     </div>
                 </div>
 
-                <div class="shot-timer-section">
+                <div class="status-card shot-timer-card">
                     <div class="status-label">Shot</div>
                     <div class="shot-time stopped" id="shotTime">00</div>
                 </div>
+
             </div>
 
             <div class="graph-container nav-graph" onclick="showPage('graph')">
@@ -1336,6 +1576,104 @@
     </div>
 
     <script>
+        // ============================================================================
+        // CONSTANTS - Configuration values
+        // ============================================================================
+        const CONSTANTS = {
+            // Timing
+            HEARTBEAT_INTERVAL: 5000,
+            RECONNECT_DELAY: 2000,
+            MAX_RECONNECT_ATTEMPTS: 5,
+            
+            // Data management
+            MAX_HISTORY_POINTS: 3000, // ~5 hours at 6 samples/min
+            
+            // Temperature limits (Celsius)
+            TEMP_LIMITS: {
+                BREW: { MIN: 80, MAX: 100, DEFAULT: 93.0 },
+                STEAM: { MIN: 110, MAX: 140, DEFAULT: 125.0 },
+                GROUP: { MIN: 80, MAX: 98, DEFAULT: 92.0 }
+            },
+            
+            // BLE Configuration
+            BLE: {
+                SERVICE_UUID: '4fafc201-1fb5-459e-8fcc-c5c9c331914b',
+                CHARACTERISTIC_UUID: 'beb5483e-36e1-4688-b7f5-ea07361b26a8',
+                DEVICE_NAME: 'LVR-1'
+            }
+        };
+
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
+        /**
+         * Debounce function to limit rapid function calls
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        /**
+         * Clamp value between min and max
+         */
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        /**
+         * Validate setpoint value
+         */
+        function validateSetpoint(value, zone) {
+            const limits = CONSTANTS.TEMP_LIMITS[zone.toUpperCase()];
+            
+            if (!limits) {
+                return { valid: false, value: null, error: `Invalid zone: ${zone}` };
+            }
+
+            if (isNaN(value) || value === null || value === undefined) {
+                return { valid: false, value: null, error: 'Temperature must be a valid number' };
+            }
+
+            const numValue = parseFloat(value);
+
+            if (numValue < limits.MIN || numValue > limits.MAX) {
+                return {
+                    valid: false,
+                    value: null,
+                    error: `${zone.charAt(0).toUpperCase() + zone.slice(1)} temperature must be between ${limits.MIN}°C and ${limits.MAX}°C`
+                };
+            }
+
+            return { valid: true, value: Math.round(numValue * 10) / 10, error: null };
+        }
+
+        /**
+         * Validate PID gain value
+         */
+        function validatePIDGain(value, param) {
+            if (isNaN(value) || value === null || value === undefined) {
+                return { valid: false, value: null, error: `${param} must be a valid number` };
+            }
+
+            const numValue = parseFloat(value);
+
+            if (numValue < 0) {
+                return { valid: false, value: null, error: `${param} cannot be negative` };
+            }
+
+            if (numValue > 100) {
+                return { valid: false, value: null, error: `${param} seems unusually high (>100). Please verify.` };
+            }
+
+            const decimals = param.toLowerCase().includes('ki') ? 2 : 2;
+            return { valid: true, value: Math.round(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals), error: null };
+        }
+
         let deferredPrompt; // Stores the install event if it fires
 
         // Capture the event if it does fire (for mobile/reliability)
@@ -1370,11 +1708,13 @@
         }
 
         let isConnecting = false;
+        let reconnectAttempts = 0;
 
         let state = {
             bleDevice: null,
             bleConnected: false,
             characteristic: null,
+            heartbeatInterval: null,
             brewTemp: 0.0,
             steamTemp: 0.0,
             groupTemp: 0.0,
@@ -1424,9 +1764,7 @@
             let service;
             for (let i = 0; i < 5; i++) {
                 try {
-                    service = await server.getPrimaryService(
-                        '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
-                    );
+                    service = await server.getPrimaryService(CONSTANTS.BLE.SERVICE_UUID);
                     break;
                 } catch (e) {
                     console.warn('Service not ready, retrying...', i);
@@ -1435,12 +1773,10 @@
             }
 
             if (!service) {
-                throw new Error('Service not found');
+                throw new Error('Service not found after multiple attempts');
             }
 
-            const characteristic = await service.getCharacteristic(
-                'beb5483e-36e1-4688-b7f5-ea07361b26a8'
-            );
+            const characteristic = await service.getCharacteristic(CONSTANTS.BLE.CHARACTERISTIC_UUID);
 
             // Cleanup old listeners
             if (state.characteristic) {
@@ -1462,6 +1798,9 @@
             updateBLEUI();
 
             console.log('BLE connected and ready');
+            
+            // Start heartbeat ping
+            startHeartbeat();
 
         }
 
@@ -1483,6 +1822,9 @@
         }
 
         function disconnectBLE() {
+            // Stop heartbeat
+            stopHeartbeat();
+            
             try {
                 if (state.characteristic) {
                     state.characteristic.removeEventListener(
@@ -1498,10 +1840,61 @@
 
             state.characteristic = null;
             state.bleConnected = false;
+            
+            // Reset all live data including shot timer
+            resetLiveData();
+            
             updateBLEUI();
         }
 
+        /**
+         * Handle and categorize BLE errors with specific user guidance
+         */
+        function handleBLEError(error) {
+            console.error('BLE Error:', error);
+            
+            let message = 'Connection error occurred';
+            let duration = 5000;
+            let type = 'error';
+
+            if (error.name === 'NotFoundError') {
+                message = 'Connection cancelled';
+                type = 'info';
+                duration = 3000;
+            } else if (error.name === 'NetworkError') {
+                message = 'Device not responding.<br>Check that LVR-1 is:<br>• Powered on<br>• Within Bluetooth range<br>• Not connected to another device';
+                duration = 10000;
+            } else if (error.name === 'SecurityError') {
+                message = 'Bluetooth permission denied.<br>Please allow Bluetooth access and reload the page.';
+                duration = 10000;
+            } else if (error.name === 'NotSupportedError' || error.message.includes('not supported')) {
+                message = 'Web Bluetooth not supported.<br>Please use Chrome, Edge, or Opera browser.';
+                duration = 10000;
+            } else if (error.message && error.message.includes('GATT')) {
+                message = 'Connection unstable.<br>Moving device closer may help.<br>Retrying automatically...';
+                duration = 6000;
+            } else if (error.message && error.message.includes('User cancelled')) {
+                message = 'Connection cancelled by user';
+                type = 'info';
+                duration = 3000;
+            } else if (error.message && error.message.includes('Service not found')) {
+                message = 'LVR-1 service not available.<br>Device may need to be restarted.';
+                duration = 8000;
+            } else if (error.message) {
+                message = `Connection error:<br>${error.message}`;
+                duration = 8000;
+            }
+
+            showToast(message, duration, type);
+        }
+
         async function toggleBLE() {
+            // Check for Web Bluetooth support
+            if (!navigator.bluetooth) {
+                showToast('Web Bluetooth not supported.<br>Please use Chrome, Edge, or Opera browser.', 10000, 'error');
+                return;
+            }
+
             if (state.bleConnected) {
                 disconnectBLE();
                 updateBLEUI();
@@ -1520,8 +1913,8 @@
 
                     try {
                         const device = await navigator.bluetooth.requestDevice({
-                            filters: [{ name: 'LVR-1' }],
-                            optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+                            filters: [{ name: CONSTANTS.BLE.DEVICE_NAME }],
+                            optionalServices: [CONSTANTS.BLE.SERVICE_UUID]
                         });
 
                         // Clean up any old listener
@@ -1540,13 +1933,9 @@
                         if (state.bleConnected) return;
                         state.bleConnected = false;
                         updateBLEUI();
-
-                        if (err.name === 'NotFoundError') {
-                            showToast('Connection cancelled.', 5000, 'info');
-                        } else {
-                            console.warn('Connection failed:', err);
-                            showToast('Failed to connect to LVR-1.<br>Ensure the device is powered on, in range, and try again.', 10000, 'error');
-                        }
+                        handleBLEError(err);
+                    } finally {
+                        isConnecting = false;
                     }
                 }
             }
@@ -1591,6 +1980,9 @@
             }
 
             console.warn('BLE disconnected');
+            
+            // Stop heartbeat
+            stopHeartbeat();
 
             state.bleConnected = false;
             state.characteristic = null;
@@ -1614,6 +2006,29 @@
                     drawMiniGraph();
                 });
             });
+            
+            // Attempt auto-reconnect with exponential backoff
+            if (reconnectAttempts < CONSTANTS.MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                const delay = CONSTANTS.RECONNECT_DELAY * reconnectAttempts;
+                console.log(`Auto-reconnect attempt ${reconnectAttempts}/${CONSTANTS.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`);
+                
+                showToast(`Connection lost. Reconnecting in ${delay/1000} seconds... (Attempt ${reconnectAttempts}/${CONSTANTS.MAX_RECONNECT_ATTEMPTS})`, delay, 'info');
+                
+                setTimeout(async () => {
+                    if (!state.bleConnected) {
+                        console.log('Attempting auto-reconnect...');
+                        const success = await connectBLE();
+                        if (success) {
+                            showToast('Reconnected successfully!', 5000, 'success');
+                            reconnectAttempts = 0;
+                        }
+                    }
+                }, delay);
+            } else {
+                showToast('Connection lost. Maximum reconnection attempts reached.<br>Please click Connect to try again.', 10000, 'error');
+                reconnectAttempts = 0; // Reset for next manual attempt
+            }
         }
 
         function updateBLEUI() {
@@ -1715,13 +2130,23 @@
                 state.tempHistory.push(state.brewTemp);
                 state.pressureHistory.push(state.groupPressure);
 
-                if (state.tempHistory.length > 600) {
+                // Memory management: limit history to prevent memory leaks
+                // Using constant for configuration
+                if (state.tempHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
                     state.tempHistory.shift();
+                }
+                if (state.pressureHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
                     state.pressureHistory.shift();
                 }
 
                 drawMiniGraph();
                 drawFullGraph();
+                
+                // Update sample count display
+                const sampleCountElem = document.getElementById('sampleCount');
+                if (sampleCountElem) {
+                    sampleCountElem.textContent = state.tempHistory.length.toString();
+                }
             }
 
             updateDisplay();
@@ -1736,6 +2161,32 @@
                 console.log('Sent command:', command);
             } catch (error) {
                 console.error('BLE write failed:', error);
+            }
+        }
+
+        function startHeartbeat() {
+            // Clear any existing heartbeat interval
+            stopHeartbeat();
+            
+            // Send heartbeat ping using constant interval
+            state.heartbeatInterval = setInterval(() => {
+                if (state.bleConnected && state.characteristic) {
+                    sendBLECommand({ type: 'ping' });
+                    console.log('Heartbeat ping sent');
+                } else {
+                    // Stop heartbeat if connection is lost
+                    stopHeartbeat();
+                }
+            }, CONSTANTS.HEARTBEAT_INTERVAL);
+            
+            console.log(`Heartbeat started (${CONSTANTS.HEARTBEAT_INTERVAL}ms interval)`);
+        }
+
+        function stopHeartbeat() {
+            if (state.heartbeatInterval) {
+                clearInterval(state.heartbeatInterval);
+                state.heartbeatInterval = null;
+                console.log('Heartbeat stopped');
             }
         }
 
@@ -1754,9 +2205,20 @@
 
             // 🔥 FORCE mini graph resize AFTER layout resolves
             if (pageName === 'main') {
+                // Force layout recalculation to fix spacing issues
+                const miniContainer = document.querySelector('.graph-container.nav-graph');
+                if (miniContainer) {
+                    // Temporarily force height recalculation
+                    miniContainer.style.minHeight = '0';
+                    miniContainer.style.height = 'auto';
+                }
+                
+                // Triple RAF to ensure layout is fully settled
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
-                        drawMiniGraph();
+                        requestAnimationFrame(() => {
+                            drawMiniGraph();
+                        });
                     });
                 });
             }
@@ -2670,19 +3132,28 @@
         });
 
         function updatePIDFromInput(input, zone, param) {
-            let val = parseFloat(input.value);
-            if (isNaN(val) || val < 0) val = 0;
-
-            if (param.includes('Ki')) {
-                val = Math.round(val * 100) / 100;
-            } else {
-                val = Math.round(val * 10) / 10;
+            if (!state.bleConnected) {
+                showToast('Please connect to device before changing PID gains', 3000, 'info');
+                return;
             }
 
-            state.pidGains[zone][param] = val;
-            input.value = val.toFixed(2);
+            let val = parseFloat(input.value);
+            
+            // Validate the PID gain
+            const validation = validatePIDGain(val, param);
+            
+            if (!validation.valid) {
+                showToast(validation.error, 5000, 'error');
+                // Reset to current value
+                input.value = state.pidGains[zone][param].toFixed(2);
+                return;
+            }
+
+            state.pidGains[zone][param] = validation.value;
+            input.value = validation.value.toFixed(2);
 
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
+            showToast(`${param} updated to ${validation.value.toFixed(2)}`, 2000, 'success');
         }
 
         function adjustPID(zone, param, delta) {
@@ -2693,12 +3164,20 @@
             } else {
                 newVal = Math.round(newVal * 10) / 10;
             }
+            
+            // Validate the new value
+            const validation = validatePIDGain(newVal, param);
+            
+            if (!validation.valid) {
+                // Silently ignore invalid adjustments when holding button
+                return;
+            }
 
-            state.pidGains[zone][param] = newVal;
+            state.pidGains[zone][param] = validation.value;
 
             const input = document.getElementById(`${zone}-${param}`);
             if (input) {
-                input.value = newVal.toFixed(2);
+                input.value = validation.value.toFixed(2);
             }
 
             sendBLECommand({ type: 'pid', zone: zone, gains: state.pidGains[zone] });
@@ -2866,15 +3345,25 @@
         function setupGraphObservers() {
             const miniContainer = document.querySelector('.graph-container.nav-graph');
             if (miniContainer) {
-                new ResizeObserver(() => {
+                // Debounce the redraw to prevent rapid updates
+                const debouncedMiniDraw = debounce(() => {
                     drawMiniGraph();
+                }, 100);
+                
+                new ResizeObserver(() => {
+                    debouncedMiniDraw();
                 }).observe(miniContainer);
             }
 
             const fullContainer = document.querySelector('.graph-container.full-graph');
             if (fullContainer) {
-                new ResizeObserver(() => {
+                // Debounce the redraw to prevent rapid updates
+                const debouncedFullDraw = debounce(() => {
                     drawFullGraph();
+                }, 100);
+                
+                new ResizeObserver(() => {
+                    debouncedFullDraw();
                 }).observe(fullContainer);
             }
         }
@@ -2895,6 +3384,28 @@
         fullCanvas.addEventListener('touchcancel', () => handleGraphLeave('fullGraph'));
 
         setupGraphObservers();
+
+        // Add window resize listener for additional responsiveness
+        const debouncedWindowResize = debounce(() => {
+            const activePage = document.querySelector('.page.active');
+            if (activePage && activePage.id === 'mainPage') {
+                drawMiniGraph();
+            } else if (activePage && activePage.id === 'graphPage') {
+                drawFullGraph();
+            }
+        }, 200);
+        
+        window.addEventListener('resize', debouncedWindowResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                const activePage = document.querySelector('.page.active');
+                if (activePage && activePage.id === 'mainPage') {
+                    drawMiniGraph();
+                } else if (activePage && activePage.id === 'graphPage') {
+                    drawFullGraph();
+                }
+            }, 100);
+        });
 
         window.addEventListener('load', () => {
             drawMiniGraph();
@@ -2957,21 +3468,32 @@
 
         function initSetpointInputs() {
             const zones = {
-                brew: { el: document.getElementById('brewSetpointInput'), min: 80, max: 100 },
-                steam: { el: document.getElementById('steamSetpointInput'), min: 110, max: 140 },
-                group: { el: document.getElementById('groupSetpointInput'), min: 80, max: 98 }
+                brew: { el: document.getElementById('brewSetpointInput') },
+                steam: { el: document.getElementById('steamSetpointInput') },
+                group: { el: document.getElementById('groupSetpointInput') }
             };
 
-            Object.keys(zones).forEach(zone => {
-                const { el, min, max } = zones[zone];
+            Object.keys(zones).forEach(zoneName => {
+                const { el } = zones[zoneName];
                 if (!el) return;
 
+                // Store zone name on the element itself to avoid closure issues
+                el.dataset.zone = zoneName;
+
                 // Shared handler for change/blur (triggers on enter, tab, or click away)
-                const handler = () => {
-                    if (!state.bleConnected) return;
+                const handler = (event) => {
+                    // Get zone from the element that triggered the event
+                    const zone = event.target.dataset.zone;
+                    
+                    if (!state.bleConnected) {
+                        showToast('Please connect to device before changing setpoints', 3000, 'info');
+                        updateSmallSetpoints();
+                        return;
+                    }
 
                     let rawValue = parseFloat(el.value);
                     if (isNaN(rawValue)) {
+                        showToast('Please enter a valid number', 3000, 'error');
                         updateSmallSetpoints(); // Reset to current if invalid
                         return;
                     }
@@ -2979,13 +3501,25 @@
                     // Convert back to °C if currently in °F
                     let valueInC = state.useFahrenheit ? (rawValue - 32) * 5 / 9 : rawValue;
 
-                    // Clamp to allowed range
-                    valueInC = Math.max(min, Math.min(max, valueInC));
-                    valueInC = Math.round(valueInC * 10) / 10; // 0.1 precision
+                    // Validate the setpoint
+                    const validation = validateSetpoint(valueInC, zone);
+                    
+                    if (!validation.valid) {
+                        showToast(validation.error, 5000, 'error');
+                        updateSmallSetpoints(); // Reset to current value
+                        return;
+                    }
 
                     // Update state and send to device
-                    state[zone + 'Setpoint'] = valueInC;
-                    sendBLECommand({ type: 'setpoint', zone: zone, value: valueInC });
+                    state[zone + 'Setpoint'] = validation.value;
+                    sendBLECommand({ type: 'setpoint', zone: zone, value: validation.value });
+
+                    // Show success feedback
+                    const displayValue = state.useFahrenheit ? 
+                        ((validation.value * 9 / 5) + 32).toFixed(1) : 
+                        validation.value.toFixed(1);
+                    const unit = state.useFahrenheit ? '°F' : '°C';
+                    showToast(`${zone.charAt(0).toUpperCase() + zone.slice(1)} setpoint updated to ${displayValue}${unit}`, 2000, 'success');
 
                     // Refresh UI (updates input with clamped/converted value + unit changes)
                     updateDisplay();
