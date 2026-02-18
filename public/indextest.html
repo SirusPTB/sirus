@@ -522,7 +522,7 @@
         /* Gauge arc background */
         .gauge-arc {
             fill: none;
-            stroke: #2a2a2a;
+            stroke: #555;
             stroke-width: 6;
             stroke-linecap: round;
         }
@@ -538,14 +538,14 @@
 
         /* Gauge tick marks */
         .gauge-tick {
-            stroke: #444;
+            stroke: #888;
             stroke-width: 1.5;
             stroke-linecap: round;
         }
 
         /* Gauge labels */
         .gauge-label {
-            fill: #666;
+            fill: #aaa;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-weight: 500;
         }
@@ -669,7 +669,7 @@
         }
 
         .reading-value {
-            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
+            font-size: clamp(2.2rem, 5.5vw, 3.5rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
             transition: color 0.3s ease;
@@ -689,7 +689,7 @@
         }
 
         .shot-time {
-            font-size: clamp(1.3rem, 3.25vw, 2.08rem);
+            font-size: clamp(2.2rem, 5.5vw, 3.5rem);
             font-family: 'DSEG7Classic', monospace;
             line-height: 1;
             transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -1082,6 +1082,18 @@
             
             #mainPage #miniGraph {
                 min-height: clamp(90px, 12vh, 160px);
+            }
+        }
+
+        /* 7-inch tablets (roughly 600–800px wide) */
+        @media (min-width: 550px) and (max-width: 850px) {
+            #mainPage .graph-container.nav-graph {
+                min-height: clamp(220px, 30vh, 320px);
+                max-height: clamp(260px, 36vh, 380px);
+            }
+
+            #mainPage #miniGraph {
+                min-height: clamp(160px, 22vh, 260px);
             }
         }
 
@@ -1505,17 +1517,11 @@
                 </div>
 
                 <div class="status-card" id="steamStatus">
-                    <input type="number" class="setpoint-input" id="steamSetpointInput" step="0.1" min="0" max="140">
+                    <input type="number" class="setpoint-input" id="steamSetpointInput" step="0.1" min="0" max="125">
                     <div class="status-temp-wrap">
-                        <div class="steam-readings-row">
-                            <div class="status-temp">
-                                <span class="temp-value" id="steamTempValue">0.0</span>
-                                <span class="temp-unit" id="steamTempUnit">°C</span>
-                            </div>
-                            <div class="steam-pressure-display">
-                                <span class="steam-pressure-value" id="steamPressureValue">0.0</span>
-                                <span class="steam-pressure-unit" id="steamPressureUnit">bar</span>
-                            </div>
+                        <div class="status-temp">
+                            <span class="temp-value" id="steamTempValue">0.0</span>
+                            <span class="temp-unit" id="steamTempUnit">°C</span>
                         </div>
                         <div class="temp-bar">
                             <div class="temp-bar-fill" id="steamTempBar"></div>
@@ -1536,40 +1542,46 @@
                 </div>
 
                 <div class="status-card shot-timer-card">
-                    <div class="status-label">Shot</div>
+                    <div class="status-label">Shot Timer</div>
                     <div class="shot-time stopped" id="shotTime">00</div>
                 </div>
 
                 <div class="status-card steam-pressure-card">
                     <div class="status-label">Steam</div>
                     <div class="circular-gauge">
-                        <svg class="gauge-svg" viewBox="0 0 100 100">
+                        <svg class="gauge-svg" viewBox="0 -8 100 100">
                             <!-- Background arc (180 degrees) -->
                             <!-- Center: (50, 85), Radius: 35, from -90° to +90° -->
                             <path class="gauge-arc" d="M 15 85 A 35 35 0 0 1 85 85" />
                             
                             <!-- Green zone arc (1.0-1.4 bar) -->
                             <!-- From 1.0 bar tick to 1.4 bar (slightly past it) -->
-                            <path class="gauge-green-zone" d="M 28.5 66.5 A 35 35 0 0 1 38.5 55.8" />
+                            <path class="gauge-green-zone" d="M 32.5 54.7 A 35 35 0 0 1 46.3 50.2" />
                             
-                            <!-- Tick marks at 0, 1, 1.5, 2, 3 bar -->
-                            <!-- 0 bar (left): horizontal tick -->
-                            <line class="gauge-tick" x1="15" y1="85" x2="10" y2="85" />
-                            <!-- 1 bar: angled tick -->
-                            <line class="gauge-tick" x1="28.5" y1="66.5" x2="22" y2="65" />
-                            <!-- 1.5 bar: vertical tick (moved down) -->
-                            <line class="gauge-tick" x1="50" y1="50" x2="50" y2="43" />
-                            <!-- 2 bar: angled tick (mirrored) -->
-                            <line class="gauge-tick" x1="71.5" y1="66.5" x2="78" y2="65" />
-                            <!-- 3 bar (right): horizontal tick -->
-                            <line class="gauge-tick" x1="85" y1="85" x2="90" y2="85" />
-                            
-                            <!-- Pressure labels (0 on left, 3 on right) -->
-                            <text class="gauge-label" x="10" y="90" text-anchor="middle" font-size="6">0</text>
-                            <text class="gauge-label" x="12" y="63" text-anchor="middle" font-size="6">1</text>
-                            <text class="gauge-label" x="50" y="40" text-anchor="middle" font-size="6">1.5</text>
-                            <text class="gauge-label" x="88" y="63" text-anchor="middle" font-size="6">2</text>
-                            <text class="gauge-label" x="88" y="90" text-anchor="middle" font-size="6">3</text>
+                            <!-- Tick marks at 0, 1, 1.5, 2, 3 bar — all extending outward from arc -->
+                            <!-- 0 bar: tick from arc outward (left) -->
+                            <line class="gauge-tick" x1="12.0" y1="85.0" x2="6.0" y2="85.0" />
+                            <!-- 0.5 bar: tick -->
+                            <line class="gauge-tick" x1="17.1" y1="66.0" x2="11.9" y2="63.0" />
+                            <!-- 1 bar: tick from arc outward -->
+                            <line class="gauge-tick" x1="31.0" y1="52.1" x2="28.0" y2="46.9" />
+                            <!-- 1.5 bar: tick from arc outward (upward) -->
+                            <line class="gauge-tick" x1="50.0" y1="47.0" x2="50.0" y2="41.0" />
+                            <!-- 2 bar: tick from arc outward -->
+                            <line class="gauge-tick" x1="69.0" y1="52.1" x2="72.0" y2="46.9" />
+                            <!-- 2.5 bar: tick -->
+                            <line class="gauge-tick" x1="82.9" y1="66.0" x2="88.1" y2="63.0" />
+                            <!-- 3 bar: tick from arc outward (right) -->
+                            <line class="gauge-tick" x1="88.0" y1="85.0" x2="94.0" y2="85.0" />
+
+                            <!-- Pressure labels outside ticks -->
+                            <text class="gauge-label" x="3.0" y="89.0" text-anchor="middle" font-size="6">0</text>
+                            <text class="gauge-label" x="6.7" y="60.0" text-anchor="middle" font-size="6">0.5</text>
+                            <text class="gauge-label" x="25.0" y="41.7" text-anchor="middle" font-size="6">1</text>
+                            <text class="gauge-label" x="50.0" y="35.0" text-anchor="middle" font-size="6">1.5</text>
+                            <text class="gauge-label" x="75.0" y="41.7" text-anchor="middle" font-size="6">2</text>
+                            <text class="gauge-label" x="93.3" y="60.0" text-anchor="middle" font-size="6">2.5</text>
+                            <text class="gauge-label" x="97.0" y="89.0" text-anchor="middle" font-size="6">3</text>
                             
                             <!-- Arrow-style needle (pivot at bottom) -->
                             <g id="steamGaugeNeedle">
@@ -1657,6 +1669,29 @@
                 <button class="btn btn-primary" style="padding: 0.9rem 1.3rem; font-size: 1rem;"
                     onclick="showPage('pid')">PID Settings</button>
             </div>
+
+            <div class="settings-row">
+                <div class="settings-label">Graph Reset</div>
+                <div class="settings-controls">
+                    <select id="graphResetSelect" onchange="setGraphResetTime(this.value)" style="
+                        background: #2a2a2a;
+                        color: #fff;
+                        border: 2px solid #444;
+                        border-radius: 8px;
+                        padding: 0.7rem 1rem;
+                        font-size: 1.4rem;
+                        cursor: pointer;
+                    ">
+                        <option value="1">1 min</option>
+                        <option value="5">5 min</option>
+                        <option value="10">10 min</option>
+                        <option value="15">15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="60" selected>1 hour</option>
+                    </select>
+                </div>
+            </div>
+
         </div>
 
         <div class="page" id="graphPage">
@@ -1754,7 +1789,7 @@
             // Temperature limits (Celsius)
             TEMP_LIMITS: {
                 BREW: { MIN: 80, MAX: 100, DEFAULT: 93.0 },
-                STEAM: { MIN: 110, MAX: 140, DEFAULT: 125.0 },
+                STEAM: { MIN: 110, MAX: 125, DEFAULT: 125.0 },
                 GROUP: { MIN: 80, MAX: 98, DEFAULT: 92.0 }
             },
             
@@ -1896,6 +1931,8 @@
             pressureHistory: [],
             dataCollectionPaused: false,
             alwaysRecordGraph: false,
+            graphResetMinutes: 60,
+            graphStartTime: null,
             pidGains: {
                 brew: { consKp: 1.20, consKi: 0.06, consKd: 0.30, aggKp: 4.50, aggKi: 0.22, aggKd: 1.10 },
                 steam: { consKp: 0.90, consKi: 0.04, consKd: 0.40, aggKp: 3.80, aggKi: 0.18, aggKd: 1.30 },
@@ -2028,7 +2065,7 @@
                 message = 'Device not responding.<br>Check that LVR-1 is:<br>• Powered on<br>• Within Bluetooth range<br>• Not connected to another device';
                 duration = 10000;
             } else if (error.name === 'SecurityError') {
-                message = 'Bluetooth permission denied.<br>Please allow Bluetooth access and reload the page.';
+                message = 'Reload the page and wait ten seconds to try and connect again.';
                 duration = 10000;
             } else if (error.name === 'NotSupportedError' || error.message.includes('not supported')) {
                 message = 'Web Bluetooth not supported.<br>Please use Chrome, Edge, or Opera browser.';
@@ -2125,6 +2162,7 @@
 
             state.tempHistory = [];
             state.pressureHistory = [];
+            state.graphStartTime = null;
             const sampleCountElem = document.getElementById('sampleCount');
             if (sampleCountElem) {
                 sampleCountElem.textContent = '0';
@@ -2281,6 +2319,7 @@
                 if (!wasRunning && state.shotRunning) {
                     state.tempHistory = [];
                     state.pressureHistory = [];
+                    state.graphStartTime = null;
                     miniHoveredIndex = -1;
                     drawMiniGraph();
                 }
@@ -2290,21 +2329,20 @@
 
             // Graph history — during shot OR if always-record is enabled
             if (!state.dataCollectionPaused && (state.shotRunning || state.alwaysRecordGraph)) {
+
+                const now = Date.now();
+
+                // Start the timer on first sample
+                if (state.graphStartTime === null) {
+                    state.graphStartTime = now;
+                }
+
                 state.tempHistory.push(state.brewTemp);
                 state.pressureHistory.push(state.groupPressure);
 
-                // Memory management: limit history to prevent memory leaks
-                // Using constant for configuration
-                if (state.tempHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
-                    state.tempHistory.shift();
-                }
-                if (state.pressureHistory.length > CONSTANTS.MAX_HISTORY_POINTS) {
-                    state.pressureHistory.shift();
-                }
-
                 drawMiniGraph();
                 drawFullGraph();
-                
+
                 // Update sample count display
                 const sampleCountElem = document.getElementById('sampleCount');
                 if (sampleCountElem) {
@@ -2366,39 +2404,26 @@
             const pageEl = document.getElementById(pageName + 'Page');
             pageEl.classList.add('active');
 
-            // 🔥 FORCE mini graph resize AFTER layout resolves
-            if (pageName === 'main') {
-                // Force layout recalculation to fix spacing issues
-                const miniContainer = document.querySelector('.graph-container.nav-graph');
-                if (miniContainer) {
-                    // Temporarily force height recalculation
-                    miniContainer.style.minHeight = '0';
-                    miniContainer.style.height = 'auto';
-                }
-                
-                // Triple RAF to ensure layout is fully settled
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            drawMiniGraph();
-                        });
-                    });
-                });
-            }
-
             if (pageName === 'pid') {
                 document.getElementById('pidZones').innerHTML = '<p>Loading PID values…</p>';
                 sendBLECommand({ type: 'get_pid' });
             }
 
             if (pageName === 'graph') {
-                updateYAxisScaleInputs(); // Ensure unit labels and values are current
+                updateYAxisScaleInputs();
                 drawFullGraph();
             }
         }
 
 
         function cToF(c) { return c * 9 / 5 + 32; }
+
+        function setGraphResetTime(minutes) {
+            state.graphResetMinutes = parseInt(minutes, 10);
+            state.graphStartTime = null; // restart the timer from now
+            localStorage.setItem('graphResetMinutes', minutes);
+            showToast(`Graph history set to ${minutes >= 60 ? '1 hour' : minutes + ' min'}`, 2000, 'success');
+        }
 
         function toggleTempUnit() {
             state.useFahrenheit = !state.useFahrenheit;
@@ -2445,8 +2470,6 @@
             document.getElementById('steamTempValue').textContent = displayTemp(state.steamTemp);
             document.getElementById('steamTempUnit').textContent = tempUnit;
 
-            document.getElementById('steamPressureValue').textContent = state.steamPressure.toFixed(1);
-            document.getElementById('steamPressureUnit').textContent = 'bar';
 
             // Update the steam pressure gauge needle
             const steamPressureValue = state.pressureIsBar ? state.steamPressure : state.steamPressure * 14.5038;
@@ -2552,7 +2575,7 @@
                 state.brewSetpoint = Math.max(80, Math.min(100, state.brewSetpoint + delta));
                 sendBLECommand({ type: 'setpoint', zone: 'brew', value: state.brewSetpoint });
             } else if (zone === 'steam') {
-                state.steamSetpoint = Math.max(110, Math.min(140, state.steamSetpoint + delta));
+                state.steamSetpoint = Math.max(110, Math.min(125, state.steamSetpoint + delta));
                 sendBLECommand({ type: 'setpoint', zone: 'steam', value: state.steamSetpoint });
             } else if (zone === 'group') {
                 state.groupSetpoint = Math.max(80, Math.min(98, state.groupSetpoint + delta));
@@ -2664,10 +2687,14 @@
 
             const tempVal = state.useFahrenheit ? cToF(tempValues[index]) : tempValues[index];
             const pressVal = pressValues[index] * pressureConv;
-            const timeSec = index;
+            const totalElapsedSec = state.graphStartTime ? (Date.now() - state.graphStartTime) / 1000 : 0;
+            const timeSec = Math.round((index / (state.tempHistory.length - 1)) * totalElapsedSec);
+            const timeStr = timeSec >= 60
+                ? `${Math.floor(timeSec / 60)}m ${timeSec % 60}s`
+                : `${timeSec}s`;
 
             const html = `
-                <strong>Time: ${timeSec}s</strong><br>
+                <strong>Time: ${timeStr}</strong><br>
                 Temp: ${tempVal.toFixed(1)}${tempUnit}<br>
                 Press: ${pressVal.toFixed(pressureDecimals)}${pressureUnit}
             `;
@@ -2726,6 +2753,7 @@
             if (!state.alwaysRecordGraph && !state.shotRunning) {
                 state.tempHistory = [];
                 state.pressureHistory = [];
+                state.graphStartTime = null;
                 drawMiniGraph();
                 drawFullGraph();
             }
@@ -2757,6 +2785,7 @@
             }
 
             const padding = 40;
+            const paddingBottom = 52; // extra space for x-axis time labels
 
             let tempMin = Math.min(...state.tempHistory);
             let tempMax = Math.max(...state.tempHistory);
@@ -2787,10 +2816,13 @@
             const dispPressureMax = pressureMax * pressureConv;
             const dispPressureRange = dispPressureMax - dispPressureMin;
 
+            const plotW = width - padding * 2;
+            const plotH = height - padding - paddingBottom;
+
             ctx.strokeStyle = '#222';
             ctx.lineWidth = 1;
             for (let i = 0; i <= 4; i++) {
-                const y = padding + (i / 4) * (height - padding * 2);
+                const y = padding + (i / 4) * plotH;
                 ctx.beginPath();
                 ctx.moveTo(padding, y);
                 ctx.lineTo(width - padding, y);
@@ -2801,14 +2833,14 @@
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(padding, padding + plotH);
             ctx.stroke();
 
             ctx.strokeStyle = '#445566';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width - padding, padding);
-            ctx.lineTo(width - padding, height - padding);
+            ctx.lineTo(width - padding, padding + plotH);
             ctx.stroke();
 
             ctx.fillStyle = '#f88';
@@ -2818,7 +2850,7 @@
             const miniTicks = 2;
             for (let i = 0; i <= miniTicks; i++) {
                 const fraction = i / miniTicks;
-                const y = padding + fraction * (height - padding * 2);
+                const y = padding + fraction * plotH;
                 const val = dispTempMax - fraction * dispTempRange;
                 ctx.fillText(val.toFixed(1), padding - 8, y);
             }
@@ -2828,20 +2860,46 @@
             ctx.textAlign = 'left';
             for (let i = 0; i <= miniTicks; i++) {
                 const fraction = i / miniTicks;
-                const y = padding + fraction * (height - padding * 2);
+                const y = padding + fraction * plotH;
                 const val = dispPressureMax - fraction * dispPressureRange;
                 ctx.fillText(val.toFixed(pressureDecimals), width - padding + 8, y);
             }
             ctx.fillText(pressureUnit, width - padding + 8, padding + 10);
+
+            // X-axis time labels — use actual elapsed time from graphStartTime
+            const totalSeconds = state.graphStartTime ? (Date.now() - state.graphStartTime) / 1000 : 0;
+            const formatTime = (s) => {
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return m > 0 ? `${m}m${sec > 0 ? sec + 's' : ''}` : `${sec}s`;
+            };
+            ctx.fillStyle = '#666';
+            ctx.font = '9px monospace';
+            ctx.textBaseline = 'top';
+            const xTickCount = 4;
+            for (let i = 0; i <= xTickCount; i++) {
+                const fraction = i / xTickCount;
+                const x = padding + fraction * plotW;
+                const secs = fraction * totalSeconds;
+                ctx.textAlign = i === 0 ? 'left' : i === xTickCount ? 'right' : 'center';
+                ctx.fillText(formatTime(secs), x, padding + plotH + 6);
+                // tick mark
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, padding + plotH);
+                ctx.lineTo(x, padding + plotH + 4);
+                ctx.stroke();
+            }
 
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 data.forEach((v, i) => {
-                    const x = padding + (i / (data.length - 1)) * (width - padding * 2);
+                    const x = padding + (i / (data.length - 1)) * plotW;
                     const fraction = (v - minV) / rangeV;
-                    const y = height - padding - fraction * (height - padding * 2);
+                    const y = padding + plotH - fraction * plotH;
                     if (i === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 });
@@ -2853,19 +2911,19 @@
 
             if (miniHoveredIndex >= 0 && miniHoveredIndex < state.tempHistory.length) {
                 const index = miniHoveredIndex;
-                const x = padding + (index / (state.tempHistory.length - 1)) * (width - padding * 2);
+                const x = padding + (index / (state.tempHistory.length - 1)) * plotW;
 
                 ctx.strokeStyle = '#aaa';
                 ctx.lineWidth = 1;
                 ctx.setLineDash([4, 4]);
                 ctx.beginPath();
                 ctx.moveTo(x, padding);
-                ctx.lineTo(x, height - padding);
+                ctx.lineTo(x, padding + plotH);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 const fractionTemp = (state.tempHistory[index] - tempMin) / tempRange;
-                const yTemp = height - padding - fractionTemp * (height - padding * 2);
+                const yTemp = padding + plotH - fractionTemp * plotH;
                 ctx.fillStyle = 'rgb(194, 58, 58)';
                 ctx.beginPath();
                 ctx.arc(x, yTemp, 5, 0, Math.PI * 2);
@@ -2875,7 +2933,7 @@
                 ctx.stroke();
 
                 const fractionPress = (state.pressureHistory[index] - pressureMin) / pressureRange;
-                const yPress = height - padding - fractionPress * (height - padding * 2);
+                const yPress = padding + plotH - fractionPress * plotH;
                 ctx.fillStyle = '#5588aa';
                 ctx.beginPath();
                 ctx.arc(x, yPress, 5, 0, Math.PI * 2);
@@ -2884,11 +2942,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
-
-            ctx.fillStyle = '#888';
-            ctx.font = '11px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('Time →', width / 2, height - 6);
         }
 
         function updateYAxisScaleInputs() {
@@ -3069,7 +3122,7 @@
             }
 
             const paddingTop = 30;
-            const paddingBottom = 30;
+            const paddingBottom = 45;
             const paddingLeft = 65;
             const paddingRight = 65;
             const plotWidth = width - paddingLeft - paddingRight;
@@ -3177,6 +3230,31 @@
             }
             ctx.fillText(pressureUnit, width - paddingRight + 10, paddingTop + 15);
 
+            // X-axis time labels — use actual elapsed time from graphStartTime
+            const totalSeconds = state.graphStartTime ? (Date.now() - state.graphStartTime) / 1000 : 0;
+            const formatTime = (s) => {
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return m > 0 ? `${m}m${sec > 0 ? sec + 's' : ''}` : `${sec}s`;
+            };
+            ctx.fillStyle = '#888';
+            ctx.font = '12px monospace';
+            ctx.textBaseline = 'top';
+            const xTickCount = 5;
+            for (let i = 0; i <= xTickCount; i++) {
+                const fraction = i / xTickCount;
+                const x = paddingLeft + fraction * plotWidth;
+                const secs = fraction * totalSeconds;
+                ctx.textAlign = i === 0 ? 'left' : i === xTickCount ? 'right' : 'center';
+                ctx.fillText(formatTime(secs), x, paddingTop + plotHeight + 6);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, paddingTop + plotHeight);
+                ctx.lineTo(x, paddingTop + plotHeight + 5);
+                ctx.stroke();
+            }
+
             const plot = (data, color, minV, rangeV) => {
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 3;
@@ -3262,6 +3340,7 @@
 
             state.tempHistory = [];
             state.pressureHistory = [];
+            state.graphStartTime = null;
             miniHoveredIndex = -1;
             fullHoveredIndex = -1;
             miniTooltip.style.display = 'none';
@@ -3518,12 +3597,17 @@
             showToast('All PID gains reset to factory defaults.', 5000, 'success');
         }
 
+        let miniGraphInitialized = false;
+
         function setupGraphObservers() {
             const miniContainer = document.querySelector('.graph-container.nav-graph');
             if (miniContainer) {
                 // Debounce the redraw to prevent rapid updates
                 const debouncedMiniDraw = debounce(() => {
-                    drawMiniGraph();
+                    // Only redraw on resize if not yet initialized or orientation changed
+                    if (!miniGraphInitialized) {
+                        drawMiniGraph();
+                    }
                 }, 100);
                 
                 new ResizeObserver(() => {
@@ -3561,11 +3645,27 @@
 
         setupGraphObservers();
 
+        // Standalone graph reset timer — checks every 10 seconds regardless of BLE data
+        setInterval(() => {
+            if (state.graphStartTime === null) return;
+            if (!state.shotRunning && !state.alwaysRecordGraph) return;
+            const elapsedMinutes = (Date.now() - state.graphStartTime) / 60000;
+            if (elapsedMinutes >= state.graphResetMinutes) {
+                state.tempHistory = [];
+                state.pressureHistory = [];
+                state.graphStartTime = Date.now();
+                miniHoveredIndex = -1;
+                fullHoveredIndex = -1;
+                drawMiniGraph();
+                drawFullGraph();
+            }
+        }, 10000);
+
         // Add window resize listener for additional responsiveness
         const debouncedWindowResize = debounce(() => {
             const activePage = document.querySelector('.page.active');
             if (activePage && activePage.id === 'mainPage') {
-                drawMiniGraph();
+                if (!miniGraphInitialized) drawMiniGraph();
             } else if (activePage && activePage.id === 'graphPage') {
                 drawFullGraph();
             }
@@ -3574,22 +3674,52 @@
         window.addEventListener('resize', debouncedWindowResize);
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
+                // Allow resize on orientation change
+                miniGraphInitialized = false;
                 const activePage = document.querySelector('.page.active');
                 if (activePage && activePage.id === 'mainPage') {
                     drawMiniGraph();
+                    // Re-pin heights after orientation change
+                    const mc = document.getElementById('miniGraph');
+                    const cont = document.querySelector('.graph-container.nav-graph');
+                    if (mc && cont) {
+                        const ch = mc.getBoundingClientRect().height;
+                        const coh = cont.getBoundingClientRect().height;
+                        if (ch > 0) mc.style.height = ch + 'px';
+                        if (coh > 0) cont.style.height = coh + 'px';
+                    }
+                    miniGraphInitialized = true;
                 } else if (activePage && activePage.id === 'graphPage') {
                     drawFullGraph();
                 }
-            }, 100);
+            }, 300);
         });
 
         window.addEventListener('load', () => {
             drawMiniGraph();
+            // Pin the canvas and container to their drawn height so display:none never collapses them
+            const miniCanvas = document.getElementById('miniGraph');
+            const miniContainer = document.querySelector('.graph-container.nav-graph');
+            if (miniCanvas && miniContainer) {
+                const canvasH = miniCanvas.getBoundingClientRect().height;
+                const containerH = miniContainer.getBoundingClientRect().height;
+                if (canvasH > 0) miniCanvas.style.height = canvasH + 'px';
+                if (containerH > 0) miniContainer.style.height = containerH + 'px';
+            }
+            miniGraphInitialized = true;
             updateDisplay();
         });
 
         document.getElementById('tempUnitBtn').textContent = state.useFahrenheit ? '°F' : '°C';
         document.getElementById('pressureUnitBtn').textContent = state.pressureIsBar ? 'bar' : 'psi';
+
+        // Restore persisted graph reset time
+        const savedResetMinutes = localStorage.getItem('graphResetMinutes');
+        if (savedResetMinutes) {
+            state.graphResetMinutes = parseInt(savedResetMinutes, 10);
+            const sel = document.getElementById('graphResetSelect');
+            if (sel) sel.value = savedResetMinutes;
+        }
 
         updateDisplay();
         updateBLEUI();
@@ -3702,12 +3832,13 @@
                 };
 
                 el.addEventListener('change', handler);
-                el.addEventListener('blur', handler);
 
-                // Optional: allow Enter key to confirm (change already fires on Enter)
+                // Enter key: call handler directly, then blur without retriggering change
                 el.addEventListener('keydown', e => {
                     if (e.key === 'Enter') {
-                        el.blur(); // Trigger blur handler
+                        e.preventDefault();
+                        handler({ target: el });
+                        el.blur();
                     }
                 });
             });
