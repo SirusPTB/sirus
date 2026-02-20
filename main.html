@@ -1074,9 +1074,9 @@
       gap: 10px;
       background: linear-gradient(135deg, #1a2a3a 0%, #1e1e2e 100%);
       color: #e8f0fe;
-      padding: 11px 18px 11px 14px;
-      border-radius: 10px;
-      font-size: 0.88em;
+      padding: 15px 24px 15px 18px;
+      border-radius: 12px;
+      font-size: 1em;
       white-space: nowrap;
       box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(42,124,255,0.25);
       border-left: 4px solid var(--accent-primary);
@@ -1088,7 +1088,7 @@
 
     #toastNotification::before {
       content: "ℹ";
-      font-size: 1.1em;
+      font-size: 1.3em;
       color: var(--accent-primary);
       flex-shrink: 0;
     }
@@ -2433,9 +2433,12 @@
         console.log("Connected but no write characteristic found");
       }
 
+      // Save device name for auto-reconnect on next page load
+      if (device.name) localStorage.setItem('sirusLastDevice', device.name);
+
       // Listen for unexpected disconnects — only attach once
       device.removeEventListener("gattserverdisconnected", handleDisconnection);
-      device.addEventListener("gattserverdisconnected", handleDisconnection);
+      device.addEventListener("gattserverdisconnected", () => handleDisconnection(false));
     }
 
     async function connectToDevice() {
@@ -2459,6 +2462,7 @@
       reconnectAttempt++;
       if (reconnectAttempt > MAX_RECONNECT_ATTEMPTS) {
         console.log("Max reconnect attempts reached, giving up.");
+        showToast("Could not reconnect. Device unreachable.", 'warning', 4000);
         device = null;
         handleDisconnection(true /* gaveUp */);
         return;
@@ -2470,6 +2474,8 @@
         btn.className = "connecting";
       }
 
+      showToast(`Reconnecting… (${reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS})`, 'warning', 3000);
+
       // Exponential backoff: 1s, 2s, 4s, 8s … capped at 30s
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt - 1), 30000);
       console.log(`Reconnect attempt ${reconnectAttempt} in ${delay}ms`);
@@ -2479,6 +2485,7 @@
         try {
           await connectGatt();
           console.log("Auto-reconnect successful!");
+          showToast("Reconnected!", 'info', 2500);
         } catch (e) {
           console.warn("Reconnect attempt failed:", e);
           reconnectToDevice(); // schedule next attempt
@@ -2784,6 +2791,62 @@
 
     // --- Button Setup ---
     document.getElementById("connectButton").onclick = connectToDevice;
+
+    // --- Auto-connect on page load ---
+    // Web Bluetooth requires a user gesture for requestDevice(), so we can't
+    // silently connect. Instead, if we remember a previously paired device,
+    // show a tappable toast so a single tap triggers the reconnect.
+    (function autoConnectOnLoad() {
+      const lastDevice = localStorage.getItem('sirusLastDevice');
+      if (!lastDevice || !navigator.bluetooth) return;
+
+      // Try getDevices() first (Chrome 117+) — truly silent reconnect
+      if (navigator.bluetooth.getDevices) {
+        navigator.bluetooth.getDevices().then(async devices => {
+          const found = devices.find(d => d.name === lastDevice);
+          if (found) {
+            console.log("Silent auto-connect to", found.name);
+            showToast("Connecting to " + found.name + "…", 'warning', 3000);
+            const btn = document.getElementById("connectButton");
+            if (btn) { btn.textContent = "Connecting..."; btn.className = "connecting"; }
+            intentionalDisconnect = false;
+            device = found;
+            try {
+              await connectGatt();
+              showToast("Connected to " + found.name, 'info', 2500);
+            } catch (e) {
+              device = null;
+              handleDisconnection(true);
+              showTapToReconnect(lastDevice);
+            }
+          } else {
+            showTapToReconnect(lastDevice);
+          }
+        }).catch(() => showTapToReconnect(lastDevice));
+      } else {
+        showTapToReconnect(lastDevice);
+      }
+    })();
+
+    // Show a persistent toast that reconnects on tap (satisfies user-gesture requirement)
+    function showTapToReconnect(deviceName) {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      toast.textContent = `Tap to reconnect to ${deviceName}`;
+      toast.classList.remove('toast-warning');
+      toast.classList.add('show', 'toast-warning');
+      toast.style.cursor = 'pointer';
+      toast.style.pointerEvents = 'auto';
+
+      function onTap() {
+        toast.removeEventListener('click', onTap);
+        toast.style.cursor = '';
+        toast.style.pointerEvents = '';
+        toast.classList.remove('show');
+        connectToDevice();
+      }
+      toast.addEventListener('click', onTap);
+    }
 
     async function sendData(command) {
       console.log("Attempting to send:", command);
