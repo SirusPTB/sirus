@@ -511,6 +511,27 @@
             color: white;
         }
 
+        .open-calendar-btn {
+            padding: 8px 16px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .open-calendar-btn:hover {
+            background: #357ae8;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.35);
+        }
+
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -627,7 +648,15 @@
                     <div class="user-details">
                         <span>✓ Signed in as <strong id="userEmail"></strong></span>
                     </div>
-                    <button class="signout-btn" id="signoutBtn">Sign Out</button>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <a class="open-calendar-btn" id="openCalendarBtn" href="https://calendar.google.com/calendar/r" target="_blank" rel="noopener noreferrer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .89-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                            </svg>
+                            Open Google Calendar
+                        </a>
+                        <button class="signout-btn" id="signoutBtn">Sign Out</button>
+                    </div>
                 </div>
 
                 <div class="auth-section" id="authSection">
@@ -790,6 +819,16 @@
             toggle.classList.toggle('collapsed');
         }
 
+        // Update the "Open Google Calendar" button with a dynamic link
+        function updateCalendarLink(email) {
+            const btn = document.getElementById('openCalendarBtn');
+            if (!btn) return;
+            // Link to the AFL season start month in the user's Google Calendar
+            // March 2026 is when the 2026 AFL season starts
+            const seasonUrl = `https://calendar.google.com/calendar/r/month/2026/3`;
+            btn.href = seasonUrl;
+        }
+
         // Initialize Google Identity Services
         function initializeGoogleAuth() {
             try {
@@ -849,6 +888,8 @@
                 
                 document.getElementById('userEmail').textContent = displayEmail;
                 document.getElementById('userInfo').classList.add('show');
+                // Update calendar link with user's email for a personalised URL
+                updateCalendarLink(data.email);
                 console.log('User info displayed:', displayEmail);
             } catch (error) {
                 console.error('Error getting user info:', error);
