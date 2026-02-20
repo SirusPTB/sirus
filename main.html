@@ -104,8 +104,25 @@
     }
 
     #installButton {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
       background-color: var(--accent-primary);
       color: #fff;
+      padding: 14px 20px;
+      border-radius: 50px;
+      box-shadow: 0 4px 16px rgba(42, 124, 255, 0.45);
+      font-size: 0.95em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #installButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(42, 124, 255, 0.55);
     }
 
     #installButton.hidden {
