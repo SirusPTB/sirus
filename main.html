@@ -143,11 +143,32 @@
       font-weight: bold;
     }
 
-    .canvas-container {
+    #combinedResizeHandle {
       width: 90%;
-      margin: 10px auto;
-      height: 300px;
+      margin: 0 auto 10px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: ns-resize;
+      user-select: none;
     }
+
+    #combinedResizeHandle span {
+      display: block;
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: #555;
+      transition: background 0.2s;
+    }
+
+    #combinedResizeHandle:hover span,
+    #combinedResizeHandle.dragging span {
+      background: var(--accent-primary);
+    }
+
+
 
     canvas {
       width: 100% !important;
@@ -1635,7 +1656,10 @@
           style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           <span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
         </div>
-        <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
+        <div class="canvas-container" id="combinedChartContainer"><canvas id="combinedChart"></canvas></div>
+        <div id="combinedResizeHandle" title="Drag to resize chart">
+          <span></span>
+        </div>
       </div>
     </div>
 
@@ -2142,7 +2166,6 @@
 
 
       const ctxCombined = document.getElementById("combinedChart").getContext("2d");
-      fixCanvasDPI(ctxCombined.canvas);
       combinedChart = new Chart(ctxCombined, {
         type: "line",
         data: {
@@ -2166,7 +2189,7 @@
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
@@ -4027,6 +4050,74 @@
 
   </script>
 
+  <script>
+    // --- Combined chart drag-to-resize ---
+    (function () {
+      const handle = document.getElementById('combinedResizeHandle');
+      const container = document.getElementById('combinedChartContainer');
+      if (!handle || !container) return;
+
+      const MIN_HEIGHT = 150;
+      const MAX_HEIGHT = 800;
+      const STORAGE_KEY = 'combinedChartHeight';
+
+      // Restore saved height
+      const saved = parseInt(localStorage.getItem(STORAGE_KEY));
+      if (saved && saved >= MIN_HEIGHT && saved <= MAX_HEIGHT) {
+        container.style.height = saved + 'px';
+      }
+
+      let startY = 0;
+      let startH = 0;
+      let rafId = null;
+      let pendingH = null;
+
+      function applyHeight() {
+        if (pendingH !== null) {
+          container.style.height = pendingH + 'px';
+          // Chart.js responsive:true picks this up automatically via ResizeObserver
+        }
+        rafId = null;
+      }
+
+      function onMove(y) {
+        const delta = y - startY;
+        pendingH = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startH + delta));
+        if (!rafId) rafId = requestAnimationFrame(applyHeight);
+      }
+
+      function onEnd() {
+        handle.classList.remove('dragging');
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; applyHeight(); }
+        localStorage.setItem(STORAGE_KEY, parseInt(container.style.height));
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onEnd);
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onEnd);
+      }
+
+      function onMouseMove(e) { onMove(e.clientY); }
+      function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
+
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        startY = e.clientY;
+        startH = container.offsetHeight;
+        handle.classList.add('dragging');
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onEnd);
+      });
+
+      handle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        startY = e.touches[0].clientY;
+        startH = container.offsetHeight;
+        handle.classList.add('dragging');
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onEnd);
+      });
+    })();
+  </script>
 </body>
 
 </html>
