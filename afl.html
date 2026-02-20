@@ -6,6 +6,40 @@
     <title>AFL Fixture to Calendar</title>
     <link rel="icon" type="image/png" href="afl-32x32.png">
     <style>
+        :root {
+            --bg-page:        #2c2c2c;
+            --bg-container:   #ffffff;
+            --bg-info-box:    #f9f9f9;
+            --bg-team-card:   #ffffff;
+            --bg-team-hover:  #fef5f7;
+            --border-team:    #e0e0e0;
+            --text-primary:   #000000;
+            --text-secondary: #666666;
+            --text-label:     #333333;
+            --section-title:  #000000;
+            --info-border:    #003087;
+            --shadow:         rgba(0,0,0,0.1);
+            --progress-bg:    #f5f5f5;
+            --progress-border:#e0e0e0;
+        }
+
+        body.dark {
+            --bg-page:        #121212;
+            --bg-container:   #1e1e1e;
+            --bg-info-box:    #2a2a2a;
+            --bg-team-card:   #2a2a2a;
+            --bg-team-hover:  #2f2f50;
+            --border-team:    #444444;
+            --text-primary:   #f0f0f0;
+            --text-secondary: #aaaaaa;
+            --text-label:     #cccccc;
+            --section-title:  #f0f0f0;
+            --info-border:    #4a7fd4;
+            --shadow:         rgba(0,0,0,0.5);
+            --progress-bg:    #333333;
+            --progress-border:#555555;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,19 +48,21 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #2c2c2c;
+            background: var(--bg-page);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s;
         }
 
         .container {
             width: 90%;
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: var(--bg-container);
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px var(--shadow);
             overflow: hidden;
+            transition: background 0.3s, box-shadow 0.3s;
         }
 
         .header {
@@ -34,6 +70,7 @@
             color: white;
             padding: 40px 30px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -42,8 +79,70 @@
             font-weight: 700;
         }
 
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .theme-toggle-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .toggle-track {
+            width: 44px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+            flex-shrink: 0;
+        }
+
+        .toggle-track.on {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            line-height: 1;
+        }
+
+        .toggle-thumb.on {
+            transform: translateX(20px);
+        }
+
+        @media (max-width: 480px) {
+            .theme-toggle-label { display: none; }
+            .theme-toggle { right: 12px; }
+        }
+
         .content {
             padding: 30px;
+            background: var(--bg-container);
+            transition: background 0.3s;
         }
 
         .section {
@@ -54,7 +153,7 @@
             font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 15px;
-            color: #000;
+            color: var(--section-title);
         }
 
         .teams-grid {
@@ -74,16 +173,16 @@
             display: flex;
             align-items: center;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-team);
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s;
-            background: white;
+            background: var(--bg-team-card);
         }
 
         .team-checkbox:hover {
             border-color: #003087;
-            background: #fef5f7;
+            background: var(--bg-team-hover);
         }
 
         .team-checkbox input[type="checkbox"] {
@@ -101,7 +200,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #333;
+            color: var(--text-label);
             font-weight: 500;
         }
 
@@ -242,9 +341,9 @@
         }
 
         .toast {
-            background: #fef5f7;
+            background: var(--bg-container);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px var(--shadow);
             padding: 16px 20px;
             display: flex;
             align-items: flex-start;
@@ -331,12 +430,12 @@
         .toast-title {
             font-weight: 700;
             font-size: 14px;
-            color: #333;
+            color: var(--text-primary);
         }
 
         .toast-message {
             font-size: 13px;
-            color: #666;
+            color: var(--text-secondary);
             line-height: 1.4;
         }
 
@@ -415,8 +514,8 @@
         }
 
         .info-box {
-            background: #f9f9f9;
-            border-left: 4px solid #003087;
+            background: var(--bg-info-box);
+            border-left: 4px solid var(--info-border);
             border-radius: 4px;
             margin-bottom: 20px;
             overflow: hidden;
@@ -433,7 +532,7 @@
         }
 
         .info-box-header:hover {
-            background: #f0f0f0;
+            background: var(--bg-team-hover);
         }
 
         .info-box-toggle {
@@ -458,7 +557,7 @@
         }
 
         .info-box-content p {
-            color: #666;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
@@ -535,12 +634,12 @@
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #f5f5f5;
+            background: var(--progress-bg);
             border-radius: 4px;
             margin-top: 10px;
             overflow: hidden;
             display: none;
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--progress-border);
         }
 
         .progress-bar.show {
@@ -629,6 +728,12 @@
     <div class="container">
         <div class="header">
             <h1>AFL Fixture to Calendar</h1>
+            <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">
+                <span class="theme-toggle-label" id="themeLabel">Dark Mode</span>
+                <div class="toggle-track" id="toggleTrack">
+                    <div class="toggle-thumb" id="toggleThumb">☀️</div>
+                </div>
+            </div>
         </div>
 
         <div class="content">
@@ -674,7 +779,7 @@
 
             <div class="section">
                 <div class="section-title">2026 AFL Season</div>
-                <p style="color: #666; margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Select your favourite teams to add their fixtures to your calendar</p>
             </div>
 
             <div class="section">
@@ -689,7 +794,7 @@
 
             <div class="section">
                 <div style="margin-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 10px; color: #666; cursor: pointer;">
+                    <label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary); cursor: pointer;">
                         <input type="checkbox" id="allDayEventsCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #003087;">
                         <span>Create as all-day events (better for year view)</span>
                     </label>
@@ -711,7 +816,7 @@
             <div class="section">
                 <div class="section-title" style="text-align: center;">📥 Download Calendar File</div>
                 <button class="download-btn" id="downloadBtn" style="width: 50%; margin: 0 auto; display: block; padding: 16px; font-size: 1.1rem; font-weight: 600;">Download ICS File</button>
-                <p style="text-align: center; color: #666; margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">Works with Google Calendar, Apple Calendar, Outlook, and more</p>
             </div>
         </div>
     </div>
@@ -2042,7 +2147,37 @@ END:VEVENT
             
             // Try to restore previous session
             restoreSession();
+
+            // Apply saved theme
+            applyTheme(localStorage.getItem('afl_theme') === 'dark');
         };
+
+        function applyTheme(isDark) {
+            const body = document.body;
+            const track = document.getElementById('toggleTrack');
+            const thumb = document.getElementById('toggleThumb');
+            const label = document.getElementById('themeLabel');
+
+            if (isDark) {
+                body.classList.add('dark');
+                track.classList.add('on');
+                thumb.classList.add('on');
+                thumb.textContent = '🌙';
+                if (label) label.textContent = 'Light Mode';
+            } else {
+                body.classList.remove('dark');
+                track.classList.remove('on');
+                thumb.classList.remove('on');
+                thumb.textContent = '☀️';
+                if (label) label.textContent = 'Dark Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = !document.body.classList.contains('dark');
+            localStorage.setItem('afl_theme', isDark ? 'dark' : 'light');
+            applyTheme(isDark);
+        }
 
         function restoreSession() {
             const storedToken = sessionStorage.getItem('google_access_token');
