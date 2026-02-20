@@ -1808,6 +1808,10 @@
     const characteristicUuid = "0000ffe3-0000-1000-8000-00805f9b34fb";
     const writeCharacteristicUuid = "0000ffe2-0000-1000-8000-00805f9b34fb";
     let device, characteristic, writeCharacteristic;
+    let intentionalDisconnect = false;   // true only when user clicks Disconnect
+    let reconnectTimer = null;           // holds the setTimeout handle
+    let reconnectAttempt = 0;            // counts retries for backoff
+    const MAX_RECONNECT_ATTEMPTS = 10;   // give up after this many tries
     let tempChart, pressureChart, combinedChart;
     let paused = false;
     let currentTemp = 0, currentPressure = 0;
@@ -2368,70 +2372,126 @@
     }
 
     // --- Connection Functions ---
+
+    // Low-level: set up GATT services/characteristics on an already-chosen device.
+    // Call this both on first connect AND on every reconnect attempt.
+    async function connectGatt() {
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService(serviceUuid);
+
+      characteristic = await service.getCharacteristic(characteristicUuid);
+      console.log("Read characteristic properties:", characteristic.properties);
+
+      try {
+        writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
+        console.log("Write characteristic found with properties:", writeCharacteristic.properties);
+      } catch (e) {
+        console.log("Separate write characteristic not found, trying to use read characteristic for writing");
+        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+          writeCharacteristic = characteristic;
+          console.log("Using read characteristic for writing");
+        } else {
+          console.log("Listing all characteristics in service:");
+          const characteristics = await service.getCharacteristics();
+          for (const char of characteristics) {
+            console.log(`Characteristic UUID: ${char.uuid}, Properties:`, char.properties);
+            if (char.properties.write || char.properties.writeWithoutResponse) {
+              writeCharacteristic = char;
+              console.log("Found writable characteristic:", char.uuid);
+              break;
+            }
+          }
+        }
+      }
+
+      await characteristic.startNotifications();
+      characteristic.addEventListener("characteristicvaluechanged", handleData);
+
+      // Reset all transient flags
+      brightnessDataReceived = false;
+      alwaysOnDataReceived = false;
+      calibrationDataReceived = false;
+      receivedDataCount = 0;
+      sleepDataReceived = false;
+      currentCalibrationValue = null;
+
+      // Clear any pending reconnect state
+      reconnectAttempt = 0;
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+      // Update UI
+      const btn = document.getElementById("connectButton");
+      btn.textContent = "Disconnect"; btn.className = "connected";
+      isConnected = true;
+      setControlsEnabled(true);
+      updateConnectionState(true);
+      btn.onclick = disconnectFromDevice;
+
+      if (writeCharacteristic) {
+        console.log("Connected successfully, write characteristic available");
+      } else {
+        console.log("Connected but no write characteristic found");
+      }
+
+      // Listen for unexpected disconnects — only attach once
+      device.removeEventListener("gattserverdisconnected", handleDisconnection);
+      device.addEventListener("gattserverdisconnected", handleDisconnection);
+    }
+
     async function connectToDevice() {
       const btn = document.getElementById("connectButton");
       try {
         btn.textContent = "Connecting..."; btn.className = "connecting";
+        intentionalDisconnect = false;
         device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "SirusPTB" }], optionalServices: [serviceUuid] });
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(serviceUuid);
-
-        characteristic = await service.getCharacteristic(characteristicUuid);
-        console.log("Read characteristic properties:", characteristic.properties);
-
-        try {
-          writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
-          console.log("Write characteristic found with properties:", writeCharacteristic.properties);
-        } catch (e) {
-          console.log("Separate write characteristic not found, trying to use read characteristic for writing");
-
-          if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-            writeCharacteristic = characteristic;
-            console.log("Using read characteristic for writing");
-          } else {
-            console.log("Listing all characteristics in service:");
-            const characteristics = await service.getCharacteristics();
-            for (const char of characteristics) {
-              console.log(`Characteristic UUID: ${char.uuid}, Properties:`, char.properties);
-              if (char.properties.write || char.properties.writeWithoutResponse) {
-                writeCharacteristic = char;
-                console.log("Found writable characteristic:", char.uuid);
-                break;
-              }
-            }
-          }
-        }
-
-        await characteristic.startNotifications();
-        characteristic.addEventListener("characteristicvaluechanged", handleData);
-
-        btn.textContent = "Disconnect"; btn.className = "connected";
-        isConnected = true;
-        setControlsEnabled(true);
-        updateConnectionState(true);
-        btn.onclick = disconnectFromDevice;
-
-        brightnessDataReceived = false;
-        alwaysOnDataReceived = false;
-        calibrationDataReceived = false;
-        receivedDataCount = 0;
-        sleepDataReceived = false;
-        currentCalibrationValue = null;
-
-        if (writeCharacteristic) {
-          console.log("Connected successfully, write characteristic available");
-        } else {
-          console.log("Connected but no write characteristic found");
-        }
-
-        device.addEventListener("gattserverdisconnected", handleDisconnection);
+        await connectGatt();
       } catch (e) {
         console.error("Connection error:", e);
+        device = null;
         handleDisconnection();
       }
     }
 
+    // Reconnect to the already-chosen device without showing the picker
+    async function reconnectToDevice() {
+      if (intentionalDisconnect || !device) return;
+
+      reconnectAttempt++;
+      if (reconnectAttempt > MAX_RECONNECT_ATTEMPTS) {
+        console.log("Max reconnect attempts reached, giving up.");
+        device = null;
+        handleDisconnection(true /* gaveUp */);
+        return;
+      }
+
+      const btn = document.getElementById("connectButton");
+      if (btn) {
+        btn.textContent = `Reconnecting (${reconnectAttempt}/${MAX_RECONNECT_ATTEMPTS})…`;
+        btn.className = "connecting";
+      }
+
+      // Exponential backoff: 1s, 2s, 4s, 8s … capped at 30s
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempt - 1), 30000);
+      console.log(`Reconnect attempt ${reconnectAttempt} in ${delay}ms`);
+
+      reconnectTimer = setTimeout(async () => {
+        if (intentionalDisconnect || !device) return;
+        try {
+          await connectGatt();
+          console.log("Auto-reconnect successful!");
+        } catch (e) {
+          console.warn("Reconnect attempt failed:", e);
+          reconnectToDevice(); // schedule next attempt
+        }
+      }, delay);
+    }
+
     async function disconnectFromDevice() {
+      // Signal that this is intentional so handleDisconnection wont try to reconnect
+      intentionalDisconnect = true;
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+      reconnectAttempt = 0;
+
       if (characteristic) {
         try {
           await characteristic.stopNotifications();
@@ -2446,32 +2506,25 @@
           console.log("Error disconnecting:", e);
         }
       }
-      handleDisconnection();
+      handleDisconnection(true);
     }
 
-    function handleDisconnection() {
-      const btn = document.getElementById("connectButton");
-      if (btn) {
-        btn.textContent = "Connect";
-        btn.className = "disconnected";
-      }
-      // mark as disconnected
+    function handleDisconnection(wasIntentional) {
+      // Mark as disconnected immediately
       isConnected = false;
       setControlsEnabled(false);
       updateConnectionState(false);
+      characteristic = null;
+      writeCharacteristic = null;
 
-      // Reset charts and current-value displays so the UI shows the disconnected state
+      // Reset charts and current-value displays
       try {
-        // Clear chart data and reset counters
         resetCharts();
-
-        // Update the textual current values to show '--' with the current units
         const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
         const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
         const tempEl = document.getElementById("tempCurrentValue");
         const pressureEl = document.getElementById("pressureCurrentValue");
         const combinedEl = document.getElementById("combinedCurrentValue");
-
         if (tempEl) tempEl.textContent = `Temperature: -- ${tempUnit}`;
         if (pressureEl) pressureEl.textContent = `Pressure: -- ${pressureUnit}`;
         if (combinedEl) combinedEl.innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
@@ -2479,20 +2532,24 @@
         console.error("Error resetting charts/UI on disconnect:", e);
       }
 
-      // Force gauges to update so they draw the disconnected state (shows --.- when not connected)
-      try {
-        updateGauges();
-      } catch (e) {
-        console.error("Error updating gauges on disconnect:", e);
+      try { updateGauges(); } catch (e) { console.error("Error updating gauges on disconnect:", e); }
+
+      updateBattery(null, false);
+
+      // --- Auto-reconnect logic ---
+      // If the disconnect was unexpected AND we still have the device reference, try to reconnect.
+      if (!wasIntentional && !intentionalDisconnect && device) {
+        console.log("Unexpected disconnect — scheduling auto-reconnect...");
+        reconnectToDevice();
+        return; // don't fully reset the UI to "Connect" yet
       }
 
-      // Clear BLE references so subsequent connect attempts are clean
-      characteristic = null;
-      writeCharacteristic = null;
+      // Full cleanup for intentional disconnect (or giving up)
       device = null;
-      if (btn) btn.onclick = connectToDevice;
+      intentionalDisconnect = false;
+      reconnectAttempt = 0;
 
-      // Reset transient flags related to device data
+      // Reset transient device-data flags
       brightnessDataReceived = false;
       alwaysOnDataReceived = false;
       calibrationDataReceived = false;
@@ -2501,13 +2558,15 @@
       firmwareDataReceived = false;
       firmwareVersion = null;
 
-      // Reset firmware display
       const firmwareDisplay = document.getElementById("firmwareVersionDisplay");
-      if (firmwareDisplay) {
-        firmwareDisplay.textContent = "---";
-      }
+      if (firmwareDisplay) firmwareDisplay.textContent = "---";
 
-      updateBattery(null, false);
+      const btn = document.getElementById("connectButton");
+      if (btn) {
+        btn.textContent = "Connect";
+        btn.className = "disconnected";
+        btn.onclick = connectToDevice;
+      }
     }
 
     function applyYAxisScales() {
