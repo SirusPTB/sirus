@@ -2726,56 +2726,7 @@
     // --- Button Setup ---
     document.getElementById("connectButton").onclick = connectToDevice;
 
-    // --- Auto-reconnect on page load ---
-    async function autoReconnect() {
-      if (!navigator.bluetooth || !navigator.bluetooth.getDevices) return;
-      try {
-        const devices = await navigator.bluetooth.getDevices();
-        const match = devices.find(d => d.name && d.name.startsWith('SirusPTB'));
-        if (!match) return;
-        device = match;
-        const btn = document.getElementById("connectButton");
-        btn.textContent = "Connecting..."; btn.className = "connecting";
-        device.addEventListener("gattserverdisconnected", handleDisconnection);
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(serviceUuid);
-        characteristic = await service.getCharacteristic(characteristicUuid);
-        try {
-          writeCharacteristic = await service.getCharacteristic(writeCharacteristicUuid);
-        } catch (e) {
-          if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-            writeCharacteristic = characteristic;
-          } else {
-            const characteristics = await service.getCharacteristics();
-            for (const char of characteristics) {
-              if (char.properties.write || char.properties.writeWithoutResponse) {
-                writeCharacteristic = char; break;
-              }
-            }
-          }
-        }
-        await characteristic.startNotifications();
-        characteristic.addEventListener("characteristicvaluechanged", handleData);
-        btn.textContent = "Disconnect"; btn.className = "connected";
-        isConnected = true;
-        setControlsEnabled(true);
-        updateConnectionState(true);
-        btn.onclick = disconnectFromDevice;
-        brightnessDataReceived = false;
-        alwaysOnDataReceived = false;
-        calibrationDataReceived = false;
-        receivedDataCount = 0;
-        sleepDataReceived = false;
-        currentCalibrationValue = null;
-      } catch (e) {
-        console.log("Auto-reconnect failed:", e);
-        handleDisconnection();
-      }
-    }
-
-    autoReconnect();
-
-
+    async function sendData(command) {
       console.log("Attempting to send:", command);
       console.log("Device:", device);
       console.log("Device connected:", device && device.gatt && device.gatt.connected);
