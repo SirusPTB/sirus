@@ -139,6 +139,16 @@
       border-radius: 8px;
     }
 
+    .btn-row-divider {
+      width: 2px;
+      height: 32px;
+      background: #666;
+      align-self: center;
+      flex-shrink: 0;
+      margin: 0 6px;
+      border-radius: 1px;
+    }
+
     .button-row {
       display: flex;
       flex-wrap: wrap;
@@ -891,6 +901,10 @@
       display: none;
     }
 
+    body.gauges-visible .btn-row-divider {
+      display: none;
+    }
+
     /* =====================================================
        Battery icon styles
        ===================================================== */
@@ -964,6 +978,39 @@
 
     .yaxis-input:disabled {
       cursor: not-allowed;
+    }
+
+    .yaxis-reset-btn {
+      padding: 4px 10px;
+      font-size: 0.82em;
+      border-radius: 5px;
+      border: 1px solid #444;
+      background: var(--bg-button);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: 14px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .yaxis-reset-btn:not(:disabled) {
+      color: #fff;
+    }
+
+    .yaxis-reset-btn:hover:not(:disabled) {
+      background: #555;
+      color: var(--text-main);
+    }
+
+    .yaxis-reset-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: auto !important;
+    }
+
+    .yaxis-input.invalid {
+      border-color: var(--accent-danger);
+      outline: 1px solid var(--accent-danger);
     }
 
     .yaxis-group {
@@ -1610,11 +1657,11 @@
             <span class="yaxis-label" style="color: var(--accent-temp);">Temp</span>
             <label class="yaxis-field">
               <span>Min</span>
-              <input type="number" id="tempYMin" class="yaxis-input" value="40" step="1">
+              <input type="number" id="tempYMin" class="yaxis-input" value="40" step="1" min="0" max="120">
             </label>
             <label class="yaxis-field">
               <span>Max</span>
-              <input type="number" id="tempYMax" class="yaxis-input" value="120" step="1">
+              <input type="number" id="tempYMax" class="yaxis-input" value="120" step="1" min="0" max="120">
             </label>
           </div>
           <div class="yaxis-divider"></div>
@@ -1622,12 +1669,13 @@
             <span class="yaxis-label" style="color: var(--accent-pressure);">Pressure</span>
             <label class="yaxis-field">
               <span>Min</span>
-              <input type="number" id="pressureYMin" class="yaxis-input" value="0" step="0.1">
+              <input type="number" id="pressureYMin" class="yaxis-input" value="0" step="0.1" min="0" max="16">
             </label>
             <label class="yaxis-field">
               <span>Max</span>
-              <input type="number" id="pressureYMax" class="yaxis-input" value="16" step="0.1">
+              <input type="number" id="pressureYMax" class="yaxis-input" value="16" step="0.1" min="0" max="16">
             </label>
+            <button id="yAxisResetBtn" class="yaxis-reset-btn" title="Reset to defaults">↺ Reset</button>
           </div>
         </div>
       </div>
@@ -1638,9 +1686,7 @@
       <button id="resetButton">Reset</button>
       <button id="toggleViewButton">Toggle View</button>
       <button id="toggleGaugeButton">Toggle Gauges</button>
-    </div>
-
-    <div class="button-row">
+      <div class="btn-row-divider"></div>
       <button id="saveButton" class="dim-on-disconnect">Save</button>
       <button id="loadButton">Load</button>
       <button id="deleteButton">Delete</button>
@@ -1794,18 +1840,22 @@
 
     // ---- Global toast helper ----
     let _toastTimer = null;
+    let _toastDelayTimer = null;
     function showToast(message, variant = 'info', duration = 2200) {
-      const toast = document.getElementById('toastNotification');
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.remove('toast-warning');
-      if (variant === 'warning') toast.classList.add('toast-warning');
-      toast.classList.remove('show');
-      // Force reflow so re-showing resets the transition
-      void toast.offsetWidth;
-      toast.classList.add('show');
-      clearTimeout(_toastTimer);
-      _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+      clearTimeout(_toastDelayTimer);
+      _toastDelayTimer = setTimeout(() => {
+        const toast = document.getElementById('toastNotification');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.remove('toast-warning');
+        if (variant === 'warning') toast.classList.add('toast-warning');
+        toast.classList.remove('show');
+        // Force reflow so re-showing resets the transition
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+      }, 500);
     }
 
     // ---- Attach toast on hover/touch to a single element ----
@@ -1816,6 +1866,9 @@
         if (el.disabled || el.classList.contains('disabled') || el.classList.contains('dimmed')) {
           showToast(message, variant);
         }
+      });
+      el.addEventListener('mouseleave', () => {
+        clearTimeout(_toastDelayTimer);
       });
       el.addEventListener('touchstart', () => {
         if (el.disabled || el.classList.contains('disabled') || el.classList.contains('dimmed')) {
@@ -1837,7 +1890,8 @@
         '#chartResetInput',
         '#setChartResetButton',
         '#checkFirmwareButton',
-        '#pauseResumeButton'
+        '#pauseResumeButton',
+        '#yAxisResetBtn'
       ];
 
       deviceControlSelectors.forEach(sel => {
@@ -1847,6 +1901,13 @@
         }
       });
 
+      // === Y-axis Reset button: disable when connected + auto is on ===
+      const yAxisResetBtn = document.getElementById('yAxisResetBtn');
+      if (yAxisResetBtn) {
+        const shouldDisable = enabled && yAxisAutoMode;
+        yAxisResetBtn.disabled = shouldDisable;
+        yAxisResetBtn.classList.toggle('auto-disabled', shouldDisable);
+      }
       // === Dim (visual only) Save and Pause buttons when disconnected ===
       // They remain clickable because they can still be useful offline
       const dimSelectors = ['#saveButton', '#pauseResumeButton'];
@@ -2484,6 +2545,11 @@
       tempChart.options.scales.y.title.text     = tempLabel;
       pressureChart.options.scales.y.title.text = pressLabel;
 
+      const tempDecimals = currentTempUnit === "C" ? 1 : 0;
+      const tempTickCb = value => value.toFixed(tempDecimals);
+      tempChart.options.scales.y.ticks.callback       = tempTickCb;
+      combinedChart.options.scales.y1.ticks.callback  = tempTickCb;
+
       tempChart.update('none');
       pressureChart.update('none');
       combinedChart.update('none');
@@ -2521,6 +2587,29 @@
       // ---- Toast helper ----
       // Uses the global showToast function
 
+      function saveYAxisPrefs() {
+        try {
+          localStorage.setItem('yAxisAuto', yAxisAutoMode ? '1' : '0');
+          localStorage.setItem('yAxisTempMin',     document.getElementById('tempYMin').value);
+          localStorage.setItem('yAxisTempMax',     document.getElementById('tempYMax').value);
+          localStorage.setItem('yAxisPressureMin', document.getElementById('pressureYMin').value);
+          localStorage.setItem('yAxisPressureMax', document.getElementById('pressureYMax').value);
+        } catch (e) { console.log('Could not save Y-axis prefs', e); }
+      }
+
+      function loadYAxisPrefs() {
+        try {
+          const savedMin  = localStorage.getItem('yAxisTempMin');
+          const savedMax  = localStorage.getItem('yAxisTempMax');
+          const savedPMin = localStorage.getItem('yAxisPressureMin');
+          const savedPMax = localStorage.getItem('yAxisPressureMax');
+          if (savedMin  !== null) document.getElementById('tempYMin').value     = savedMin;
+          if (savedMax  !== null) document.getElementById('tempYMax').value     = savedMax;
+          if (savedPMin !== null) document.getElementById('pressureYMin').value = savedPMin;
+          if (savedPMax !== null) document.getElementById('pressureYMax').value = savedPMax;
+        } catch (e) { console.log('Could not load Y-axis prefs', e); }
+      }
+
       function setAutoMode(on) {
         yAxisAutoMode = on;
         autoBtn.classList.toggle('active', on);
@@ -2529,8 +2618,15 @@
         inputs.forEach(input => {
           input.disabled = on;
         });
+        const resetBtn = document.getElementById('yAxisResetBtn');
+        if (resetBtn) {
+          const shouldDisable = on && isConnected;
+          resetBtn.disabled = shouldDisable;
+          resetBtn.classList.toggle('auto-disabled', shouldDisable);
+        }
         manualDiv.classList.toggle('yaxis-disabled', on);
         applyYAxisScales();
+        saveYAxisPrefs();
       }
 
       autoBtn.addEventListener('click', function () {
@@ -2541,14 +2637,88 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutoMode(!yAxisAutoMode); }
       });
 
-      // Apply initial disabled state to match the default auto=ON
-      setAutoMode(true);
+      // Restore saved prefs, then apply the saved auto mode
+      loadYAxisPrefs();
+      const savedAuto = localStorage.getItem('yAxisAuto');
+      setAutoMode(savedAuto === null || savedAuto === '1');
+
+      const tempYMin     = document.getElementById('tempYMin');
+      const tempYMax     = document.getElementById('tempYMax');
+      const pressureYMin = document.getElementById('pressureYMin');
+      const pressureYMax = document.getElementById('pressureYMax');
+
+      function clamp(val, lo, hi) { return Math.min(hi, Math.max(lo, val)); }
+
+      function validateAndApply() {
+        let tMin = parseFloat(tempYMin.value);
+        let tMax = parseFloat(tempYMax.value);
+        let pMin = parseFloat(pressureYMin.value);
+        let pMax = parseFloat(pressureYMax.value);
+
+        let valid = true;
+
+        // Clamp to absolute bounds
+        tMin = isNaN(tMin) ? 0   : clamp(tMin, 0, 120);
+        tMax = isNaN(tMax) ? 120 : clamp(tMax, 0, 120);
+        pMin = isNaN(pMin) ? 0   : clamp(pMin, 0, 16);
+        pMax = isNaN(pMax) ? 16  : clamp(pMax, 0, 16);
+
+        // Cross-field: min must be less than max
+        if (tMin >= tMax) {
+          tempYMin.classList.add('invalid');
+          tempYMax.classList.add('invalid');
+          showToast('Temp Min must be less than Temp Max', 'warning');
+          valid = false;
+        } else {
+          tempYMin.classList.remove('invalid');
+          tempYMax.classList.remove('invalid');
+          tempYMin.value = tMin;
+          tempYMax.value = tMax;
+        }
+
+        if (pMin >= pMax) {
+          pressureYMin.classList.add('invalid');
+          pressureYMax.classList.add('invalid');
+          showToast('Pressure Min must be less than Pressure Max', 'warning');
+          valid = false;
+        } else {
+          pressureYMin.classList.remove('invalid');
+          pressureYMax.classList.remove('invalid');
+          pressureYMin.value = pMin;
+          pressureYMax.value = pMax;
+        }
+
+        if (valid) {
+          applyYAxisScales();
+          saveYAxisPrefs();
+        }
+      }
 
       inputs.forEach(input => {
         input.addEventListener('change', function () {
-          if (!yAxisAutoMode) applyYAxisScales();
+          if (!yAxisAutoMode) validateAndApply();
         });
         attachDisabledToast(input, 'Turn off Auto to set manual Y-axis limits', 'warning');
+      });
+
+      const yAxisResetBtnEl = document.getElementById('yAxisResetBtn');
+      yAxisResetBtnEl.addEventListener('mouseenter', () => {
+        if (yAxisAutoMode && isConnected) showToast('Turn off auto to reset the min max values', 'warning');
+      });
+      yAxisResetBtnEl.addEventListener('mouseleave', () => {
+        clearTimeout(_toastDelayTimer);
+      });
+      yAxisResetBtnEl.addEventListener('click', function () {
+        if (yAxisAutoMode && isConnected) { showToast('Turn off auto to reset the min max values', 'warning'); return; }
+        tempYMin.value     = 0;
+        tempYMax.value     = 120;
+        pressureYMin.value = 0;
+        pressureYMax.value = 16;
+        [tempYMin, tempYMax, pressureYMin, pressureYMax].forEach(el => el.classList.remove('invalid'));
+        if (!yAxisAutoMode) {
+          applyYAxisScales();
+          saveYAxisPrefs();
+        }
       });
     });
 
@@ -2864,7 +3034,8 @@
       }
     };
 
-    document.getElementById("resetButton").onclick = () => {
+    const resetButton = document.getElementById("resetButton");
+    resetButton.onclick = () => {
       chartData = { labels: [], temp: [], pressure: [] }; secondsCounter = 0;
 
       [tempChart, pressureChart, combinedChart].forEach(chart => {
@@ -3344,7 +3515,8 @@
       const msg = 'Connect to device to use this control';
       const buttonIds = [
         'zeroPressureButton', 'setSleepTimeButton', 'setPressureCalibrationButton',
-        'setChartResetButton', 'checkFirmwareButton', 'pauseResumeButton', 'saveButton'
+        'setChartResetButton', 'checkFirmwareButton', 'pauseResumeButton', 'saveButton',
+        'yAxisResetBtn'
       ];
       const inputIds = [
         'brightnessSlider', 'sleepTimeInput', 'pressureCalibrationInput', 'chartResetInput'
