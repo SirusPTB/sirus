@@ -2804,49 +2804,23 @@
       if (navigator.bluetooth.getDevices) {
         navigator.bluetooth.getDevices().then(async devices => {
           const found = devices.find(d => d.name === lastDevice);
-          if (found) {
-            console.log("Silent auto-connect to", found.name);
-            showToast("Connecting to " + found.name + "…", 'warning', 3000);
-            const btn = document.getElementById("connectButton");
-            if (btn) { btn.textContent = "Connecting..."; btn.className = "connecting"; }
-            intentionalDisconnect = false;
-            device = found;
-            try {
-              await connectGatt();
-              showToast("Connected to " + found.name, 'info', 2500);
-            } catch (e) {
-              device = null;
-              handleDisconnection(true);
-              showTapToReconnect(lastDevice);
-            }
-          } else {
-            showTapToReconnect(lastDevice);
+          if (!found) return;
+          console.log("Silent auto-connect to", found.name);
+          showToast("Connecting to " + found.name + "…", 'warning', 3000);
+          const btn = document.getElementById("connectButton");
+          if (btn) { btn.textContent = "Connecting..."; btn.className = "connecting"; }
+          intentionalDisconnect = false;
+          device = found;
+          try {
+            await connectGatt();
+            showToast("Connected to " + found.name, 'info', 2500);
+          } catch (e) {
+            device = null;
+            handleDisconnection(true);
           }
-        }).catch(() => showTapToReconnect(lastDevice));
-      } else {
-        showTapToReconnect(lastDevice);
+        }).catch(e => console.warn("getDevices() error:", e));
       }
     })();
-
-    // Show a persistent toast that reconnects on tap (satisfies user-gesture requirement)
-    function showTapToReconnect(deviceName) {
-      const toast = document.getElementById('toastNotification');
-      if (!toast) return;
-      toast.textContent = `Tap to reconnect to ${deviceName}`;
-      toast.classList.remove('toast-warning');
-      toast.classList.add('show', 'toast-warning');
-      toast.style.cursor = 'pointer';
-      toast.style.pointerEvents = 'auto';
-
-      function onTap() {
-        toast.removeEventListener('click', onTap);
-        toast.style.cursor = '';
-        toast.style.pointerEvents = '';
-        toast.classList.remove('show');
-        connectToDevice();
-      }
-      toast.addEventListener('click', onTap);
-    }
 
     async function sendData(command) {
       console.log("Attempting to send:", command);
