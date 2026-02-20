@@ -37,15 +37,33 @@ h1{color:#f8fafc;margin-bottom:20px;font-size:2.2em;font-weight:300;}
 </div>
 
 <script>
-function getBrowserInfo(){
-    const ua=navigator.userAgent, platform=navigator.platform;
+async function getBrowserInfo(){
+    const ua=navigator.userAgent;
     let browser='Unknown', version='', os='';
-    if(platform.indexOf('Mac')!==-1)os='macOS';
-    else if(platform.indexOf('Win')!==-1)os='Windows';
-    else if(platform.indexOf('Linux')!==-1)os='Linux';
-    else if(/Android/i.test(ua))os='Android';
-    else if(/iPhone|iPad|iPod/i.test(ua))os='iOS';
-    if(/Chrome/i.test(ua)&&!/Edge/i.test(ua)){browser='Chrome';version=ua.match(/Chrome\/([0-9]+)/)?.[1]||'';}
+
+    // Use modern userAgentData if available, fall back to UA string parsing
+    if(navigator.userAgentData){
+        const hints=await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion']).catch(()=>({}));
+        const p=(hints.platform||navigator.userAgentData.platform||'').toLowerCase();
+        if(p.includes('mac'))os='macOS';
+        else if(p.includes('win'))os='Windows';
+        else if(p.includes('linux'))os='Linux';
+        else if(p.includes('android'))os='Android';
+        // iOS devices identify as macOS in userAgentData; fall back to UA check
+        if(!os&&/iPhone|iPad|iPod/i.test(ua))os='iOS';
+    } else {
+        // Legacy fallback for Firefox and Safari
+        if(/Android/i.test(ua))os='Android';
+        else if(/iPhone|iPad|iPod/i.test(ua))os='iOS';
+        else if(/Mac/i.test(ua))os='macOS';
+        else if(/Win/i.test(ua))os='Windows';
+        else if(/Linux/i.test(ua))os='Linux';
+    }
+
+    // Brave must be checked before Chrome — it also matches the Chrome UA pattern
+    const isBrave = navigator.brave && await navigator.brave.isBrave().catch(()=>false);
+    if(isBrave){browser='Brave';version=ua.match(/Chrome\/([0-9]+)/)?.[1]||'';}
+    else if(/Chrome/i.test(ua)&&!/Edge/i.test(ua)){browser='Chrome';version=ua.match(/Chrome\/([0-9]+)/)?.[1]||'';}
     else if(/Firefox/i.test(ua)){browser='Firefox';version=ua.match(/Firefox\/([0-9]+)/)?.[1]||'';}
     else if(/Safari/i.test(ua)&&!/Chrome/i.test(ua)){browser='Safari';version=ua.match(/Version\/([0-9]+)/)?.[1]||'';}
     else if(/Edge/i.test(ua)){browser='Edge';version=ua.match(/Edge\/([0-9]+)/)?.[1]||'';}
@@ -57,10 +75,19 @@ function redirectToIndex(){ window.location.href='main.html'; }
 
 function getInstructions(info){
     const {browser,os}=info;
+    if(browser==='Brave') return {
+        title:'🔧 Enable Web Bluetooth in Brave',
+        steps:[
+            'Copy this URL: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\',this)">chrome://flags/#brave-web-bluetooth-api</span> and <strong>paste it directly into the address bar of a new tab</strong>. <em>Links cannot be opened by clicking.</em>',
+            'Set the flag to <strong>Enabled</strong>, then relaunch Brave.'
+        ],
+        note:'Use HTTPS for Web Bluetooth to work.'
+    };
     if(browser==='Chrome'||browser==='Edge'||browser==='Opera') return {
         title:'🔧 Enable Web Bluetooth in Browser',
         steps:[
-            'Copy this URL: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#brave-web-bluetooth-api\',this)">chrome://flags/#brave-web-bluetooth-api</span> and <strong>paste it directly into the address bar of a new tab</strong>. <em>Links cannot be opened by clicking.</em>'
+            'Copy this URL: <span class="code-link" onclick="copyToClipboard(\'chrome://flags/#enable-web-bluetooth\',this)">chrome://flags/#enable-web-bluetooth</span> and <strong>paste it directly into the address bar of a new tab</strong>. <em>Links cannot be opened by clicking.</em>',
+            'Set the flag to <strong>Enabled</strong>, then relaunch the browser.'
         ],
         note:'Use HTTPS for Web Bluetooth to work.'
     };
@@ -74,9 +101,31 @@ function getInstructions(info){
 
 function displayInstructions(instr){ const div=document.getElementById('instructions'); div.innerHTML=`<h3>${instr.title}</h3><ol>${instr.steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="note"><strong>Note:</strong> ${instr.note}</div>`; div.style.display='block'; }
 
-async function copyToClipboard(text,el){ try{ await navigator.clipboard.writeText(text); el.classList.add('copy-success'); const o=el.textContent; el.textContent='✓ Copied!'; setTimeout(()=>{el.classList.remove('copy-success'); el.textContent=o;},2000);}catch{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);el.classList.add('copy-success');const o=el.textContent;el.textContent='✓ Copied!';setTimeout(()=>{el.classList.remove('copy-success');el.textContent=o;},2000);}}
+async function copyToClipboard(text,el){
+    // navigator.clipboard requires a secure context (HTTPS or localhost)
+    if(!navigator.clipboard){
+        const o=el.textContent;
+        el.textContent='⚠ Needs HTTPS to copy';
+        el.style.color='#f59e0b';
+        setTimeout(()=>{ el.textContent=o; el.style.color=''; },3000);
+        return;
+    }
+    try{
+        await navigator.clipboard.writeText(text);
+        el.classList.add('copy-success');
+        const o=el.textContent;
+        el.textContent='✓ Copied!';
+        setTimeout(()=>{ el.classList.remove('copy-success'); el.textContent=o; },2000);
+    } catch(err){
+        // Clipboard write was blocked (e.g. permissions denied)
+        const o=el.textContent;
+        el.textContent='⚠ Copy blocked';
+        el.style.color='#f59e0b';
+        setTimeout(()=>{ el.textContent=o; el.style.color=''; },3000);
+    }
+}
 
-async function checkBluetoothSupport(){ const info=getBrowserInfo(); const status=document.getElementById('status'); const retry=document.getElementById('retry-btn'); const instructions=document.getElementById('instructions'); instructions.style.display='none'; retry.style.display='none'; status.style.display='none'; if('bluetooth' in navigator){try{ const avail=await navigator.bluetooth.getAvailability(); if(avail){ redirectToIndex(); return;} throw 'Disabled'; }catch{ status.style.display='block'; status.className='status warning'; status.innerHTML='⚠️ Web Bluetooth API exists but is not enabled'; displayInstructions(getInstructions(info)); retry.style.display='inline-block';}} else{ status.style.display='block'; status.className='status error'; status.innerHTML='❌ Web Bluetooth API not supported'; displayInstructions(getInstructions(info)); retry.style.display='inline-block'; }}
+async function checkBluetoothSupport(){ const info=await getBrowserInfo(); const status=document.getElementById('status'); const retry=document.getElementById('retry-btn'); const instructions=document.getElementById('instructions'); instructions.style.display='none'; retry.style.display='none'; status.style.display='none'; if('bluetooth' in navigator){try{ const avail=await navigator.bluetooth.getAvailability(); if(avail){ redirectToIndex(); return;} throw 'Disabled'; }catch{ status.style.display='block'; status.className='status warning'; status.innerHTML='⚠️ Web Bluetooth API exists but is not enabled'; displayInstructions(getInstructions(info)); retry.style.display='inline-block';}} else{ status.style.display='block'; status.className='status error'; status.innerHTML='❌ Web Bluetooth API not supported'; displayInstructions(getInstructions(info)); retry.style.display='inline-block'; }}
 
 window.addEventListener('load',()=>{ checkBluetoothSupport(); });
 </script>

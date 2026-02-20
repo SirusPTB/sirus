@@ -89,75 +89,18 @@
         align-self: flex-start;
       }
     }
-  </style>
 
-  <style>
-    /* Dimmed state for specific buttons when disconnected */
+    /* =====================================================
+       Dimmed state + Tooltip styles
+       ===================================================== */
+
     button.dim-on-disconnect {
       transition: opacity 0.3s ease;
     }
 
     button.dim-on-disconnect.dimmed {
       opacity: 0.6 !important;
-    }
-
-    /* Custom tooltip styling for disabled controls */
-    [data-tooltip] {
-      position: relative;
-    }
-
-    [data-tooltip]::after,
-    [data-tooltip]::before {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-      z-index: 10000;
-    }
-
-    /* Tooltip text box */
-    [data-tooltip]::after {
-      content: attr(data-tooltip);
-      bottom: calc(100% + 14px);
-      /* Position above the element */
-      background: var(--bg-panel);
-      color: #e0e0e0;
-      padding: 9px 14px;
-      border-radius: 8px;
-      font-size: 14px;
-      white-space: nowrap;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
-      border: 1px solid #333;
-    }
-
-    /* Arrow pointing down to the element */
-    [data-tooltip]::before {
-      content: "";
-      bottom: calc(100% + 6px);
-      /* Position between tooltip and element */
-      border: 8px solid transparent;
-      border-top-color: #1e1e1e;
-      /* Matches tooltip background */
-    }
-
-    /* Show on hover/focus */
-    [data-tooltip]:hover::after,
-    [data-tooltip]:hover::before,
-    [data-tooltip]:focus::after,
-    [data-tooltip]:focus::before {
-      opacity: 1;
-    }
-
-    /* Optional: small delay so tooltip doesn't flash on quick mouseover */
-    [data-tooltip]::after {
-      transition-delay: 0s;
-    }
-
-    [data-tooltip]:hover::after,
-    [data-tooltip]:focus::after {
-      transition-delay: 0s;
+      cursor: not-allowed !important;
     }
 
     #installButton {
@@ -224,6 +167,12 @@
 
     #connectButton.disconnected {
       background-color: var(--accent-danger);
+    }
+
+    /* Re-enable pointer events on disabled elements so toast mouseenter fires */
+    .toast-trigger:disabled,
+    .toast-trigger[disabled] {
+      pointer-events: auto;
     }
 
     /* Cursor feedback for disabled controls */
@@ -298,7 +247,7 @@
       position: relative;
       width: 60px;
       height: 30px;
-      background-color: #444;
+      background-color: var(--bg-button);
       border-radius: 15px;
       cursor: pointer;
       transition: background-color 0.3s;
@@ -312,7 +261,7 @@
 
     /* Temperature toggle - dull red for both positions */
     #tempToggle {
-      background-color: #8B3A3A;
+      background-color: var(--toggle-temp);
     }
 
     #tempToggle.active {
@@ -332,6 +281,10 @@
 
     #alwaysOnToggle.active {
       background-color: var(--toggle-always-on);
+    }
+
+    #yAxisAutoBtn.active {
+      background-color: var(--accent-success);
     }
 
     /* Raw data toggle - purple when active */
@@ -379,7 +332,7 @@
     }
 
     .modal-content {
-      background: #1e1e1e;
+      background: var(--bg-panel);
       padding: 20px;
       border-radius: 10px;
       width: 90%;
@@ -583,7 +536,7 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #4CAF50;
+      background: var(--accent-success);
       border: 2px solid #fff;
       cursor: pointer;
     }
@@ -592,7 +545,7 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #4CAF50;
+      background: var(--accent-success);
       border: 2px solid #fff;
       cursor: pointer;
     }
@@ -753,8 +706,8 @@
     }
 
     /* Smaller labels for toggles */
-    .toggle-container n {
-      font-size: 0.85em !important;
+    .toggle-container span {
+      font-size: 0.85em;
     }
 
     /* On very small screens, stack label above controls */
@@ -930,15 +883,214 @@
         font-size: 1em !important;
       }
     }
-  </style>
 
-  <style>
+    /* =====================================================
+       Gauge visibility + Battery icon styles
+       ===================================================== */
     body.gauges-visible #resetButton {
-      display: none !important;
+      display: none;
     }
-  </style>
-  <style>
-    /* Battery icon styles */
+
+    /* =====================================================
+       Battery icon styles
+       ===================================================== */
+    #battery {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #batteryIcon {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-radius: 3px;
+      box-sizing: border-box;
+    }
+
+    #batteryLevel {
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      bottom: 3px;
+      right: 8px;
+      width: 60%;
+      max-width: 24px;
+      background: var(--battery-high);
+      border-radius: 2px;
+      transition: width 300ms ease, background 300ms ease;
+    }
+
+    #batteryNub {
+      position: absolute;
+      right: -5px;
+      top: 3.2px;
+      width: 4px;
+      height: 8px;
+      background: #fff;
+      border-radius: 1px;
+    }
+
+    /* ---- Y-Axis Scale Controls ---- */
+    #yAxisControls {
+      width: 90%;
+      margin: 0 auto 6px;
+    }
+
+    #yAxisInner {
+      background: var(--bg-card);
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .yaxis-manual {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .yaxis-manual.yaxis-disabled {
+      opacity: 0.45;
+    }
+
+    .yaxis-input:disabled {
+      cursor: not-allowed;
+    }
+
+    .yaxis-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .yaxis-label {
+      font-size: 0.82em;
+      font-weight: 700;
+      min-width: 52px;
+    }
+
+    .yaxis-field {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8em;
+      color: var(--text-muted);
+    }
+
+    .yaxis-input {
+      width: 68px;
+      padding: 4px 6px;
+      background: var(--bg-input);
+      border: 1px solid #333;
+      border-radius: 5px;
+      color: var(--text-main);
+      font-size: 0.9em;
+      text-align: right;
+      -moz-appearance: textfield;
+    }
+
+    .yaxis-input::-webkit-outer-spin-button,
+    .yaxis-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    .yaxis-divider {
+      width: 1px;
+      height: 28px;
+      background: #333;
+      align-self: center;
+    }
+
+    @media (max-width: 480px) {
+      .yaxis-divider { display: none; }
+      .yaxis-group { width: 100%; }
+    }
+
+    /* ---- Toast notification ---- */
+    #toastNotification {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #1a2a3a 0%, #1e1e2e 100%);
+      color: #e8f0fe;
+      padding: 11px 18px 11px 14px;
+      border-radius: 10px;
+      font-size: 0.88em;
+      white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(42,124,255,0.25);
+      border-left: 4px solid var(--accent-primary);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 20000;
+    }
+
+    #toastNotification::before {
+      content: "ℹ";
+      font-size: 1.1em;
+      color: var(--accent-primary);
+      flex-shrink: 0;
+    }
+
+    #toastNotification.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #toastNotification.toast-warning {
+      background: linear-gradient(135deg, #2a1a0a 0%, #1e1a0e 100%);
+      border-left-color: var(--accent-warning);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,140,0,0.25);
+      color: #fff0d8;
+    }
+
+    #toastNotification.toast-warning::before {
+      content: "⚠";
+      color: var(--accent-warning);
+    }
+
+    /* Always-on toggle section */
+    #alwaysOnSection {
+      width: 80%;
+      margin: 10px auto;
+    }
+
+    .always-on-inner {
+      padding: 15px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Advance toggle button */
+    #advanceToggle {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      background: var(--bg-button);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    /* Battery icon family */
     #battery {
       font-family: Arial, Helvetica, sans-serif;
       color: #fff;
@@ -1023,11 +1175,10 @@
     }
 
     /* small visual emphasis when charging */
-  </style>
 
-
-  <!-- Help icon + modal styles injected by ChatGPT -->
-  <style>
+    /* =====================================================
+       Help button + modal styles
+       ===================================================== */
     /* Floating help button (top-left) */
     #helpButton {
       position: fixed;
@@ -1037,7 +1188,7 @@
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: #444;
+      background: var(--bg-button);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1113,13 +1264,13 @@
       padding: 8px 12px;
       border-radius: 6px;
       border: none;
-      background: #444;
+      background: var(--bg-button);
       color: #fff;
       cursor: pointer;
     }
 
     #helpModal button.primary {
-      background: #28a745;
+      background: var(--accent-success);
     }
 
     #helpModal .close-btn {
@@ -1139,9 +1290,10 @@
         left: 8px;
       }
     }
-  </style>
 
-  <style>
+    /* =====================================================
+       Scrollbar + top-bar layout styles
+       ===================================================== */
     /* Hide scrollbar by default, but reserve space and show thumb only when mouse hovers over the scrollbar area */
     html {
       overflow-y: scroll;
@@ -1227,7 +1379,7 @@
 
 <body>
   <div id="page-wrapper">
-    <!-- Floating Help Button + Modal (added by ChatGPT) -->
+    <!-- Floating Help Button + Modal -->
     <div id="helpButton" role="button" aria-label="Help" title="Help" tabindex="0">?</div>
 
     <div id="helpModal" aria-hidden="true">
@@ -1249,7 +1401,6 @@
           <h4 style="margin-top:0;">Device Help</h4>
           <img src="sirusscreen1.png" alt="SirusPTB device showing button locations"
             style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;">
-          <p style="margin:0 0 8px 0;">
           <h2 style="color: #ddd128;">Button Functions</h2>
           <ul>
             <li>Press "T" button to turn on.</li>
@@ -1273,7 +1424,6 @@
             <li>Plug in device and charge for 2 hours min.</li>
             <li>Press the reset button just below the USB port.</li>
           </ul>
-          </p>
         </div>
 
         <div id="appHelp" class="help-section" aria-hidden="true">
@@ -1367,14 +1517,14 @@
           <button class="disconnected" id="connectButton">Connect</button>
 
           <div class="toggle-container">
-            <n>°C/°F:</n>
+            <span>°C/°F:</span>
             <div class="toggle-switch" id="tempToggle">
               <div class="toggle-slider">C</div>
             </div>
           </div>
 
           <div class="toggle-container">
-            <n>Bar/PSI:</n>
+            <span>Bar/PSI:</span>
             <div class="toggle-switch" id="pressureToggle">
               <div class="toggle-slider">Bar</div>
             </div>
@@ -1385,15 +1535,10 @@
           </button>
 
           <!-- Battery moved here (next to toggles when Install is hidden) -->
-          <div id="battery" style="display: flex; align-items: center; gap: 8px;">
-            <div id="batteryIcon" aria-hidden="true"
-              style="position:relative;width:34px;height:18px;border:2px solid #fff;border-radius:3px;box-sizing:border-box;">
-              <div id="batteryLevel"
-                style="position:absolute;left:3px;top:3px;bottom:3px;right:8px;width:60%;max-width:24px;background:#7fff7f;border-radius:2px;transition:width 300ms ease, background 300ms ease;">
-              </div>
-              <div id="batteryNub"
-                style="position:absolute;right:-5px;top:3.2px;width:4px;height:8px;background:#fff;border-radius:<script>1px;">
-              </div>
+          <div id="battery">
+            <div id="batteryIcon" aria-hidden="true">
+              <div id="batteryLevel"></div>
+              <div id="batteryNub"></div>
               <svg class="battery-bolt" viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="14" height="18">
                 <path d="M13 2 L3 14 H9 L8 22 L20 10 H14 L15 2 Z"></path>
               </svg>
@@ -1424,7 +1569,7 @@
       <div style="width: 90%; margin: 0 auto;">
         <div id="combinedCurrentValue"
           style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
-          <n style="color: #ff7f7f;">Temperature: -- °C</n> | <n style="color: #7fbfff;">Pressure: -- bar</n>
+          <span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
         </div>
         <div class="canvas-container"><canvas id="combinedChart"></canvas></div>
       </div>
@@ -1450,6 +1595,44 @@
       </div>
     </div>
 
+    <!-- Y-Axis Scale Controls -->
+    <div id="yAxisControls">
+      <div id="yAxisInner">
+        <div class="toggle-container">
+          <span style="font-size:0.82em; color: var(--text-muted);">Auto</span>
+          <div class="toggle-switch active" id="yAxisAutoBtn" role="switch" aria-checked="true" tabindex="0">
+            <div class="toggle-slider">ON</div>
+          </div>
+        </div>
+        <div id="yAxisManual" class="yaxis-manual">
+          <div class="yaxis-divider"></div>
+          <div class="yaxis-group">
+            <span class="yaxis-label" style="color: var(--accent-temp);">Temp</span>
+            <label class="yaxis-field">
+              <span>Min</span>
+              <input type="number" id="tempYMin" class="yaxis-input" value="40" step="1">
+            </label>
+            <label class="yaxis-field">
+              <span>Max</span>
+              <input type="number" id="tempYMax" class="yaxis-input" value="120" step="1">
+            </label>
+          </div>
+          <div class="yaxis-divider"></div>
+          <div class="yaxis-group">
+            <span class="yaxis-label" style="color: var(--accent-pressure);">Pressure</span>
+            <label class="yaxis-field">
+              <span>Min</span>
+              <input type="number" id="pressureYMin" class="yaxis-input" value="0" step="0.1">
+            </label>
+            <label class="yaxis-field">
+              <span>Max</span>
+              <input type="number" id="pressureYMax" class="yaxis-input" value="16" step="0.1">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="button-row">
       <button id="pauseResumeButton" class="dim-on-disconnect">Pause</button>
       <button id="resetButton">Reset</button>
@@ -1464,11 +1647,10 @@
     </div>
 
     <!-- Always On Toggle - Standalone row -->
-    <div style="width: 80%; margin: 10px auto;">
-      <div
-        style="padding: 15px; background: #121212; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+    <div id="alwaysOnSection">
+      <div class="always-on-inner">
         <div class="toggle-container">
-          <n style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</n>
+          <span style="color: #e0e0e0; font-weight: bold;">Keep device screen on:</span>
           <div class="toggle-switch" id="alwaysOnToggle">
             <div class="toggle-slider">OFF</div>
           </div>
@@ -1478,8 +1660,7 @@
 
     <!-- Advance Section -->
     <div id="advanceSection" style="width: 90%; margin: 20px auto;">
-      <button id="advanceToggle"
-        style="width: 100%; padding: 10px; border-radius: 6px; background:#444; color:#fff; font-weight:bold; cursor:pointer; text-align:left;">
+      <button id="advanceToggle">
         Advance ▼
       </button>
 
@@ -1540,6 +1721,7 @@
               </td>
             </tr>
 
+          </tbody>
         </table>
 
         <!-- Raw data container hidden -->
@@ -1551,8 +1733,10 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- /graphPage -->
 
+  <!-- Toast notification -->
+  <div id="toastNotification" role="status" aria-live="polite"></div>
 
   <!-- Modal -->
   <div class="modal" id="popupModal">
@@ -1569,6 +1753,7 @@
     </div>
   </div>
 
+  </div><!-- /page-wrapper -->
 
   <script>
 
@@ -1605,9 +1790,41 @@
     let calibrationDataReceived = false;
     let firmwareVersion = null;
     let firmwareDataReceived = false;
+    let yAxisAutoMode = true;
+
+    // ---- Global toast helper ----
+    let _toastTimer = null;
+    function showToast(message, variant = 'info', duration = 2200) {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.remove('toast-warning');
+      if (variant === 'warning') toast.classList.add('toast-warning');
+      toast.classList.remove('show');
+      // Force reflow so re-showing resets the transition
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // ---- Attach toast on hover/touch to a single element ----
+    function attachDisabledToast(el, message, variant = 'warning') {
+      // Re-enable pointer events on the element so mouseenter fires even when disabled
+      el.classList.add('toast-trigger');
+      el.addEventListener('mouseenter', () => {
+        if (el.disabled || el.classList.contains('disabled') || el.classList.contains('dimmed')) {
+          showToast(message, variant);
+        }
+      });
+      el.addEventListener('touchstart', () => {
+        if (el.disabled || el.classList.contains('disabled') || el.classList.contains('dimmed')) {
+          showToast(message, variant);
+        }
+      }, { passive: true });
+    }
 
     function setControlsEnabled(enabled) {
-      const tooltipText = "Connect to device to enable";
 
       // === Fully disable + tooltip these controls when disconnected ===
       const deviceControlSelectors = [
@@ -1619,23 +1836,14 @@
         '#pressureCalibrationInput',
         '#chartResetInput',
         '#setChartResetButton',
-        '#checkFirmwareButton',               // "Check Latest" button - blocked per request
-        '#saveButton',                        // Save button - blocked per request
+        '#checkFirmwareButton',
         '#pauseResumeButton'
-        // Note: Save and Pause are no longer here — they will only be dimmed
       ];
 
       deviceControlSelectors.forEach(sel => {
         const el = document.querySelector(sel);
         if (el) {
           el.disabled = !enabled;
-          if (!enabled) {
-            el.setAttribute("data-tooltip", tooltipText);
-            el.removeAttribute("title");
-          } else {
-            el.removeAttribute("data-tooltip");
-            el.removeAttribute("title");
-          }
         }
       });
 
@@ -1656,11 +1864,7 @@
 
       // === Toggle containers: group tooltip ===
       document.querySelectorAll('.toggle-container').forEach(container => {
-        if (!enabled) {
-          container.setAttribute("data-tooltip", tooltipText);
-        } else {
-          container.removeAttribute("data-tooltip");
-        }
+        container.removeAttribute("data-tooltip");
       });
     }
 
@@ -1788,12 +1992,6 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    const currentValuePlugin = {
-      id: 'currentValue',
-      afterDraw(chart) {
-        return;
-      }
-    };
 
     function initCharts() {
       const ctxTemp = document.getElementById("tempChart").getContext("2d");
@@ -1819,8 +2017,7 @@
               }
             }
           }
-        },
-        plugins: [currentValuePlugin]
+        }
       });
 
       const ctxPressure = document.getElementById("pressureChart").getContext("2d");
@@ -2252,55 +2449,108 @@
       updateBattery(null, false);
     }
 
-    function updateChartRanges() {
-      // ---- Temperature limits ----
-      let tempMin, tempMax, tempLabel;
+    function applyYAxisScales() {
+      // ---- Labels (always update) ----
+      const tempLabel  = currentTempUnit === "F"      ? "Temperature (°F)" : "Temperature (°C)";
+      const pressLabel = currentPressureUnit === "PSI" ? "Pressure (PSI)"   : "Pressure (bar)";
 
-      if (currentTempUnit === "F") {
-        tempMin = 40 * 9 / 5 + 32;   // 104°F
-        tempMax = 120 * 9 / 5 + 32; // 248°F
-        tempLabel = "Temperature (°F)";
+      if (yAxisAutoMode) {
+        // Let Chart.js determine limits automatically
+        tempChart.options.scales.y.min     = undefined;
+        tempChart.options.scales.y.max     = undefined;
+        pressureChart.options.scales.y.min = undefined;
+        pressureChart.options.scales.y.max = undefined;
+        combinedChart.options.scales.y1.min = undefined;
+        combinedChart.options.scales.y1.max = undefined;
+        combinedChart.options.scales.y2.min = undefined;
+        combinedChart.options.scales.y2.max = undefined;
       } else {
-        tempMin = 40;
-        tempMax = 120;
-        tempLabel = "Temperature (°C)";
+        // Read values from inputs
+        const tMin = parseFloat(document.getElementById('tempYMin').value);
+        const tMax = parseFloat(document.getElementById('tempYMax').value);
+        const pMin = parseFloat(document.getElementById('pressureYMin').value);
+        const pMax = parseFloat(document.getElementById('pressureYMax').value);
+
+        tempChart.options.scales.y.min     = isNaN(tMin) ? undefined : tMin;
+        tempChart.options.scales.y.max     = isNaN(tMax) ? undefined : tMax;
+        pressureChart.options.scales.y.min = isNaN(pMin) ? undefined : pMin;
+        pressureChart.options.scales.y.max = isNaN(pMax) ? undefined : pMax;
+        combinedChart.options.scales.y1.min = isNaN(tMin) ? undefined : tMin;
+        combinedChart.options.scales.y1.max = isNaN(tMax) ? undefined : tMax;
+        combinedChart.options.scales.y2.min = isNaN(pMin) ? undefined : pMin;
+        combinedChart.options.scales.y2.max = isNaN(pMax) ? undefined : pMax;
       }
 
-      // ---- Pressure limits ----
-      let pressureMin, pressureMax, pressureLabel;
+      tempChart.options.scales.y.title.text     = tempLabel;
+      pressureChart.options.scales.y.title.text = pressLabel;
 
-      if (currentPressureUnit === "PSI") {
-        pressureMin = 0;
-        pressureMax = 16 * 14.5038; // ≈ 232 PSI
-        pressureLabel = "Pressure (PSI)";
-      } else {
-        pressureMin = 0;
-        pressureMax = 16;
-        pressureLabel = "Pressure (bar)";
-      }
-
-      // ---- Apply to temperature chart ----
-      tempChart.options.scales.y.min = tempMin;
-      tempChart.options.scales.y.max = tempMax;
-      tempChart.options.scales.y.title.text = tempLabel;
-
-      // ---- Apply to pressure chart ----
-      pressureChart.options.scales.y.min = pressureMin;
-      pressureChart.options.scales.y.max = pressureMax;
-      pressureChart.options.scales.y.title.text = pressureLabel;
-
-      // ---- Apply to combined chart ----
-      combinedChart.options.scales.y1.min = tempMin;
-      combinedChart.options.scales.y1.max = tempMax;
-
-      combinedChart.options.scales.y2.min = pressureMin;
-      combinedChart.options.scales.y2.max = pressureMax;
-
-      // ---- Redraw ----
       tempChart.update('none');
       pressureChart.update('none');
       combinedChart.update('none');
     }
+
+    function updateChartRanges() {
+      // Populate manual inputs with sensible unit-aware defaults when switching units,
+      // then apply whatever mode is active.
+      if (currentTempUnit === "F") {
+        document.getElementById('tempYMin').value = 104;
+        document.getElementById('tempYMax').value = 248;
+      } else {
+        document.getElementById('tempYMin').value = 40;
+        document.getElementById('tempYMax').value = 120;
+      }
+
+      if (currentPressureUnit === "PSI") {
+        document.getElementById('pressureYMin').value = 0;
+        document.getElementById('pressureYMax').value = Math.round(16 * 14.5038);
+      } else {
+        document.getElementById('pressureYMin').value = 0;
+        document.getElementById('pressureYMax').value = 16;
+      }
+
+      applyYAxisScales();
+    }
+
+    // Wire up Y-axis control panel
+    document.addEventListener('DOMContentLoaded', function () {
+      const autoBtn    = document.getElementById('yAxisAutoBtn');
+      const autoSlider = autoBtn.querySelector('.toggle-slider');
+      const manualDiv  = document.getElementById('yAxisManual');
+      const inputs     = manualDiv.querySelectorAll('.yaxis-input');
+
+      // ---- Toast helper ----
+      // Uses the global showToast function
+
+      function setAutoMode(on) {
+        yAxisAutoMode = on;
+        autoBtn.classList.toggle('active', on);
+        autoBtn.setAttribute('aria-checked', String(on));
+        autoSlider.textContent = on ? 'ON' : 'OFF';
+        inputs.forEach(input => {
+          input.disabled = on;
+        });
+        manualDiv.classList.toggle('yaxis-disabled', on);
+        applyYAxisScales();
+      }
+
+      autoBtn.addEventListener('click', function () {
+        setAutoMode(!yAxisAutoMode);
+      });
+
+      autoBtn.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAutoMode(!yAxisAutoMode); }
+      });
+
+      // Apply initial disabled state to match the default auto=ON
+      setAutoMode(true);
+
+      inputs.forEach(input => {
+        input.addEventListener('change', function () {
+          if (!yAxisAutoMode) applyYAxisScales();
+        });
+        attachDisabledToast(input, 'Turn off Auto to set manual Y-axis limits', 'warning');
+      });
+    });
 
 
     // --- Button Setup ---
@@ -2657,6 +2907,7 @@
       document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
+      document.getElementById("yAxisControls").style.display = gaugeView ? "none" : "block";
 
       const toggleViewButton = document.getElementById("toggleViewButton");
 
@@ -3088,6 +3339,39 @@
     // Initialize toggles and brightness slider as disabled on page load
     updateConnectionState(false);
 
+    // Attach "connect first" toast to all device-controlled elements (once, on load)
+    (function attachConnectionToasts() {
+      const msg = 'Connect to device to use this control';
+      const buttonIds = [
+        'zeroPressureButton', 'setSleepTimeButton', 'setPressureCalibrationButton',
+        'setChartResetButton', 'checkFirmwareButton', 'pauseResumeButton', 'saveButton'
+      ];
+      const inputIds = [
+        'brightnessSlider', 'sleepTimeInput', 'pressureCalibrationInput', 'chartResetInput'
+      ];
+      const toggleIds = ['tempToggle', 'pressureToggle', 'alwaysOnToggle'];
+
+      buttonIds.concat(inputIds).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) attachDisabledToast(el, msg);
+      });
+
+      toggleIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) attachDisabledToast(el, msg);
+      });
+
+      // Y-axis auto toggle: show connection toast when device is disconnected
+      const autoBtn = document.getElementById('yAxisAutoBtn');
+      if (autoBtn) {
+        attachDisabledToast(
+          autoBtn,
+          msg,
+          'warning'
+        );
+      }
+    })();
+
     // --- Advance Toggle ---
     document.addEventListener("DOMContentLoaded", function () {
       const btn = document.getElementById("advanceToggle");
@@ -3196,39 +3480,96 @@
       return 0;
     }
 
+    /**
+     * Show a custom non-blocking alert using an in-page overlay.
+     * Returns a Promise that resolves when the user dismisses.
+     */
+    function uiAlert(message) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:var(--bg-panel,#1e1e1e);padding:20px;border-radius:10px;max-width:380px;width:90%;text-align:center;color:var(--text-main,#e0e0e0);box-shadow:0 8px 30px rgba(0,0,0,0.6);';
+        const p = document.createElement('p');
+        p.style.cssText = 'margin:0 0 16px;white-space:pre-wrap;';
+        p.textContent = message;
+        const okBtn = document.createElement('button');
+        okBtn.textContent = 'OK';
+        okBtn.style.cssText = 'padding:10px 24px;border:none;border-radius:8px;background:var(--bg-button,#444);color:#fff;cursor:pointer;font-size:1em;';
+        okBtn.onclick = () => { document.body.removeChild(overlay); resolve(); };
+        dialog.appendChild(p);
+        dialog.appendChild(okBtn);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        setTimeout(() => okBtn.focus(), 50);
+      });
+    }
+
+    /**
+     * Show a custom non-blocking confirm using an in-page overlay.
+     * Returns a Promise that resolves to true (confirm) or false (cancel).
+     */
+    function uiConfirm(message) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:var(--bg-panel,#1e1e1e);padding:20px;border-radius:10px;max-width:380px;width:90%;text-align:center;color:var(--text-main,#e0e0e0);box-shadow:0 8px 30px rgba(0,0,0,0.6);';
+        const p = document.createElement('p');
+        p.style.cssText = 'margin:0 0 16px;white-space:pre-wrap;';
+        p.textContent = message;
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;justify-content:center;gap:8px;';
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = 'Update';
+        confirmBtn.style.cssText = 'padding:10px 18px;border:none;border-radius:8px;background:var(--accent-success,#28a745);color:#fff;cursor:pointer;font-size:1em;';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = 'padding:10px 18px;border:none;border-radius:8px;background:var(--bg-button,#444);color:#fff;cursor:pointer;font-size:1em;';
+        const close = (result) => { document.body.removeChild(overlay); resolve(result); };
+        confirmBtn.onclick = () => close(true);
+        cancelBtn.onclick = () => close(false);
+        btnRow.appendChild(confirmBtn);
+        btnRow.appendChild(cancelBtn);
+        dialog.appendChild(p);
+        dialog.appendChild(btnRow);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        setTimeout(() => confirmBtn.focus(), 50);
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       const checkFirmwareButton = document.getElementById('checkFirmwareButton');
       if (checkFirmwareButton) {
         checkFirmwareButton.addEventListener('click', async function () {
           try {
-            const response = await fetch('latest_version.txt'); // Assumes the file is 'latest_version.txt' on the same server
+            const response = await fetch('latest_version.txt');
             if (!response.ok) {
               throw new Error('Failed to fetch latest version');
             }
             const latestVersion = await response.text();
             const latest = latestVersion.trim();
             if (firmwareVersion && versionCompare(latest, firmwareVersion) > 0) {
-              const shouldUpdate = confirm(`Update available! Current: ${firmwareVersion}, Latest: ${latest}\nDo you want to update now?`);
+              const shouldUpdate = await uiConfirm(`Update available!\nCurrent: ${firmwareVersion}  →  Latest: ${latest}\n\nDo you want to update now?`);
               if (shouldUpdate) {
                 if (isConnected) {
                   await sendData('V1');
                   window.location.href = 'setup.html';
                 } else {
-                  alert('Please connect to the device first.');
+                  await uiAlert('Please connect to the device first.');
                 }
               }
             } else {
-              alert(`Firmware is up to date. Current: ${firmwareVersion || '--'}, Latest: ${latest}`);
+              await uiAlert(`Firmware is up to date.\nCurrent: ${firmwareVersion || '--'}   Latest: ${latest}`);
             }
           } catch (error) {
-            alert('Error checking latest version: ' + error.message);
+            await uiAlert('Error checking latest version:\n' + error.message);
           }
         });
       }
     });
   </script>
-
-  </div>
 
   <!-- Minimal footer with coffee-bean icon link to game.html -->
   <footer id="pageFooter" class="minimal-footer" role="contentinfo" aria-label="Site footer">
@@ -3298,7 +3639,7 @@
   </script>
 
 
-  <!-- Help button script injected by ChatGPT -->
+  <!-- Help button script -->
   <script>
     (function () {
       function $(id) { return document.getElementById(id); }
@@ -3385,40 +3726,14 @@
   </script>
   <script>
 
-    // Service Worker registration with auto-reload on update
+    // Service Worker registration
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
         console.log('Service Worker registered');
-
-        // Force update check on page load
         reg.update();
-
-        // Listen for updates
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          console.log('New Service Worker found');
-
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-              console.log('New Service Worker activated - reloading page');
-              window.location.reload();
-            }
-          });
-        });
       });
 
-      // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener('message', event => {
-        if (event.data.type === 'CACHE_UPDATED') {
-          console.log('Cache updated to version:', event.data.version);
-          // Reload the page after a short delay to ensure cache is ready
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
-        }
-      });
-
-      // Handle controller change (when new SW takes over)
+      // Reload once when new SW takes control (single, standard pattern)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         console.log('New Service Worker controller detected - reloading');
         window.location.reload();
