@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-02-21T00:00:00.000Z",
+  "source": "static-example",
+  "team": {
+    "id": "AUS",
+    "name": "Australia"
+  },
+  "fixtures": [
+    {
+      "id": "aus-fixture-001",
+      "startTime": "2026-03-05T08:10:00.000Z",
+      "endTime": null,
+      "format": "T20I",
+      "opponent": "New Zealand",
+      "homeAway": "home",
+      "venue": "Sydney Cricket Ground",
+      "city": "Sydney",
+      "country": "Australia",
+      "competition": "Australia v New Zealand (T20I)",
+      "status": "scheduled",
+      "links": {
+        "match": "",
+        "tickets": ""
+      }
+    },
+    {
+      "id": "aus-fixture-002",
+      "startTime": "2026-03-07T08:10:00.000Z",
+      "endTime": null,
+      "format": "T20I",
+      "opponent": "New Zealand",
+      "homeAway": "home",
+      "venue": "Melbourne Cricket Ground",
+      "city": "Melbourne",
+      "country": "Australia",
+      "competition": "Australia v New Zealand (T20I)",
+      "status": "scheduled",
+      "links": {
+        "match": "",
+        "tickets": ""
+      }
+    },
+    {
+      "id": "aus-fixture-003",
+      "startTime": "2026-03-12T09:00:00.000Z",
+      "endTime": null,
+      "format": "ODI",
+      "opponent": "India",
+      "homeAway": "away",
+      "venue": "Wankhede Stadium",
+      "city": "Mumbai",
+      "country": "India",
+      "competition": "India v Australia (ODI)",
+      "status": "scheduled",
+      "links": {
+        "match": "",
+        "tickets": ""
+      }
+    },
+    {
+      "id": "aus-fixture-004",
+      "startTime": "2026-03-15T04:00:00.000Z",
+      "endTime": null,
+      "format": "Test",
+      "opponent": "India",
+      "homeAway": "away",
+      "venue": "Eden Gardens",
+      "city": "Kolkata",
+      "country": "India",
+      "competition": "India v Australia (Test)",
+      "status": "scheduled",
+      "links": {
+        "match": "",
+        "tickets": ""
+      }
+    }
+  ]
+}
