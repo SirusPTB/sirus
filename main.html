@@ -2042,7 +2042,29 @@
           console.error("Error saving graph:", e);
           alert("Error saving: " + (e && e.message ? e.message : e));
         }
-        modal.style.display = "none";
+        // Trigger a file download
+        try {
+          const exportData = { name: name, savedAt: new Date().toISOString(), labels: chartData.labels, temp: chartData.temp, pressure: chartData.pressure };
+          const json = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([json], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name.replace(/[^a-z0-9_\-]/gi, "_") + ".json";
+          a.style.display = "none";
+          document.body.appendChild(a);
+          modal.style.display = "none";
+          setTimeout(() => {
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 500);
+          }, 100);
+        } catch (e) {
+          console.error("Error downloading graph file:", e);
+          modal.style.display = "none";
+        }
         return;
       }
 
