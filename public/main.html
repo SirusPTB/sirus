@@ -143,7 +143,9 @@
       font-weight: bold;
     }
 
-    #combinedResizeHandle {
+    #combinedResizeHandle,
+    #tempResizeHandle,
+    #pressureResizeHandle {
       width: 90%;
       margin: 0 auto 10px;
       height: 14px;
@@ -154,7 +156,9 @@
       user-select: none;
     }
 
-    #combinedResizeHandle span {
+    #combinedResizeHandle span,
+    #tempResizeHandle span,
+    #pressureResizeHandle span {
       display: block;
       width: 40px;
       height: 4px;
@@ -164,7 +168,11 @@
     }
 
     #combinedResizeHandle:hover span,
-    #combinedResizeHandle.dragging span {
+    #combinedResizeHandle.dragging span,
+    #tempResizeHandle:hover span,
+    #tempResizeHandle.dragging span,
+    #pressureResizeHandle:hover span,
+    #pressureResizeHandle.dragging span {
       background: var(--accent-primary);
     }
 
@@ -1640,13 +1648,15 @@
         <div id="tempCurrentValue"
           style="background: var(--bg-main); color: var(--accent-temp); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Temperature: -- °C</div>
-        <div class="canvas-container"><canvas id="tempChart"></canvas></div>
+        <div class="canvas-container" id="tempChartContainer"><canvas id="tempChart"></canvas></div>
+        <div id="tempResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
       <div style="width: 90%; margin: 0 auto;">
         <div id="pressureCurrentValue"
           style="background: var(--bg-main); color: var(--accent-pressure); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Pressure: -- bar</div>
-        <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
+        <div class="canvas-container" id="pressureChartContainer"><canvas id="pressureChart"></canvas></div>
+        <div id="pressureResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
     </div>
 
@@ -1724,13 +1734,12 @@
 
     <div class="button-row">
       <button id="pauseResumeButton" class="dim-on-disconnect">Pause</button>
-      <button id="resetButton">Reset</button>
+      <button id="resetButton">Clear</button>
       <button id="toggleViewButton">Toggle View</button>
       <button id="toggleGaugeButton">Toggle Gauges</button>
       <div class="btn-row-divider"></div>
       <button id="saveButton" class="dim-on-disconnect">Save</button>
       <button id="loadButton">Load</button>
-      <button id="deleteButton">Delete</button>
     </div>
 
     <!-- Always On Toggle - Standalone row -->
@@ -1833,6 +1842,8 @@
         style="display:block;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;"></select>
       <input type="text" id="modalInput" placeholder="Enter name to save"
         style="display:none;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;" />
+      <input type="file" id="filePickerInput" accept=".json" style="display:none;" />
+      <button id="loadFromFileButton" style="display:none;width:100%;margin:8px 0;background:#2d5884;">&#128194; Load from File</button>
       <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
         <button id="confirmButton">Confirm</button>
         <button id="cancelButton">Cancel</button>
@@ -2003,6 +2014,7 @@
         modalTitleEl.textContent = "Save Current Graph";
         modalInputEl.style.display = "block";
         modalSelectEl.style.display = "none";
+        document.getElementById("loadFromFileButton").style.display = "none";
         modalInputEl.value = "";
         modal.style.display = "flex";
         // focus input for convenience
@@ -2013,6 +2025,7 @@
       // load / delete
       modalInputEl.style.display = "none";
       modalSelectEl.style.display = "block";
+      document.getElementById("loadFromFileButton").style.display = (action === "load") ? "block" : "none";
 
       if (saved.length === 0) {
         alert("No saved graphs found");
@@ -2042,22 +2055,29 @@
           console.error("Error saving graph:", e);
           alert("Error saving: " + (e && e.message ? e.message : e));
         }
-        // Also trigger a file download
+        // Trigger a file download
         try {
-          const exportData = { name: name, savedAt: new Date().toISOString(), ...chartData };
-          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+          const exportData = { name: name, savedAt: new Date().toISOString(), labels: chartData.labels, temp: chartData.temp, pressure: chartData.pressure };
+          const json = JSON.stringify(exportData, null, 2);
+          const blob = new Blob([json], { type: "application/json" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = name.replace(/[^a-z0-9_\-]/gi, "_") + ".json";
+          a.style.display = "none";
           document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          modal.style.display = "none";
+          setTimeout(() => {
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 500);
+          }, 100);
         } catch (e) {
           console.error("Error downloading graph file:", e);
+          modal.style.display = "none";
         }
-        modal.style.display = "none";
         return;
       }
 
@@ -2099,30 +2119,58 @@
       modal.style.display = "none";
     };
 
+    // Load from file picker
+    const filePickerInput = document.getElementById("filePickerInput");
+    document.getElementById("loadFromFileButton").onclick = () => {
+      filePickerInput.value = "";
+      filePickerInput.click();
+    };
+    filePickerInput.onchange = () => {
+      const file = filePickerInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.labels || !data.temp || !data.pressure) {
+            alert("Invalid graph file: missing required data fields.");
+            return;
+          }
+          chartData = { labels: data.labels, temp: data.temp, pressure: data.pressure };
+          secondsCounter = chartData.labels.length;
+          tempChart.data.labels = chartData.labels;
+          tempChart.data.datasets[0].data = chartData.temp;
+          tempChart.update();
+          pressureChart.data.labels = chartData.labels;
+          pressureChart.data.datasets[0].data = chartData.pressure;
+          pressureChart.update();
+          combinedChart.data.labels = chartData.labels;
+          combinedChart.data.datasets[0].data = chartData.temp;
+          combinedChart.data.datasets[1].data = chartData.pressure;
+          combinedChart.update();
+          updateGauges();
+          modal.style.display = "none";
+          console.log("Graph loaded from file:", file.name);
+        } catch (err) {
+          alert("Error reading file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+
     // Wireup for the toolbar buttons (ensure these exist elsewhere in the file)
-    document.getElementById("loadButton").onclick = () => { showModal("load"); };
-    document.getElementById("deleteButton").onclick = () => { showModal("delete"); };
+    document.getElementById("loadButton").onclick = () => { const fp = document.getElementById("filePickerInput"); fp.value = ""; fp.click(); };
     document.getElementById("saveButton").onclick = () => { showModal("save"); };
     // --- Chart Setup ---
-    function fixCanvasDPI(canvas) {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-
     function initCharts() {
       const ctxTemp = document.getElementById("tempChart").getContext("2d");
-      fixCanvasDPI(ctxTemp.canvas);
       tempChart = new Chart(ctxTemp, {
         type: "line",
         data: { labels: [], datasets: [{ label: "Temp", borderColor: "#ff7f7f", data: [], fill: false }] },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: window.devicePixelRatio || 1,
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
@@ -2142,7 +2190,6 @@
       });
 
       const ctxPressure = document.getElementById("pressureChart").getContext("2d");
-      fixCanvasDPI(ctxPressure.canvas);
       pressureChart = new Chart(ctxPressure, {
         type: "line",
         data: {
@@ -2156,7 +2203,8 @@
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: window.devicePixelRatio || 1,
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
@@ -3228,7 +3276,6 @@
       document.body.classList.toggle('gauges-visible', gaugeView);
       document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
-      document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("yAxisControls").style.display = gaugeView ? "none" : "block";
 
       const toggleViewButton = document.getElementById("toggleViewButton");
@@ -4066,71 +4113,70 @@
   </script>
 
   <script>
-    // --- Combined chart drag-to-resize ---
+    // --- Chart drag-to-resize (shared for all resizable charts) ---
     (function () {
-      const handle = document.getElementById('combinedResizeHandle');
-      const container = document.getElementById('combinedChartContainer');
-      if (!handle || !container) return;
-
       const MIN_HEIGHT = 150;
       const MAX_HEIGHT = 800;
-      const STORAGE_KEY = 'combinedChartHeight';
 
-      // Restore saved height
-      const saved = parseInt(localStorage.getItem(STORAGE_KEY));
-      if (saved && saved >= MIN_HEIGHT && saved <= MAX_HEIGHT) {
-        container.style.height = saved + 'px';
-      }
+      function makeResizable(handleId, containerId, storageKey, defaultHeightPx) {
+        const handle = document.getElementById(handleId);
+        const container = document.getElementById(containerId);
+        if (!handle || !container) return;
 
-      let startY = 0;
-      let startH = 0;
-      let rafId = null;
-      let pendingH = null;
+        container.style.height = defaultHeightPx + 'px';
 
-      function applyHeight() {
-        if (pendingH !== null) {
-          container.style.height = pendingH + 'px';
-          // Chart.js responsive:true picks this up automatically via ResizeObserver
+        const saved = parseInt(localStorage.getItem(storageKey));
+        if (saved && saved >= MIN_HEIGHT && saved <= MAX_HEIGHT) {
+          container.style.height = saved + 'px';
         }
-        rafId = null;
+
+        let startY = 0, startH = 0, rafId = null, pendingH = null;
+
+        function applyHeight() {
+          if (pendingH !== null) container.style.height = pendingH + 'px';
+          rafId = null;
+        }
+        function onMove(y) {
+          const delta = y - startY;
+          pendingH = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startH + delta));
+          if (!rafId) rafId = requestAnimationFrame(applyHeight);
+        }
+        function onEnd() {
+          handle.classList.remove('dragging');
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; applyHeight(); }
+          localStorage.setItem(storageKey, parseInt(container.style.height));
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onEnd);
+          document.removeEventListener('touchmove', onTouchMove);
+          document.removeEventListener('touchend', onEnd);
+        }
+        function onMouseMove(e) { onMove(e.clientY); }
+        function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
+
+        handle.addEventListener('mousedown', e => {
+          e.preventDefault();
+          startY = e.clientY;
+          startH = container.offsetHeight;
+          handle.classList.add('dragging');
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onEnd);
+        });
+        handle.addEventListener('touchstart', e => {
+          e.preventDefault();
+          startY = e.touches[0].clientY;
+          startH = container.offsetHeight;
+          handle.classList.add('dragging');
+          document.addEventListener('touchmove', onTouchMove, { passive: false });
+          document.addEventListener('touchend', onEnd);
+        });
       }
 
-      function onMove(y) {
-        const delta = y - startY;
-        pendingH = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startH + delta));
-        if (!rafId) rafId = requestAnimationFrame(applyHeight);
-      }
+      const splitDefault = Math.round(window.innerHeight * 0.375); // 3/8 each ~ half of 75vh
+      const combinedDefault = Math.round(window.innerHeight * 0.75);
 
-      function onEnd() {
-        handle.classList.remove('dragging');
-        if (rafId) { cancelAnimationFrame(rafId); rafId = null; applyHeight(); }
-        localStorage.setItem(STORAGE_KEY, parseInt(container.style.height));
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onEnd);
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onEnd);
-      }
-
-      function onMouseMove(e) { onMove(e.clientY); }
-      function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
-
-      handle.addEventListener('mousedown', e => {
-        e.preventDefault();
-        startY = e.clientY;
-        startH = container.offsetHeight;
-        handle.classList.add('dragging');
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onEnd);
-      });
-
-      handle.addEventListener('touchstart', e => {
-        e.preventDefault();
-        startY = e.touches[0].clientY;
-        startH = container.offsetHeight;
-        handle.classList.add('dragging');
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
-      });
+      makeResizable('tempResizeHandle',     'tempChartContainer',     'tempChartHeight',     splitDefault);
+      makeResizable('pressureResizeHandle', 'pressureChartContainer', 'pressureChartHeight', splitDefault);
+      makeResizable('combinedResizeHandle', 'combinedChartContainer', 'combinedChartHeight', combinedDefault);
     })();
   </script>
 </body>
