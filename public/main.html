@@ -3,12 +3,18 @@
 <html lang="en">
 
 <head>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SirusPTB">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <title>SirusPTB </title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
   <style>
     :root {
@@ -1297,6 +1303,9 @@
       transform: translateY(-2px);
     }
 
+
+
+
     /* Help modal styles */
     #helpModal {
       display: none;
@@ -1492,8 +1501,9 @@
 
         <div id="deviceHelp" class="help-section" aria-hidden="true">
           <h4 style="margin-top:0;">Device Help</h4>
-          <img src="sirusscreen1.png" alt="SirusPTB device showing button locations"
-            style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;">
+          <img src="./sirusscreen1.png" alt="SirusPTB device showing button locations"
+            style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;"
+            onerror="this.style.display='none';">
           <h2 style="color: #ddd128;">Button Functions</h2>
           <ul>
             <li>Press "T" button to turn on.</li>
@@ -1623,7 +1633,7 @@
             </div>
           </div>
 
-          <button id="installButton" style="display:none;">
+          <button id="installButton" type="button" style="display:none;">
             Install App
           </button>
 
@@ -4064,29 +4074,68 @@
   </script>
 
   <script>
+    // Improved PWA install button handling
+    // - Chrome/Edge/Android/Desktop: uses the browser's native install prompt
+    // - iPhone/iPad Safari: shows clear Add to Home Screen instructions
+    // - Already-installed app: hides the button
 
     let deferredInstallPrompt = null;
     const installButton = document.getElementById("installButton");
 
-    window.addEventListener("beforeinstallprompt", (e) => {
-      // Prevent browser mini-infobar
-      e.preventDefault();
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
 
-      deferredInstallPrompt = e;
-      installButton.style.display = "inline-block";
-    });
+    const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+    // Start hidden. Only show when install is possible or when iOS needs manual instructions.
+    installButton.style.display = "none";
+
+    if (!isStandalone) {
+      window.addEventListener("beforeinstallprompt", (event) => {
+        // Stop the browser mini-infobar and save the real install prompt for your button.
+        event.preventDefault();
+
+        deferredInstallPrompt = event;
+        installButton.textContent = "Install App";
+        installButton.style.display = "flex";
+      });
+
+      // iOS Safari does not expose the native PWA install prompt.
+      if (isIOS) {
+        installButton.textContent = "Add to Home Screen";
+        installButton.style.display = "flex";
+      }
+    }
 
     installButton.addEventListener("click", async () => {
-      if (!deferredInstallPrompt) return;
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
 
-      deferredInstallPrompt.prompt();
-      const { outcome } = await deferredInstallPrompt.userChoice;
+        const result = await deferredInstallPrompt.userChoice;
 
-      if (outcome === "accepted") {
-        installButton.style.display = "none";
+        if (result.outcome === "accepted") {
+          installButton.style.display = "none";
+        }
+
+        deferredInstallPrompt = null;
+        return;
       }
 
-      deferredInstallPrompt = null;
+      if (isIOS) {
+        alert(
+          "To install this app:\n\n" +
+          "1. Tap the Share button\n" +
+          "2. Scroll down\n" +
+          "3. Tap ‘Add to Home Screen’"
+        );
+        return;
+      }
+
+      alert(
+        "Install is not available in this browser. Try Chrome or Edge, " +
+        "or use your browser menu to install the app."
+      );
     });
 
     window.addEventListener("appinstalled", () => {
@@ -4097,14 +4146,22 @@
   <script>
 
     // Service Worker registration
+    // sw.js must be uploaded into the same folder as this file.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(reg => {
-        console.log('Service Worker registered');
-        reg.update();
-      });
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => {
+          console.log('Service Worker registered');
+          reg.update().catch(err => console.warn('Service Worker update check failed:', err));
+        })
+        .catch(err => {
+          console.warn('Service Worker registration failed. Check that ./sw.js exists in this folder:', err);
+        });
 
-      // Reload once when new SW takes control (single, standard pattern)
+      // Reload once when new SW takes control.
+      let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
         console.log('New Service Worker controller detected - reloading');
         window.location.reload();
       });

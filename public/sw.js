@@ -1,98 +1,113 @@
-// sw.js - Fixed paths for GitHub Pages subfolder hosting
-// All precache paths are now RELATIVE (no leading '/') to match the service worker scope /sirus/public/
-// This ensures fetches resolve correctly to /sirus/public/index.html, /sirus/public/manifest.json, etc.
+const SW_VERSION = '2026-06-08-01';
+const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
-const CACHE_VERSION = '2026-01-09-v47'; // Bumped again to force fresh cache
-const CACHE_NAME = `lvr1-cache-${CACHE_VERSION}`;
-
-const PRECACHE_ASSETS = [
-  'index.html',                    // Main page
-  'manifest.json',
-  'icons/icon-192x192.png',
-  'DSEG7Classic-Bold.woff2',
-  'DSEG7Classic-Bold.woff',
-  'DSEG7Classic-Bold.ttf',
-  // Optional: add these if they exist in your /public/ folder
-  // 'favicon.ico',
-  // 'apple-touch-icon.png',
+// Keep this list small and only include files that definitely exist beside main.html.
+// Optional files are attempted separately and will not break service-worker install if missing.
+const REQUIRED_URLS = [
+  './',
+  './main.html',
+  './manifest.json'
 ];
 
-// Helper: precache one-by-one (skips missing files gracefully)
-async function precacheAssets() {
-  const cache = await caches.open(CACHE_NAME);
-  for (const relativePath of PRECACHE_ASSETS) {
-    const url = new URL(relativePath, self.location).href; // Ensures correct full URL
-    try {
-      const response = await fetch(url, { cache: 'reload' });
-      if (response && response.ok) {
-        await cache.put(relativePath, response);
-        console.log('Precaching succeeded:', relativePath);
-      } else {
-        console.warn('Skipping precache (not found/bad response):', relativePath);
-      }
-    } catch (err) {
-      console.warn('Skipping precache (fetch error):', relativePath, err);
+const OPTIONAL_URLS = [
+  './favicon.ico',
+  './sirusscreen1.png',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './index.html',
+  './game.html',
+  './setup.html',
+  'https://cdn.jsdelivr.net/npm/chart.js'
+];
+
+const NEVER_CACHE = [
+  'latest_version.txt'
+];
+
+async function safeAdd(cache, url) {
+  try {
+    const response = await fetch(url, { cache: 'reload' });
+    if (response && response.ok) {
+      await cache.put(url, response);
+    } else {
+      console.warn('Not cached because it was not found or was not OK:', url, response && response.status);
     }
+  } catch (err) {
+    console.warn('Not cached because request failed:', url, err);
   }
 }
 
-// Install
 self.addEventListener('install', event => {
-  event.waitUntil(
-    precacheAssets()
-      .then(() => self.skipWaiting())
-  );
+  console.log('Service Worker installing...', SW_VERSION);
+  self.skipWaiting();
+
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+
+    // Do not use cache.addAll here. One 404 would reject the whole install.
+    await Promise.all(REQUIRED_URLS.map(url => safeAdd(cache, url)));
+    await Promise.all(OPTIONAL_URLS.map(url => safeAdd(cache, url)));
+  })());
 });
 
-// Activate: clean old caches
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames
-          .filter(name => name.startsWith('lvr1-cache-') && name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      );
-    })
-    .then(() => self.clients.claim())
-  );
+  console.log('Service Worker activating...', SW_VERSION);
+
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter(cacheName => cacheName !== CACHE_NAME)
+        .map(cacheName => caches.delete(cacheName))
+    );
+
+    await self.clients.claim();
+
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'CACHE_UPDATED',
+        version: SW_VERSION
+      });
+    });
+  })());
 });
 
-// Fetch: cache-first for assets, network-first for navigation with offline fallback
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET') return;
 
-  if (event.request.method !== 'GET' || url.origin !== location.origin) {
+  const requestUrl = new URL(event.request.url);
+
+  if (NEVER_CACHE.some(path => requestUrl.pathname.includes(path))) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match('index.html'))
-    );
-    return;
-  }
+  event.respondWith((async () => {
+    try {
+      const networkResponse = await fetch(event.request);
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(cached => cached || fetch(event.request)
-        .then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match('index.html')) // Extra offline safety
-      )
-  );
-});
+      const isSameOrigin = requestUrl.origin === self.location.origin;
+      const isChartJs = event.request.url.startsWith('https://cdn.jsdelivr.net/npm/chart.js');
+      const isValidResponse = networkResponse && networkResponse.status === 200;
 
-// Message for update prompt
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+      if (isValidResponse && (isSameOrigin || isChartJs)) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(event.request, networkResponse.clone());
+      }
+
+      return networkResponse;
+    } catch (err) {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) return cachedResponse;
+
+      // If navigation fails offline, fall back to main.html if available.
+      if (event.request.mode === 'navigate') {
+        const appShell = await caches.match('./main.html');
+        if (appShell) return appShell;
+      }
+
+      throw err;
+    }
+  })());
 });
