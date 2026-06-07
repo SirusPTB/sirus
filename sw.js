@@ -1,89 +1,113 @@
-const SW_VERSION = '2026-01-14-28';
+const SW_VERSION = '2026-06-08-01';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
-
-const URLS_TO_CACHE = [
+// Keep this list small and only include files that definitely exist beside main.html.
+// Optional files are attempted separately and will not break service-worker install if missing.
+const REQUIRED_URLS = [
   './',
-  'index.html',
-  'main.html',
-  'game.html',
-  'setup.html',
-  'latest_version.txt',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'icons/icon-192x192.png',
-  'icons/icon-512x512.png',
-  'favicon.ico'
+  './main.html',
+  './manifest.json'
 ];
 
-console.log('SW VERSION', SW_VERSION);
+const OPTIONAL_URLS = [
+  './favicon.ico',
+  './sirusscreen1.png',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './index.html',
+  './game.html',
+  './setup.html',
+  'https://cdn.jsdelivr.net/npm/chart.js'
+];
 
-// Install - cache files
+const NEVER_CACHE = [
+  'latest_version.txt'
+];
+
+async function safeAdd(cache, url) {
+  try {
+    const response = await fetch(url, { cache: 'reload' });
+    if (response && response.ok) {
+      await cache.put(url, response);
+    } else {
+      console.warn('Not cached because it was not found or was not OK:', url, response && response.status);
+    }
+  } catch (err) {
+    console.warn('Not cached because request failed:', url, err);
+  }
+}
+
 self.addEventListener('install', event => {
   console.log('Service Worker installing...', SW_VERSION);
-  // Skip waiting to activate immediately
   self.skipWaiting();
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Caching app shell');
-        return cache.addAll(URLS_TO_CACHE);
-      })
-  );
+
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+
+    // Do not use cache.addAll here. One 404 would reject the whole install.
+    await Promise.all(REQUIRED_URLS.map(url => safeAdd(cache, url)));
+    await Promise.all(OPTIONAL_URLS.map(url => safeAdd(cache, url)));
+  })());
 });
 
-// Activate - clean old caches and take control
 self.addEventListener('activate', event => {
   console.log('Service Worker activating...', SW_VERSION);
-  
-  event.waitUntil(
-    Promise.all([
-      // Delete old caches
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              console.log('Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      // Take control of all clients immediately
-      self.clients.claim()
-    ]).then(() => {
-      // Notify all clients to reload
-      return self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'CACHE_UPDATED',
-            version: SW_VERSION
-          });
-        });
+
+  event.waitUntil((async () => {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter(cacheName => cacheName !== CACHE_NAME)
+        .map(cacheName => caches.delete(cacheName))
+    );
+
+    await self.clients.claim();
+
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'CACHE_UPDATED',
+        version: SW_VERSION
       });
-    })
-  );
+    });
+  })());
 });
 
-// Fetch - network first, then cache
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Clone the response before caching
-        const responseToCache = response.clone();
-        
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseToCache);
-        });
-        
-        return response;
-      })
-      .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request);
-      })
-  );
+  const requestUrl = new URL(event.request.url);
+
+  if (NEVER_CACHE.some(path => requestUrl.pathname.includes(path))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  event.respondWith((async () => {
+    try {
+      const networkResponse = await fetch(event.request);
+
+      const isSameOrigin = requestUrl.origin === self.location.origin;
+      const isChartJs = event.request.url.startsWith('https://cdn.jsdelivr.net/npm/chart.js');
+      const isValidResponse = networkResponse && networkResponse.status === 200;
+
+      if (isValidResponse && (isSameOrigin || isChartJs)) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(event.request, networkResponse.clone());
+      }
+
+      return networkResponse;
+    } catch (err) {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) return cachedResponse;
+
+      // If navigation fails offline, fall back to main.html if available.
+      if (event.request.mode === 'navigate') {
+        const appShell = await caches.match('./main.html');
+        if (appShell) return appShell;
+      }
+
+      throw err;
+    }
+  })());
 });

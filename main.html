@@ -3,12 +3,18 @@
 <html lang="en">
 
 <head>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SirusPTB">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <title>SirusPTB </title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
   <style>
     :root {
@@ -143,7 +149,9 @@
       font-weight: bold;
     }
 
-    #combinedResizeHandle {
+    #combinedResizeHandle,
+    #tempResizeHandle,
+    #pressureResizeHandle {
       width: 90%;
       margin: 0 auto 10px;
       height: 14px;
@@ -154,7 +162,9 @@
       user-select: none;
     }
 
-    #combinedResizeHandle span {
+    #combinedResizeHandle span,
+    #tempResizeHandle span,
+    #pressureResizeHandle span {
       display: block;
       width: 40px;
       height: 4px;
@@ -164,7 +174,11 @@
     }
 
     #combinedResizeHandle:hover span,
-    #combinedResizeHandle.dragging span {
+    #combinedResizeHandle.dragging span,
+    #tempResizeHandle:hover span,
+    #tempResizeHandle.dragging span,
+    #pressureResizeHandle:hover span,
+    #pressureResizeHandle.dragging span {
       background: var(--accent-primary);
     }
 
@@ -1289,6 +1303,9 @@
       transform: translateY(-2px);
     }
 
+
+
+
     /* Help modal styles */
     #helpModal {
       display: none;
@@ -1484,8 +1501,9 @@
 
         <div id="deviceHelp" class="help-section" aria-hidden="true">
           <h4 style="margin-top:0;">Device Help</h4>
-          <img src="sirusscreen1.png" alt="SirusPTB device showing button locations"
-            style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;">
+          <img src="./sirusscreen1.png" alt="SirusPTB device showing button locations"
+            style="max-width:100%; height:auto; border-radius:6px; margin:10px 0;"
+            onerror="this.style.display='none';">
           <h2 style="color: #ddd128;">Button Functions</h2>
           <ul>
             <li>Press "T" button to turn on.</li>
@@ -1615,7 +1633,7 @@
             </div>
           </div>
 
-          <button id="installButton" style="display:none;">
+          <button id="installButton" type="button" style="display:none;">
             Install App
           </button>
 
@@ -1640,13 +1658,15 @@
         <div id="tempCurrentValue"
           style="background: var(--bg-main); color: var(--accent-temp); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Temperature: -- °C</div>
-        <div class="canvas-container"><canvas id="tempChart"></canvas></div>
+        <div class="canvas-container" id="tempChartContainer"><canvas id="tempChart"></canvas></div>
+        <div id="tempResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
       <div style="width: 90%; margin: 0 auto;">
         <div id="pressureCurrentValue"
           style="background: var(--bg-main); color: var(--accent-pressure); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Pressure: -- bar</div>
-        <div class="canvas-container"><canvas id="pressureChart"></canvas></div>
+        <div class="canvas-container" id="pressureChartContainer"><canvas id="pressureChart"></canvas></div>
+        <div id="pressureResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
     </div>
 
@@ -1724,13 +1744,12 @@
 
     <div class="button-row">
       <button id="pauseResumeButton" class="dim-on-disconnect">Pause</button>
-      <button id="resetButton">Reset</button>
+      <button id="resetButton">Clear</button>
       <button id="toggleViewButton">Toggle View</button>
       <button id="toggleGaugeButton">Toggle Gauges</button>
       <div class="btn-row-divider"></div>
       <button id="saveButton" class="dim-on-disconnect">Save</button>
       <button id="loadButton">Load</button>
-      <button id="deleteButton">Delete</button>
     </div>
 
     <!-- Always On Toggle - Standalone row -->
@@ -1833,6 +1852,8 @@
         style="display:block;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;"></select>
       <input type="text" id="modalInput" placeholder="Enter name to save"
         style="display:none;width:100%;padding:8px;margin:10px 0;border-radius:6px;background:#333;color:#fff;border:none;" />
+      <input type="file" id="filePickerInput" accept=".json" style="display:none;" />
+      <button id="loadFromFileButton" style="display:none;width:100%;margin:8px 0;background:#2d5884;">&#128194; Load from File</button>
       <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
         <button id="confirmButton">Confirm</button>
         <button id="cancelButton">Cancel</button>
@@ -2003,6 +2024,7 @@
         modalTitleEl.textContent = "Save Current Graph";
         modalInputEl.style.display = "block";
         modalSelectEl.style.display = "none";
+        document.getElementById("loadFromFileButton").style.display = "none";
         modalInputEl.value = "";
         modal.style.display = "flex";
         // focus input for convenience
@@ -2013,6 +2035,7 @@
       // load / delete
       modalInputEl.style.display = "none";
       modalSelectEl.style.display = "block";
+      document.getElementById("loadFromFileButton").style.display = (action === "load") ? "block" : "none";
 
       if (saved.length === 0) {
         alert("No saved graphs found");
@@ -2106,30 +2129,58 @@
       modal.style.display = "none";
     };
 
+    // Load from file picker
+    const filePickerInput = document.getElementById("filePickerInput");
+    document.getElementById("loadFromFileButton").onclick = () => {
+      filePickerInput.value = "";
+      filePickerInput.click();
+    };
+    filePickerInput.onchange = () => {
+      const file = filePickerInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.labels || !data.temp || !data.pressure) {
+            alert("Invalid graph file: missing required data fields.");
+            return;
+          }
+          chartData = { labels: data.labels, temp: data.temp, pressure: data.pressure };
+          secondsCounter = chartData.labels.length;
+          tempChart.data.labels = chartData.labels;
+          tempChart.data.datasets[0].data = chartData.temp;
+          tempChart.update();
+          pressureChart.data.labels = chartData.labels;
+          pressureChart.data.datasets[0].data = chartData.pressure;
+          pressureChart.update();
+          combinedChart.data.labels = chartData.labels;
+          combinedChart.data.datasets[0].data = chartData.temp;
+          combinedChart.data.datasets[1].data = chartData.pressure;
+          combinedChart.update();
+          updateGauges();
+          modal.style.display = "none";
+          console.log("Graph loaded from file:", file.name);
+        } catch (err) {
+          alert("Error reading file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+
     // Wireup for the toolbar buttons (ensure these exist elsewhere in the file)
-    document.getElementById("loadButton").onclick = () => { showModal("load"); };
-    document.getElementById("deleteButton").onclick = () => { showModal("delete"); };
+    document.getElementById("loadButton").onclick = () => { const fp = document.getElementById("filePickerInput"); fp.value = ""; fp.click(); };
     document.getElementById("saveButton").onclick = () => { showModal("save"); };
     // --- Chart Setup ---
-    function fixCanvasDPI(canvas) {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-
     function initCharts() {
       const ctxTemp = document.getElementById("tempChart").getContext("2d");
-      fixCanvasDPI(ctxTemp.canvas);
       tempChart = new Chart(ctxTemp, {
         type: "line",
         data: { labels: [], datasets: [{ label: "Temp", borderColor: "#ff7f7f", data: [], fill: false }] },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: window.devicePixelRatio || 1,
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
@@ -2149,7 +2200,6 @@
       });
 
       const ctxPressure = document.getElementById("pressureChart").getContext("2d");
-      fixCanvasDPI(ctxPressure.canvas);
       pressureChart = new Chart(ctxPressure, {
         type: "line",
         data: {
@@ -2163,7 +2213,8 @@
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: window.devicePixelRatio || 1,
           animation: false,
           plugins: { legend: { display: false } },
           scales: {
@@ -3235,7 +3286,6 @@
       document.body.classList.toggle('gauges-visible', gaugeView);
       document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
-      document.getElementById("deleteButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("yAxisControls").style.display = gaugeView ? "none" : "block";
 
       const toggleViewButton = document.getElementById("toggleViewButton");
@@ -4024,29 +4074,68 @@
   </script>
 
   <script>
+    // Improved PWA install button handling
+    // - Chrome/Edge/Android/Desktop: uses the browser's native install prompt
+    // - iPhone/iPad Safari: shows clear Add to Home Screen instructions
+    // - Already-installed app: hides the button
 
     let deferredInstallPrompt = null;
     const installButton = document.getElementById("installButton");
 
-    window.addEventListener("beforeinstallprompt", (e) => {
-      // Prevent browser mini-infobar
-      e.preventDefault();
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
 
-      deferredInstallPrompt = e;
-      installButton.style.display = "inline-block";
-    });
+    const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+    // Start hidden. Only show when install is possible or when iOS needs manual instructions.
+    installButton.style.display = "none";
+
+    if (!isStandalone) {
+      window.addEventListener("beforeinstallprompt", (event) => {
+        // Stop the browser mini-infobar and save the real install prompt for your button.
+        event.preventDefault();
+
+        deferredInstallPrompt = event;
+        installButton.textContent = "Install App";
+        installButton.style.display = "flex";
+      });
+
+      // iOS Safari does not expose the native PWA install prompt.
+      if (isIOS) {
+        installButton.textContent = "Add to Home Screen";
+        installButton.style.display = "flex";
+      }
+    }
 
     installButton.addEventListener("click", async () => {
-      if (!deferredInstallPrompt) return;
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
 
-      deferredInstallPrompt.prompt();
-      const { outcome } = await deferredInstallPrompt.userChoice;
+        const result = await deferredInstallPrompt.userChoice;
 
-      if (outcome === "accepted") {
-        installButton.style.display = "none";
+        if (result.outcome === "accepted") {
+          installButton.style.display = "none";
+        }
+
+        deferredInstallPrompt = null;
+        return;
       }
 
-      deferredInstallPrompt = null;
+      if (isIOS) {
+        alert(
+          "To install this app:\n\n" +
+          "1. Tap the Share button\n" +
+          "2. Scroll down\n" +
+          "3. Tap ‘Add to Home Screen’"
+        );
+        return;
+      }
+
+      alert(
+        "Install is not available in this browser. Try Chrome or Edge, " +
+        "or use your browser menu to install the app."
+      );
     });
 
     window.addEventListener("appinstalled", () => {
@@ -4057,14 +4146,22 @@
   <script>
 
     // Service Worker registration
+    // sw.js must be uploaded into the same folder as this file.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(reg => {
-        console.log('Service Worker registered');
-        reg.update();
-      });
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => {
+          console.log('Service Worker registered');
+          reg.update().catch(err => console.warn('Service Worker update check failed:', err));
+        })
+        .catch(err => {
+          console.warn('Service Worker registration failed. Check that ./sw.js exists in this folder:', err);
+        });
 
-      // Reload once when new SW takes control (single, standard pattern)
+      // Reload once when new SW takes control.
+      let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
         console.log('New Service Worker controller detected - reloading');
         window.location.reload();
       });
@@ -4073,71 +4170,70 @@
   </script>
 
   <script>
-    // --- Combined chart drag-to-resize ---
+    // --- Chart drag-to-resize (shared for all resizable charts) ---
     (function () {
-      const handle = document.getElementById('combinedResizeHandle');
-      const container = document.getElementById('combinedChartContainer');
-      if (!handle || !container) return;
-
       const MIN_HEIGHT = 150;
       const MAX_HEIGHT = 800;
-      const STORAGE_KEY = 'combinedChartHeight';
 
-      // Restore saved height
-      const saved = parseInt(localStorage.getItem(STORAGE_KEY));
-      if (saved && saved >= MIN_HEIGHT && saved <= MAX_HEIGHT) {
-        container.style.height = saved + 'px';
-      }
+      function makeResizable(handleId, containerId, storageKey, defaultHeightPx) {
+        const handle = document.getElementById(handleId);
+        const container = document.getElementById(containerId);
+        if (!handle || !container) return;
 
-      let startY = 0;
-      let startH = 0;
-      let rafId = null;
-      let pendingH = null;
+        container.style.height = defaultHeightPx + 'px';
 
-      function applyHeight() {
-        if (pendingH !== null) {
-          container.style.height = pendingH + 'px';
-          // Chart.js responsive:true picks this up automatically via ResizeObserver
+        const saved = parseInt(localStorage.getItem(storageKey));
+        if (saved && saved >= MIN_HEIGHT && saved <= MAX_HEIGHT) {
+          container.style.height = saved + 'px';
         }
-        rafId = null;
+
+        let startY = 0, startH = 0, rafId = null, pendingH = null;
+
+        function applyHeight() {
+          if (pendingH !== null) container.style.height = pendingH + 'px';
+          rafId = null;
+        }
+        function onMove(y) {
+          const delta = y - startY;
+          pendingH = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startH + delta));
+          if (!rafId) rafId = requestAnimationFrame(applyHeight);
+        }
+        function onEnd() {
+          handle.classList.remove('dragging');
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; applyHeight(); }
+          localStorage.setItem(storageKey, parseInt(container.style.height));
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onEnd);
+          document.removeEventListener('touchmove', onTouchMove);
+          document.removeEventListener('touchend', onEnd);
+        }
+        function onMouseMove(e) { onMove(e.clientY); }
+        function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
+
+        handle.addEventListener('mousedown', e => {
+          e.preventDefault();
+          startY = e.clientY;
+          startH = container.offsetHeight;
+          handle.classList.add('dragging');
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onEnd);
+        });
+        handle.addEventListener('touchstart', e => {
+          e.preventDefault();
+          startY = e.touches[0].clientY;
+          startH = container.offsetHeight;
+          handle.classList.add('dragging');
+          document.addEventListener('touchmove', onTouchMove, { passive: false });
+          document.addEventListener('touchend', onEnd);
+        });
       }
 
-      function onMove(y) {
-        const delta = y - startY;
-        pendingH = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, startH + delta));
-        if (!rafId) rafId = requestAnimationFrame(applyHeight);
-      }
+      const splitDefault = Math.round(window.innerHeight * 0.375); // 3/8 each ~ half of 75vh
+      const combinedDefault = Math.round(window.innerHeight * 0.75);
 
-      function onEnd() {
-        handle.classList.remove('dragging');
-        if (rafId) { cancelAnimationFrame(rafId); rafId = null; applyHeight(); }
-        localStorage.setItem(STORAGE_KEY, parseInt(container.style.height));
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onEnd);
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onEnd);
-      }
-
-      function onMouseMove(e) { onMove(e.clientY); }
-      function onTouchMove(e) { e.preventDefault(); onMove(e.touches[0].clientY); }
-
-      handle.addEventListener('mousedown', e => {
-        e.preventDefault();
-        startY = e.clientY;
-        startH = container.offsetHeight;
-        handle.classList.add('dragging');
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onEnd);
-      });
-
-      handle.addEventListener('touchstart', e => {
-        e.preventDefault();
-        startY = e.touches[0].clientY;
-        startH = container.offsetHeight;
-        handle.classList.add('dragging');
-        document.addEventListener('touchmove', onTouchMove, { passive: false });
-        document.addEventListener('touchend', onEnd);
-      });
+      makeResizable('tempResizeHandle',     'tempChartContainer',     'tempChartHeight',     splitDefault);
+      makeResizable('pressureResizeHandle', 'pressureChartContainer', 'pressureChartHeight', splitDefault);
+      makeResizable('combinedResizeHandle', 'combinedChartContainer', 'combinedChartHeight', combinedDefault);
     })();
   </script>
 </body>

@@ -1,22 +1,27 @@
 {
-  "name": "EMA SirusPTB",
+  "name": "SirusPTB",
   "short_name": "SirusPTB",
-  "description": "Bluetooth pressure & temperature monitor.",
-  "start_url": "./index.html",
+  "description": "SirusPTB Progressive Web App",
+  "start_url": "./main.html",
+  "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone"],
   "background_color": "#121212",
   "theme_color": "#121212",
   "orientation": "any",
   "icons": [
     {
-      "src": "icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "./favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "./icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
