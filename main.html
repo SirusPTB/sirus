@@ -1930,6 +1930,8 @@
     let autoSave = false; // Advanced Settings: when Free Running is OFF, auto-clear+start at 0->0.5 bar, auto-stop below 0.5 bar
     let autoSaveTriggered = false; // whether the current 0.5+ bar excursion already fired the auto-clear/start
     let currentTemp = 0, currentPressure = 0;
+    let lastChartUpdateTime = 0; // timestamp (ms) of the last time the graph was plotted - used to cap updates to 1/sec
+    const CHART_UPDATE_INTERVAL_MS = 1000;
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
     let splitView = true;
     let gaugeView = false;
@@ -3871,7 +3873,11 @@
 
         if (paused) return;
 
-        updateCharts();
+        const now = Date.now();
+        if (now - lastChartUpdateTime >= CHART_UPDATE_INTERVAL_MS) {
+          lastChartUpdateTime = now;
+          updateCharts();
+        }
         updateGauges();
       }
     }
