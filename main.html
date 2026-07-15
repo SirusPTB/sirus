@@ -1171,6 +1171,12 @@
       color: var(--accent-warning);
     }
 
+    /* Tappable toast (used for manual reconnect prompts) */
+    #toastNotification.toast-tappable {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
     /* Always-on toggle section */
     #alwaysOnSection {
       width: 80%;
@@ -1935,7 +1941,7 @@
     // ---- Global toast helper ----
     let _toastTimer = null;
     let _toastDelayTimer = null;
-    function showToast(message, variant = 'info', duration = 2200) {
+    function showToast(message, variant = 'info', duration = 2200, onClick = null) {
       clearTimeout(_toastDelayTimer);
       _toastDelayTimer = setTimeout(() => {
         const toast = document.getElementById('toastNotification');
@@ -1947,8 +1953,27 @@
         // Force reflow so re-showing resets the transition
         void toast.offsetWidth;
         toast.classList.add('show');
+
+        // Reset any previous tap handler before (maybe) attaching a new one
+        toast.onclick = null;
+        toast.classList.remove('toast-tappable');
+
+        if (onClick) {
+          toast.classList.add('toast-tappable');
+          toast.onclick = () => {
+            toast.onclick = null;
+            toast.classList.remove('toast-tappable', 'show');
+            clearTimeout(_toastTimer);
+            onClick();
+          };
+        }
+
         clearTimeout(_toastTimer);
-        _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+        _toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+          toast.onclick = null;
+          toast.classList.remove('toast-tappable');
+        }, duration);
       }, 500);
     }
 
@@ -2960,17 +2985,29 @@
 
     // --- Auto-connect on page load ---
     // Web Bluetooth requires a user gesture for requestDevice(), so we can't
-    // silently connect. Instead, if we remember a previously paired device,
-    // show a tappable toast so a single tap triggers the reconnect.
+    // silently connect. If getDevices() is supported and still remembers the
+    // device, we reconnect silently. Otherwise (or if that fails), fall back
+    // to a tappable toast so a single tap triggers the reconnect picker.
     (function autoConnectOnLoad() {
       const lastDevice = localStorage.getItem('sirusLastDevice');
       if (!lastDevice || !navigator.bluetooth) return;
+
+      function offerManualReconnect() {
+        console.log("Offering manual tap-to-reconnect toast for", lastDevice);
+        showToast("Tap to reconnect to " + lastDevice, 'warning', 8000, () => {
+          connectToDevice();
+        });
+      }
 
       // Try getDevices() first (Chrome 117+) — truly silent reconnect
       if (navigator.bluetooth.getDevices) {
         navigator.bluetooth.getDevices().then(async devices => {
           const found = devices.find(d => d.name === lastDevice);
-          if (!found) return;
+          if (!found) {
+            console.log("getDevices() didn't return a match for", lastDevice, "- offering manual reconnect");
+            offerManualReconnect();
+            return;
+          }
           console.log("Silent auto-connect to", found.name);
           showToast("Connecting to " + found.name + "…", 'warning', 3000);
           const btn = document.getElementById("connectButton");
@@ -2981,10 +3018,18 @@
             await connectGatt();
             showToast("Connected to " + found.name, 'info', 2500);
           } catch (e) {
+            console.warn("Silent auto-connect failed:", e);
             device = null;
             handleDisconnection(true);
+            offerManualReconnect();
           }
-        }).catch(e => console.warn("getDevices() error:", e));
+        }).catch(e => {
+          console.warn("getDevices() error:", e);
+          offerManualReconnect();
+        });
+      } else {
+        console.log("navigator.bluetooth.getDevices() not supported in this browser - offering manual reconnect");
+        offerManualReconnect();
       }
     })();
 
