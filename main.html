@@ -3386,6 +3386,14 @@
         // Free Running OFF: record mode - stop until the user presses Start.
         paused = !freeRunning;
         autoSaveTriggered = false; // Auto Save only applies in record mode; reset trigger state on mode switch
+
+        // Free Running and Auto Save are mutually exclusive
+        if (freeRunning && autoSave) {
+          autoSave = false;
+          localStorage.setItem("autoSaveMode", "false");
+          updateAutoSaveToggleUI();
+        }
+
         updatePauseResumeButtonUI();
       };
     }
@@ -3417,11 +3425,30 @@
         localStorage.setItem("autoSaveMode", autoSave ? "true" : "false");
         autoSaveTriggered = false; // reset so the next 0->0.5 bar rise can trigger cleanly
         updateAutoSaveToggleUI();
+
+        // Free Running and Auto Save are mutually exclusive
+        if (autoSave && freeRunning) {
+          freeRunning = false;
+          localStorage.setItem("freeRunningMode", "false");
+          updateFreeRunningToggleUI();
+          paused = !freeRunning; // Free Running OFF -> record mode, stopped until triggered/started
+          updatePauseResumeButtonUI();
+        }
       };
     }
 
     // Load saved Auto Save preference
     if (localStorage.getItem("autoSaveMode") === "true") autoSave = true;
+
+    // Free Running and Auto Save are mutually exclusive - if both were saved as on
+    // (e.g. from before this constraint existed), Auto Save takes precedence.
+    if (autoSave && freeRunning) {
+      freeRunning = false;
+      localStorage.setItem("freeRunningMode", "false");
+      paused = !freeRunning;
+      updateFreeRunningToggleUI();
+      updatePauseResumeButtonUI();
+    }
     updateAutoSaveToggleUI();
 
     function clearGraphData() {
