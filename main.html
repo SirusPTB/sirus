@@ -367,6 +367,15 @@
       background-color: var(--accent-success);
     }
 
+    /* Auto Save toggle - green when active, grey when inactive */
+    #autoSaveToggle {
+      background-color: var(--bg-toggle-inactive);
+    }
+
+    #autoSaveToggle.active {
+      background-color: var(--accent-success);
+    }
+
     .toggle-slider {
       position: absolute;
       top: 3px;
@@ -3433,6 +3442,10 @@
           updateFreeRunningToggleUI();
           paused = !freeRunning; // Free Running OFF -> record mode, stopped until triggered/started
           updatePauseResumeButtonUI();
+        }
+
+        if (autoSave) {
+          clearGraphData(); // start with a clean graph whenever Auto Save is switched on
         }
       };
     }
