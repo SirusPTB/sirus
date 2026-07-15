@@ -1787,7 +1787,7 @@
     </div>
 
     <div class="button-row">
-      <div class="mode-toggle-column">
+      <div class="mode-toggle-column" id="modeToggleColumn">
         <div class="toggle-container">
           <span style="font-size:0.85em; color: var(--text-muted); display:inline-block; width:90px; text-align:right;">Free Running:</span>
           <div class="toggle-switch active" id="freeRunningToggle">
@@ -3523,6 +3523,28 @@
       document.getElementById("saveButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("loadButton").style.display = gaugeView ? "none" : "inline-block";
       document.getElementById("yAxisControls").style.display = gaugeView ? "none" : "block";
+
+      // Free Running / Auto Save only make sense in chart view - hide them in
+      // gauge view, and force Free Running ON (streaming, not record mode)
+      // while gauges are showing.
+      const modeToggleColumn = document.getElementById("modeToggleColumn");
+      if (modeToggleColumn) modeToggleColumn.style.display = gaugeView ? "none" : "flex";
+
+      if (gaugeView) {
+        if (!freeRunning) {
+          freeRunning = true;
+          localStorage.setItem("freeRunningMode", "true");
+          updateFreeRunningToggleUI();
+        }
+        if (autoSave) {
+          autoSave = false;
+          localStorage.setItem("autoSaveMode", "false");
+          updateAutoSaveToggleUI();
+        }
+        autoSaveTriggered = false;
+        paused = false;
+        updatePauseResumeButtonUI();
+      }
 
       const toggleViewButton = document.getElementById("toggleViewButton");
 
