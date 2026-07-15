@@ -358,6 +358,15 @@
       background-color: var(--toggle-raw);
     }
 
+    /* Free Running toggle - green when running continuously, grey when in record (start/stop) mode */
+    #freeRunningToggle {
+      background-color: var(--bg-toggle-inactive);
+    }
+
+    #freeRunningToggle.active {
+      background-color: var(--accent-success);
+    }
+
     .toggle-slider {
       position: absolute;
       top: 3px;
@@ -1753,6 +1762,12 @@
     </div>
 
     <div class="button-row">
+      <div class="toggle-container" style="margin-right: 6px;">
+        <span style="font-size:0.85em; color: var(--text-muted);">Free Running:</span>
+        <div class="toggle-switch active" id="freeRunningToggle">
+          <div class="toggle-slider">ON</div>
+        </div>
+      </div>
       <button id="pauseResumeButton" class="dim-on-disconnect">Pause</button>
       <button id="resetButton">Clear</button>
       <button id="toggleViewButton">Toggle View</button>
@@ -1886,6 +1901,7 @@
     const MAX_RECONNECT_ATTEMPTS = 10;   // give up after this many tries
     let tempChart, pressureChart, combinedChart;
     let paused = false;
+    let freeRunning = true; // true = continuous streaming, false = manual start/stop recording
     let currentTemp = 0, currentPressure = 0;
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
     let splitView = true;
@@ -3242,17 +3258,60 @@
     });
 
     // --- Other Button Handlers ---
-    document.getElementById("pauseResumeButton").onclick = () => {
+    function updatePauseResumeButtonUI() {
       const btn = document.getElementById("pauseResumeButton");
-      paused = !paused;
-      btn.textContent = paused ? "Resume" : "Pause";
+      if (!btn) return;
+      if (freeRunning) {
+        btn.textContent = paused ? "Resume" : "Pause";
+      } else {
+        btn.textContent = paused ? "Start" : "Stop";
+      }
 
       if (paused) {
         btn.classList.add("resume");
       } else {
         btn.classList.remove("resume");
       }
+    }
+
+    document.getElementById("pauseResumeButton").onclick = () => {
+      paused = !paused;
+      updatePauseResumeButtonUI();
     };
+
+    function updateFreeRunningToggleUI() {
+      const toggle = document.getElementById("freeRunningToggle");
+      const slider = toggle ? toggle.querySelector(".toggle-slider") : null;
+      if (!toggle || !slider) return;
+
+      if (freeRunning) {
+        toggle.classList.add("active");
+        slider.textContent = "ON";
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "OFF";
+      }
+    }
+
+    const freeRunningToggle = document.getElementById("freeRunningToggle");
+    if (freeRunningToggle) {
+      freeRunningToggle.onclick = () => {
+        freeRunning = !freeRunning;
+        localStorage.setItem("freeRunningMode", freeRunning ? "true" : "false");
+        updateFreeRunningToggleUI();
+
+        // Free Running ON: graph streams continuously.
+        // Free Running OFF: record mode - stop until the user presses Start.
+        paused = !freeRunning;
+        updatePauseResumeButtonUI();
+      };
+    }
+
+    // Load saved Free Running preference
+    if (localStorage.getItem("freeRunningMode") === "false") freeRunning = false;
+    paused = !freeRunning;
+    updateFreeRunningToggleUI();
+    updatePauseResumeButtonUI();
 
     const resetButton = document.getElementById("resetButton");
     resetButton.onclick = () => {
