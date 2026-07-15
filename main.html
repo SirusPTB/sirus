@@ -2637,29 +2637,7 @@
       try {
         btn.textContent = "Connecting..."; btn.className = "connecting";
         intentionalDisconnect = false;
-
-        // If the browser already remembers this device from a previous
-        // session, reuse it directly and skip the picker dialog entirely.
-        let reused = null;
-        if (navigator.bluetooth.getDevices) {
-          try {
-            const lastDevice = localStorage.getItem('sirusLastDevice');
-            if (lastDevice) {
-              const devices = await navigator.bluetooth.getDevices();
-              reused = devices.find(d => d.name === lastDevice) || null;
-            }
-          } catch (e) {
-            console.warn("getDevices() lookup before connect failed:", e);
-          }
-        }
-
-        if (reused) {
-          console.log("Reusing previously authorized device, skipping picker:", reused.name);
-          device = reused;
-        } else {
-          device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "SirusPTB" }], optionalServices: [serviceUuid] });
-        }
-
+        device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: "SirusPTB" }], optionalServices: [serviceUuid] });
         await connectGatt();
       } catch (e) {
         console.error("Connection error:", e);
