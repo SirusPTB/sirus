@@ -8,6 +8,7 @@
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <meta name="theme-color" content="#121212">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SirusPTB">
@@ -2564,6 +2565,10 @@
 
     // --- Connection Functions ---
 
+    function onGattServerDisconnected() {
+      handleDisconnection(false);
+    }
+
     // Low-level: set up GATT services/characteristics on an already-chosen device.
     // Call this both on first connect AND on every reconnect attempt.
     async function connectGatt() {
@@ -2627,9 +2632,10 @@
       // Save device name for auto-reconnect on next page load
       if (device.name) localStorage.setItem('sirusLastDevice', device.name);
 
-      // Listen for unexpected disconnects — only attach once
-      device.removeEventListener("gattserverdisconnected", handleDisconnection);
-      device.addEventListener("gattserverdisconnected", () => handleDisconnection(false));
+      // Listen for unexpected disconnects — use the same named callback so
+      // repeated reconnects do not accumulate duplicate event listeners.
+      device.removeEventListener("gattserverdisconnected", onGattServerDisconnected);
+      device.addEventListener("gattserverdisconnected", onGattServerDisconnected);
     }
 
     async function connectToDevice() {
@@ -3018,10 +3024,15 @@
             await connectGatt();
             showToast("Connected to " + found.name, 'info', 2500);
           } catch (e) {
-            console.warn("Silent auto-connect failed:", e);
-            device = null;
-            handleDisconnection(true);
-            offerManualReconnect();
+            // Chrome often reports a transient NetworkError (including the
+            // misleading "no longer in range" message) before Windows has
+            // rediscovered an advertising BLE device. Keep the authorised
+            // BluetoothDevice reference and retry rather than giving up after
+            // one attempt.
+            console.warn("Initial silent auto-connect failed; retrying:", e);
+            showToast("Device found. Waiting for Bluetooth…", 'warning', 3000);
+            reconnectAttempt = 0;
+            reconnectToDevice();
           }
         }).catch(e => {
           console.warn("getDevices() error:", e);
