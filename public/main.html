@@ -1658,6 +1658,9 @@
         <div id="tempCurrentValue"
           style="background: var(--bg-main); color: var(--accent-temp); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Temperature: -- °C</div>
+        <div id="tempMaxValue"
+          style="background: var(--bg-main); color: var(--accent-temp); padding: 4px; margin: 0 0 5px; border-radius: 6px; font-weight: bold; font-size: 0.9em; opacity: 0.8; text-align: center;">
+          Max: -- °C</div>
         <div class="canvas-container" id="tempChartContainer"><canvas id="tempChart"></canvas></div>
         <div id="tempResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
@@ -1665,6 +1668,9 @@
         <div id="pressureCurrentValue"
           style="background: var(--bg-main); color: var(--accent-pressure); padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           Pressure: -- bar</div>
+        <div id="pressureMaxValue"
+          style="background: var(--bg-main); color: var(--accent-pressure); padding: 4px; margin: 0 0 5px; border-radius: 6px; font-weight: bold; font-size: 0.9em; opacity: 0.8; text-align: center;">
+          Max: -- bar</div>
         <div class="canvas-container" id="pressureChartContainer"><canvas id="pressureChart"></canvas></div>
         <div id="pressureResizeHandle" title="Drag to resize chart"><span></span></div>
       </div>
@@ -1675,6 +1681,10 @@
         <div id="combinedCurrentValue"
           style="background: #121212; color: #e0e0e0; padding: 8px; margin: 5px 0; border-radius: 6px; font-weight: bold; font-size: 1.1em; text-align: center;">
           <span style="color: #ff7f7f;">Temperature: -- °C</span> | <span style="color: #7fbfff;">Pressure: -- bar</span>
+        </div>
+        <div id="combinedMaxValue"
+          style="background: #121212; color: #e0e0e0; padding: 4px; margin: 0 0 5px; border-radius: 6px; font-weight: bold; font-size: 0.9em; opacity: 0.8; text-align: center;">
+          <span style="color: #ff7f7f;">Max: -- °C</span> | <span style="color: #7fbfff;">Max: -- bar</span>
         </div>
         <div class="canvas-container" id="combinedChartContainer"><canvas id="combinedChart"></canvas></div>
         <div id="combinedResizeHandle" title="Drag to resize chart">
@@ -1877,6 +1887,7 @@
     let tempChart, pressureChart, combinedChart;
     let paused = false;
     let currentTemp = 0, currentPressure = 0;
+    let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
     let splitView = true;
     let gaugeView = false;
     let secondsCounter = 0;
@@ -3246,6 +3257,7 @@
     const resetButton = document.getElementById("resetButton");
     resetButton.onclick = () => {
       chartData = { labels: [], temp: [], pressure: [] }; secondsCounter = 0;
+      maxTemp = null; maxPressure = null;
 
       [tempChart, pressureChart, combinedChart].forEach(chart => {
         chart.data.labels = [];
@@ -3259,6 +3271,9 @@
       document.getElementById("tempCurrentValue").textContent = `Temperature: -- ${tempUnit}`;
       document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
       document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
+      document.getElementById("tempMaxValue").textContent = `Max: -- ${tempUnit}`;
+      document.getElementById("pressureMaxValue").textContent = `Max: -- ${pressureUnit}`;
+      document.getElementById("combinedMaxValue").innerHTML = `<span style="color: #ff7f7f;">Max: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Max: -- ${pressureUnit}</span>`;
 
       updateGauges();
     };
@@ -3656,6 +3671,11 @@
       }
       document.getElementById("tempCurrentValue").textContent = `Temperature: ${displayTemp.toFixed(1)} ${tempUnit}`;
 
+      if (maxTemp === null || displayTemp > maxTemp) {
+        maxTemp = displayTemp;
+      }
+      document.getElementById("tempMaxValue").textContent = `Max: ${maxTemp.toFixed(1)} ${tempUnit}`;
+
       tempChart.update();
 
       const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
@@ -3674,6 +3694,12 @@
 
       document.getElementById("pressureCurrentValue").textContent = `Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}`;
 
+      if (maxPressure === null || currentPressure > maxPressure) {
+        maxPressure = currentPressure;
+      }
+      const displayMaxPressure = currentPressureUnit === "PSI" ? barToPsi(maxPressure) : maxPressure;
+      document.getElementById("pressureMaxValue").textContent = `Max: ${displayMaxPressure.toFixed(1)} ${pressureUnit}`;
+
       pressureChart.update();
 
       combinedChart.data.labels = chartData.labels;
@@ -3687,6 +3713,7 @@
       combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
 
       document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}</span>`;
+      document.getElementById("combinedMaxValue").innerHTML = `<span style="color: #ff7f7f;">Max: ${maxTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Max: ${displayMaxPressure.toFixed(1)} ${pressureUnit}</span>`;
 
       combinedChart.update();
     }
