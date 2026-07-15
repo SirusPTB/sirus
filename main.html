@@ -1939,8 +1939,7 @@
     let autoSave = false; // Advanced Settings: when Free Running is OFF, auto-clear+start at 0->0.5 bar, auto-stop below 0.5 bar
     let autoSaveTriggered = false; // whether the current 0.5+ bar excursion already fired the auto-clear/start
     let currentTemp = 0, currentPressure = 0;
-    let lastChartUpdateTime = 0; // timestamp (ms) of the last time the graph was plotted - used to cap updates to 1/sec
-    const CHART_UPDATE_INTERVAL_MS = 1000;
+    const CHART_UPDATE_INTERVAL_MS = 1000; // cadence of the chart-update ticker (see setInterval near updateCharts)
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
     let splitView = true;
     let gaugeView = false;
@@ -3882,11 +3881,9 @@
 
         if (paused) return;
 
-        const now = Date.now();
-        if (now - lastChartUpdateTime >= CHART_UPDATE_INTERVAL_MS) {
-          lastChartUpdateTime = now;
-          updateCharts();
-        }
+        // Chart plotting itself is now driven by a dedicated 1s setInterval
+        // (see "Chart update ticker" below), so it keeps ticking on a steady
+        // cadence even if BLE notifications arrive slower/faster/irregularly.
         updateGauges();
       }
     }
@@ -3983,6 +3980,20 @@
 
       combinedChart.update();
     }
+
+    // --- Chart update ticker: plots on a steady 1s cadence ---
+    // Previously, chart updates only happened inside handleData() (i.e. only
+    // when a new BLE notification arrived), rate-limited to at most once per
+    // second. That made the *effective* update rate = max(1s, however often
+    // the device actually sends data), so if the device notifies slower than
+    // 1s (or with jitter), the graph updated slower than 1s too.
+    // This interval instead plots the latest known reading every 1000ms
+    // regardless of exactly when BLE data arrived, so the graph advances on
+    // a true, steady 1-second cadence whenever connected and not paused.
+    setInterval(() => {
+      if (!isConnected || paused) return;
+      updateCharts();
+    }, CHART_UPDATE_INTERVAL_MS);
 
     // --- Auto-check BLE every second ---
     setInterval(() => {
