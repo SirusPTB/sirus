@@ -8,7 +8,6 @@
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <meta name="theme-color" content="#121212">
-  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SirusPTB">
@@ -1816,6 +1815,16 @@
             </tr>
 
             <tr>
+              <td class="label-cell"><label for="autoSaveToggle">Auto save:</label></td>
+              <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
+                <div class="toggle-switch" id="autoSaveToggle">
+                  <div class="toggle-slider">OFF</div>
+                </div>
+                <span class="input-hint" aria-hidden="true">(Free Running off: auto-clear &amp; start at 0→0.5 bar, stop below 0.5 bar)</span>
+              </td>
+            </tr>
+
+            <tr>
               <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
               <td class="control-cell">
                 <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5"
@@ -1910,6 +1919,8 @@
     let tempChart, pressureChart, combinedChart;
     let paused = false;
     let freeRunning = true; // true = continuous streaming, false = manual start/stop recording
+    let autoSave = false; // Advanced Settings: when Free Running is OFF, auto-clear+start at 0->0.5 bar, auto-stop below 0.5 bar
+    let autoSaveTriggered = false; // whether the current 0.5+ bar excursion already fired the auto-clear/start
     let currentTemp = 0, currentPressure = 0;
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
     let splitView = true;
@@ -2565,10 +2576,6 @@
 
     // --- Connection Functions ---
 
-    function onGattServerDisconnected() {
-      handleDisconnection(false);
-    }
-
     // Low-level: set up GATT services/characteristics on an already-chosen device.
     // Call this both on first connect AND on every reconnect attempt.
     async function connectGatt() {
@@ -2632,10 +2639,9 @@
       // Save device name for auto-reconnect on next page load
       if (device.name) localStorage.setItem('sirusLastDevice', device.name);
 
-      // Listen for unexpected disconnects — use the same named callback so
-      // repeated reconnects do not accumulate duplicate event listeners.
-      device.removeEventListener("gattserverdisconnected", onGattServerDisconnected);
-      device.addEventListener("gattserverdisconnected", onGattServerDisconnected);
+      // Listen for unexpected disconnects — only attach once
+      device.removeEventListener("gattserverdisconnected", handleDisconnection);
+      device.addEventListener("gattserverdisconnected", () => handleDisconnection(false));
     }
 
     async function connectToDevice() {
@@ -3024,15 +3030,10 @@
             await connectGatt();
             showToast("Connected to " + found.name, 'info', 2500);
           } catch (e) {
-            // Chrome often reports a transient NetworkError (including the
-            // misleading "no longer in range" message) before Windows has
-            // rediscovered an advertising BLE device. Keep the authorised
-            // BluetoothDevice reference and retry rather than giving up after
-            // one attempt.
-            console.warn("Initial silent auto-connect failed; retrying:", e);
-            showToast("Device found. Waiting for Bluetooth…", 'warning', 3000);
-            reconnectAttempt = 0;
-            reconnectToDevice();
+            console.warn("Silent auto-connect failed:", e);
+            device = null;
+            handleDisconnection(true);
+            offerManualReconnect();
           }
         }).catch(e => {
           console.warn("getDevices() error:", e);
@@ -3385,6 +3386,7 @@
         // Free Running ON: graph streams continuously.
         // Free Running OFF: record mode - stop until the user presses Start.
         paused = !freeRunning;
+        autoSaveTriggered = false; // Auto Save only applies in record mode; reset trigger state on mode switch
         updatePauseResumeButtonUI();
       };
     }
@@ -3395,10 +3397,38 @@
     updateFreeRunningToggleUI();
     updatePauseResumeButtonUI();
 
-    const resetButton = document.getElementById("resetButton");
-    resetButton.onclick = () => {
+    function updateAutoSaveToggleUI() {
+      const toggle = document.getElementById("autoSaveToggle");
+      const slider = toggle ? toggle.querySelector(".toggle-slider") : null;
+      if (!toggle || !slider) return;
+
+      if (autoSave) {
+        toggle.classList.add("active");
+        slider.textContent = "ON";
+      } else {
+        toggle.classList.remove("active");
+        slider.textContent = "OFF";
+      }
+    }
+
+    const autoSaveToggle = document.getElementById("autoSaveToggle");
+    if (autoSaveToggle) {
+      autoSaveToggle.onclick = () => {
+        autoSave = !autoSave;
+        localStorage.setItem("autoSaveMode", autoSave ? "true" : "false");
+        autoSaveTriggered = false; // reset so the next 0->0.5 bar rise can trigger cleanly
+        updateAutoSaveToggleUI();
+      };
+    }
+
+    // Load saved Auto Save preference
+    if (localStorage.getItem("autoSaveMode") === "true") autoSave = true;
+    updateAutoSaveToggleUI();
+
+    function clearGraphData() {
       chartData = { labels: [], temp: [], pressure: [] }; secondsCounter = 0;
       maxTemp = null; maxPressure = null;
+      autoSaveTriggered = false;
 
       [tempChart, pressureChart, combinedChart].forEach(chart => {
         chart.data.labels = [];
@@ -3415,7 +3445,10 @@
       updateMaxDisplays();
 
       updateGauges();
-    };
+    }
+
+    const resetButton = document.getElementById("resetButton");
+    resetButton.onclick = clearGraphData;
 
     document.getElementById("toggleViewButton").onclick = () => {
       if (!gaugeView) {
@@ -3765,14 +3798,39 @@
 
 
 
-      if (paused) return;
-
       if (dataParts.length >= 2) {
         const tempStr = dataParts[0];
         const pressureStr = dataParts[1];
 
+        const previousPressure = currentPressure;
         currentTemp = parseFloat(tempStr);
         currentPressure = Math.max(0, parseFloat(pressureStr));
+
+        // --- Auto Save (Advanced Settings): only applies when Free Running is OFF ---
+        // Rising through 0.5 bar (coming up from ~0) -> auto-clear the graph and start recording.
+        // Falling back below 0.5 bar -> stop recording.
+        if (autoSave && !freeRunning) {
+          const AUTO_SAVE_THRESHOLD = 0.5;
+          const wasBelow = previousPressure < AUTO_SAVE_THRESHOLD;
+          const isAtOrAbove = currentPressure >= AUTO_SAVE_THRESHOLD;
+
+          if (!autoSaveTriggered && wasBelow && isAtOrAbove) {
+            // Crossed 0 -> 0.5 bar: clear the graph and start fresh
+            autoSaveTriggered = true;
+            clearGraphData();
+            paused = false;
+            updatePauseResumeButtonUI();
+            console.log("Auto Save: pressure crossed 0.5 bar - graph cleared and recording started");
+          } else if (autoSaveTriggered && !paused && !isAtOrAbove) {
+            // Dropped back below 0.5 bar: stop recording
+            paused = true;
+            autoSaveTriggered = false;
+            updatePauseResumeButtonUI();
+            console.log("Auto Save: pressure dropped below 0.5 bar - recording stopped");
+          }
+        }
+
+        if (paused) return;
 
         updateCharts();
         updateGauges();
