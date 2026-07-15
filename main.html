@@ -1784,6 +1784,15 @@
       <button id="toggleGaugeButton">Toggle Gauges</button>
     </div>
 
+    <div class="button-row">
+      <div class="toggle-container" style="margin-right: 6px;" title="When Free Running is off: auto-clear &amp; start recording at 0→0.5 bar, auto-stop below 0.5 bar">
+        <span style="font-size:0.85em; color: var(--text-muted);">Auto Save:</span>
+        <div class="toggle-switch" id="autoSaveToggle">
+          <div class="toggle-slider">OFF</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Always On Toggle - Standalone row -->
     <div id="alwaysOnSection">
       <div class="always-on-inner">
@@ -1811,16 +1820,6 @@
               <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
                 <button id="zeroPressureButton" class="adv-btn control-btn" disabled
                   style="width:auto;min-width:36px;padding:6px 8px;">Zero</button>
-              </td>
-            </tr>
-
-            <tr>
-              <td class="label-cell"><label for="autoSaveToggle">Auto save:</label></td>
-              <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
-                <div class="toggle-switch" id="autoSaveToggle">
-                  <div class="toggle-slider">OFF</div>
-                </div>
-                <span class="input-hint" aria-hidden="true">(Free Running off: auto-clear &amp; start at 0→0.5 bar, stop below 0.5 bar)</span>
               </td>
             </tr>
 
