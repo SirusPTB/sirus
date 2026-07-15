@@ -2087,7 +2087,16 @@
         if (!name) { alert("Please enter a name"); return; }
         const key = "graph_" + name;
         try {
-          localStorage.setItem(key, JSON.stringify(chartData));
+          const dataToSave = {
+            labels: chartData.labels,
+            temp: chartData.temp,
+            pressure: chartData.pressure,
+            maxTemp: maxTemp,
+            maxPressure: maxPressure,
+            maxTempUnit: currentTempUnit,
+            maxPressureUnit: currentPressureUnit
+          };
+          localStorage.setItem(key, JSON.stringify(dataToSave));
           console.log("Graph saved as:", key);
         } catch (e) {
           console.error("Error saving graph:", e);
@@ -2095,7 +2104,17 @@
         }
         // Trigger a file download
         try {
-          const exportData = { name: name, savedAt: new Date().toISOString(), labels: chartData.labels, temp: chartData.temp, pressure: chartData.pressure };
+          const exportData = {
+            name: name,
+            savedAt: new Date().toISOString(),
+            labels: chartData.labels,
+            temp: chartData.temp,
+            pressure: chartData.pressure,
+            maxTemp: maxTemp,
+            maxPressure: maxPressure,
+            maxTempUnit: currentTempUnit,
+            maxPressureUnit: currentPressureUnit
+          };
           const json = JSON.stringify(exportData, null, 2);
           const blob = new Blob([json], { type: "application/json" });
           const url = URL.createObjectURL(blob);
@@ -2126,7 +2145,7 @@
         try {
           const data = JSON.parse(localStorage.getItem(key));
           if (data) {
-            chartData = data;
+            chartData = { labels: data.labels, temp: data.temp, pressure: data.pressure };
             secondsCounter = data.labels.length;
             tempChart.data.labels = chartData.labels;
             tempChart.data.datasets[0].data = chartData.temp;
@@ -2138,6 +2157,9 @@
             combinedChart.data.datasets[0].data = chartData.temp;
             combinedChart.data.datasets[1].data = chartData.pressure;
             combinedChart.update();
+            maxTemp = (typeof data.maxTemp === "number") ? data.maxTemp : null;
+            maxPressure = (typeof data.maxPressure === "number") ? data.maxPressure : null;
+            updateMaxDisplays();
             updateGauges();
             console.log("Graph loaded successfully");
           }
@@ -2186,6 +2208,9 @@
           combinedChart.data.datasets[0].data = chartData.temp;
           combinedChart.data.datasets[1].data = chartData.pressure;
           combinedChart.update();
+          maxTemp = (typeof data.maxTemp === "number") ? data.maxTemp : null;
+          maxPressure = (typeof data.maxPressure === "number") ? data.maxPressure : null;
+          updateMaxDisplays();
           updateGauges();
           modal.style.display = "none";
           console.log("Graph loaded from file:", file.name);
@@ -3331,9 +3356,7 @@
       document.getElementById("tempCurrentValue").textContent = `Temperature: -- ${tempUnit}`;
       document.getElementById("pressureCurrentValue").textContent = `Pressure: -- ${pressureUnit}`;
       document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: -- ${pressureUnit}</span>`;
-      document.getElementById("tempMaxValue").textContent = `Max: -- ${tempUnit}`;
-      document.getElementById("pressureMaxValue").textContent = `Max: -- ${pressureUnit}`;
-      document.getElementById("combinedMaxValue").innerHTML = `<span style="color: #ff7f7f;">Max: -- ${tempUnit}</span> | <span style="color: #7fbfff;">Max: -- ${pressureUnit}</span>`;
+      updateMaxDisplays();
 
       updateGauges();
     };
@@ -3700,6 +3723,24 @@
       }
     }
 
+    // --- Update Max Reading Displays ---
+    function updateMaxDisplays() {
+      const tempUnit = currentTempUnit === "F" ? "°F" : "°C";
+      const pressureUnit = currentPressureUnit === "PSI" ? "PSI" : "bar";
+
+      const tempMaxText = (maxTemp === null) ? `Max: -- ${tempUnit}` : `Max: ${maxTemp.toFixed(1)} ${tempUnit}`;
+      const displayMaxPressure = (maxPressure === null) ? null : (currentPressureUnit === "PSI" ? barToPsi(maxPressure) : maxPressure);
+      const pressureMaxText = (displayMaxPressure === null) ? `Max: -- ${pressureUnit}` : `Max: ${displayMaxPressure.toFixed(1)} ${pressureUnit}`;
+
+      const tempMaxEl = document.getElementById("tempMaxValue");
+      const pressureMaxEl = document.getElementById("pressureMaxValue");
+      const combinedMaxEl = document.getElementById("combinedMaxValue");
+
+      if (tempMaxEl) tempMaxEl.textContent = tempMaxText;
+      if (pressureMaxEl) pressureMaxEl.textContent = pressureMaxText;
+      if (combinedMaxEl) combinedMaxEl.innerHTML = `<span style="color: #ff7f7f;">${tempMaxText}</span> | <span style="color: #7fbfff;">${pressureMaxText}</span>`;
+    }
+
     // --- Update Charts Function ---
     function updateCharts() {
       const label = secondsCounter++;
@@ -3734,7 +3775,6 @@
       if (maxTemp === null || displayTemp > maxTemp) {
         maxTemp = displayTemp;
       }
-      document.getElementById("tempMaxValue").textContent = `Max: ${maxTemp.toFixed(1)} ${tempUnit}`;
 
       tempChart.update();
 
@@ -3757,8 +3797,6 @@
       if (maxPressure === null || currentPressure > maxPressure) {
         maxPressure = currentPressure;
       }
-      const displayMaxPressure = currentPressureUnit === "PSI" ? barToPsi(maxPressure) : maxPressure;
-      document.getElementById("pressureMaxValue").textContent = `Max: ${displayMaxPressure.toFixed(1)} ${pressureUnit}`;
 
       pressureChart.update();
 
@@ -3773,7 +3811,7 @@
       combinedChart.data.datasets[1].label = `Pressure (${pressureUnit})`;
 
       document.getElementById("combinedCurrentValue").innerHTML = `<span style="color: #ff7f7f;">Temperature: ${displayTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Pressure: ${displayPressure.toFixed(1)} ${pressureUnit}</span>`;
-      document.getElementById("combinedMaxValue").innerHTML = `<span style="color: #ff7f7f;">Max: ${maxTemp.toFixed(1)} ${tempUnit}</span> | <span style="color: #7fbfff;">Max: ${displayMaxPressure.toFixed(1)} ${pressureUnit}</span>`;
+      updateMaxDisplays();
 
       combinedChart.update();
     }
