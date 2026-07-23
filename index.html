@@ -386,6 +386,31 @@
       background-color: var(--accent-success);
     }
 
+    /* Auto stop-at-time toggle (Advanced panel) - smaller inline toggle, green when active */
+    .toggle-switch-sm {
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+    }
+
+    .toggle-switch-sm .toggle-slider {
+      width: 18px;
+      height: 18px;
+      font-size: 9px;
+    }
+
+    .toggle-switch-sm.active .toggle-slider {
+      transform: translateX(20px);
+    }
+
+    #autoStopTimeToggle {
+      background-color: var(--bg-toggle-inactive);
+    }
+
+    #autoStopTimeToggle.active {
+      background-color: var(--accent-success);
+    }
+
     .toggle-slider {
       position: absolute;
       top: 3px;
@@ -1888,6 +1913,17 @@
               </td>
             </tr>
 
+            <tr title="When on, recording stops automatically at the time set here instead of using the pressure return-to-zero above">
+              <td class="label-cell"><label for="autoStopTimeToggle">Auto stop at time:</label></td>
+              <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
+                <div class="toggle-switch toggle-switch-sm" id="autoStopTimeToggle" role="switch" aria-checked="false" tabindex="0">
+                  <div class="toggle-slider">OFF</div>
+                </div>
+                <input type="time" id="autoStopTimeInput" class="control-input" style="text-align:right !important; padding-right:6px !important;">
+                <button id="setAutoStopTimeButton" class="adv-btn control-btn">Set</button>
+              </td>
+            </tr>
+
             <tr>
               <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
               <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
@@ -1960,6 +1996,9 @@
     let autoSaveHighReached = false; // whether pressure has reached the high-pressure zone during the current recording (armed to stop on return to zero)
     let autoSaveStartThreshold = 1.0; // bar - user-configurable: rising through this starts auto-record
     let autoSaveStopThreshold = 0.5;  // bar - user-configurable: once armed, falling below this stops auto-record
+    let autoStopTimeEnabled = false;  // when true, auto-stop recording at a specific time instead of using the pressure return-to-zero threshold
+    let autoStopTimeValue = "";       // "HH:MM" (24h) - user-configurable time of day to auto-stop recording
+    let autoStopTimeTriggeredDate = null; // date string (YYYY-MM-DD) recording was last auto-stopped by time, so it only fires once per day
     let currentTemp = 0, currentPressure = 0;
     const CHART_UPDATE_INTERVAL_MS = 1000; // cadence of the chart-update ticker (see setInterval near updateCharts)
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
@@ -3288,6 +3327,10 @@
       if (!isNaN(savedStop) && savedStop >= 0 && savedStop <= 16) {
         autoSaveStopThreshold = savedStop;
       }
+      const savedStopTimeEnabled = localStorage.getItem('autoStopTimeEnabled');
+      if (savedStopTimeEnabled === 'true') autoStopTimeEnabled = true;
+      const savedStopTimeValue = localStorage.getItem('autoStopTimeValue');
+      if (savedStopTimeValue) autoStopTimeValue = savedStopTimeValue;
     } catch (e) {
       console.log('Error reading auto record thresholds from localStorage', e);
     }
@@ -3299,6 +3342,35 @@
       } catch (e) {
         console.log('Could not save auto record thresholds', e);
       }
+    }
+
+    function saveAutoStopTimeSettings() {
+      try {
+        localStorage.setItem('autoStopTimeEnabled', autoStopTimeEnabled ? 'true' : 'false');
+        localStorage.setItem('autoStopTimeValue', autoStopTimeValue);
+      } catch (e) {
+        console.log('Could not save auto stop-at-time settings', e);
+      }
+    }
+
+    // "YYYY-MM-DD" for the local date, used to make sure the time-based auto-stop only fires once per day
+    function getLocalDateString() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // True once local clock time reaches/passes the configured stop time (HH:MM), and it hasn't already fired today
+    function isAutoStopTimeReached() {
+      if (!autoStopTimeValue) return false;
+      const todayStr = getLocalDateString();
+      if (autoStopTimeTriggeredDate === todayStr) return false; // already stopped once today
+
+      const [h, m] = autoStopTimeValue.split(':').map(Number);
+      if (isNaN(h) || isNaN(m)) return false;
+
+      const now = new Date();
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+      return now >= target;
     }
 
     // Initialize input values and wire up Set buttons
@@ -3350,6 +3422,64 @@
 
           stopBtn.textContent = 'Saved';
           setTimeout(() => { stopBtn.textContent = 'Set'; }, 900);
+        });
+      }
+
+      // --- Auto stop at time ---
+      const stopTimeToggle = document.getElementById('autoStopTimeToggle');
+      const stopTimeInput = document.getElementById('autoStopTimeInput');
+      const stopTimeBtn = document.getElementById('setAutoStopTimeButton');
+
+      function updateAutoStopTimeToggleUI() {
+        if (!stopTimeToggle) return;
+        const slider = stopTimeToggle.querySelector('.toggle-slider');
+        if (autoStopTimeEnabled) {
+          stopTimeToggle.classList.add('active');
+          stopTimeToggle.setAttribute('aria-checked', 'true');
+          if (slider) slider.textContent = 'ON';
+        } else {
+          stopTimeToggle.classList.remove('active');
+          stopTimeToggle.setAttribute('aria-checked', 'false');
+          if (slider) slider.textContent = 'OFF';
+        }
+      }
+
+      if (stopTimeInput) stopTimeInput.value = autoStopTimeValue;
+      updateAutoStopTimeToggleUI();
+
+      if (stopTimeToggle) {
+        stopTimeToggle.addEventListener('click', function () {
+          if (stopTimeToggle.classList.contains('disabled')) return;
+          if (!autoStopTimeEnabled && !autoStopTimeValue) {
+            showToast('Set a stop time first', 'warning');
+            return;
+          }
+          autoStopTimeEnabled = !autoStopTimeEnabled;
+          autoStopTimeTriggeredDate = null; // reset so a freshly-enabled toggle can fire today
+          saveAutoStopTimeSettings();
+          updateAutoStopTimeToggleUI();
+        });
+        stopTimeToggle.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            stopTimeToggle.click();
+          }
+        });
+      }
+
+      if (stopTimeBtn && stopTimeInput) {
+        stopTimeBtn.addEventListener('click', function () {
+          const val = stopTimeInput.value;
+          if (!val) {
+            showToast('Choose a time to enable auto stop', 'warning');
+            return;
+          }
+          autoStopTimeValue = val;
+          autoStopTimeTriggeredDate = null; // allow it to fire today if the new time hasn't passed yet
+          saveAutoStopTimeSettings();
+
+          stopTimeBtn.textContent = 'Saved';
+          setTimeout(() => { stopTimeBtn.textContent = 'Set'; }, 900);
         });
       }
     });
@@ -4007,8 +4137,20 @@
               console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar - armed to stop on return to threshold`);
             }
 
-            // Only auto-stop once we've been through the high zone AND pressure has come back down
-            if (autoSaveHighReached && !paused && currentPressure < autoSaveStopThreshold) {
+            // Stop condition: either the pressure return-to-zero threshold (default) or,
+            // when "Auto stop at time" is enabled in the Advanced panel, a specific
+            // time of day instead - the two are mutually exclusive.
+            if (autoStopTimeEnabled) {
+              if (autoSaveHighReached && !paused && isAutoStopTimeReached()) {
+                paused = true;
+                autoSaveTriggered = false;
+                autoSaveHighReached = false;
+                autoStopTimeTriggeredDate = getLocalDateString();
+                updatePauseResumeButtonUI();
+                console.log(`Auto Save: reached auto-stop time ${autoStopTimeValue} - recording stopped`);
+              }
+            } else if (autoSaveHighReached && !paused && currentPressure < autoSaveStopThreshold) {
+              // Only auto-stop once we've been through the high zone AND pressure has come back down
               paused = true;
               autoSaveTriggered = false;
               autoSaveHighReached = false;
