@@ -1794,7 +1794,7 @@
             <div class="toggle-slider">ON</div>
           </div>
         </div>
-        <div class="toggle-container" title="When Free Running is off: auto-clear &amp; start recording at ~1 bar, auto-stop once pressure peaks ~7-12 bar and returns to ~0 bar">
+        <div class="toggle-container" title="When Free Running is off: auto-clear &amp; start recording at the start threshold, auto-stop once pressure peaks ~7-12 bar and returns to the stop threshold (both thresholds are set in the Advanced panel)">
           <span style="font-size:0.85em; color: var(--text-muted); display:inline-block; width:90px; text-align:right;">Auto Save:</span>
           <div class="toggle-switch" id="autoSaveToggle">
             <div class="toggle-slider">OFF</div>
@@ -1870,6 +1870,25 @@
             </tr>
 
             <tr>
+              <td class="label-cell"><label for="autoSaveStartInput">Auto record start (bar):</label></td>
+              <td class="control-cell">
+                <input type="number" id="autoSaveStartInput" class="control-input" step="0.1" min="0.1" max="16" value="1.0"
+                  style="text-align: right !important; padding-right:6px !important;">
+                <button id="setAutoSaveStartButton" class="adv-btn control-btn">Set</button>
+                <span class="input-hint" aria-hidden="true">rising edge starts recording</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="label-cell"><label for="autoSaveStopInput">Auto record stop (bar):</label></td>
+              <td class="control-cell">
+                <input type="number" id="autoSaveStopInput" class="control-input" step="0.1" min="0" max="16" value="0.5"
+                  style="text-align: right !important; padding-right:6px !important;">
+                <button id="setAutoSaveStopButton" class="adv-btn control-btn">Set</button>
+                <span class="input-hint" aria-hidden="true">return-to-zero stops recording</span>
+              </td>
+            </tr>
+
+            <tr>
               <td class="label-cell"><label for="brightnessSlider">Device brightness:</label></td>
               <td class="control-cell" style="display:flex; align-items:center; gap:10px;">
                 <input id="brightnessSlider" type="range" min="10" max="250" value="125" class="control-range" />
@@ -1939,6 +1958,8 @@
     let autoSave = false; // Advanced Settings: when Free Running is OFF, auto-clear+start at ~1 bar, auto-stop after peaking 7-12+ bar and returning to ~0 bar
     let autoSaveTriggered = false; // whether recording is currently active for the current pressure excursion
     let autoSaveHighReached = false; // whether pressure has reached the high-pressure zone during the current recording (armed to stop on return to zero)
+    let autoSaveStartThreshold = 1.0; // bar - user-configurable: rising through this starts auto-record
+    let autoSaveStopThreshold = 0.5;  // bar - user-configurable: once armed, falling below this stops auto-record
     let currentTemp = 0, currentPressure = 0;
     const CHART_UPDATE_INTERVAL_MS = 1000; // cadence of the chart-update ticker (see setInterval near updateCharts)
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
@@ -3256,6 +3277,83 @@
       }
     });
 
+    // --- Auto Record start/stop thresholds (configurable) ---
+    // Load saved preferences (if any)
+    try {
+      const savedStart = parseFloat(localStorage.getItem('autoSaveStartThreshold'));
+      if (!isNaN(savedStart) && savedStart >= 0.1 && savedStart <= 16) {
+        autoSaveStartThreshold = savedStart;
+      }
+      const savedStop = parseFloat(localStorage.getItem('autoSaveStopThreshold'));
+      if (!isNaN(savedStop) && savedStop >= 0 && savedStop <= 16) {
+        autoSaveStopThreshold = savedStop;
+      }
+    } catch (e) {
+      console.log('Error reading auto record thresholds from localStorage', e);
+    }
+
+    function saveAutoSaveThresholds() {
+      try {
+        localStorage.setItem('autoSaveStartThreshold', String(autoSaveStartThreshold));
+        localStorage.setItem('autoSaveStopThreshold', String(autoSaveStopThreshold));
+      } catch (e) {
+        console.log('Could not save auto record thresholds', e);
+      }
+    }
+
+    // Initialize input values and wire up Set buttons
+    document.addEventListener('DOMContentLoaded', function () {
+      const startInput = document.getElementById('autoSaveStartInput');
+      const stopInput = document.getElementById('autoSaveStopInput');
+      const startBtn = document.getElementById('setAutoSaveStartButton');
+      const stopBtn = document.getElementById('setAutoSaveStopButton');
+
+      if (startInput) startInput.value = autoSaveStartThreshold;
+      if (stopInput) stopInput.value = autoSaveStopThreshold;
+
+      if (startBtn && startInput) {
+        startBtn.addEventListener('click', function () {
+          const val = parseFloat(startInput.value);
+          if (isNaN(val) || val < 0.1 || val > 16) {
+            showToast('Enter a start value between 0.1 and 16 bar', 'warning');
+            startInput.value = autoSaveStartThreshold;
+            return;
+          }
+          if (val <= autoSaveStopThreshold) {
+            showToast('Start must be greater than Stop', 'warning');
+            startInput.value = autoSaveStartThreshold;
+            return;
+          }
+          autoSaveStartThreshold = val;
+          saveAutoSaveThresholds();
+
+          startBtn.textContent = 'Saved';
+          setTimeout(() => { startBtn.textContent = 'Set'; }, 900);
+        });
+      }
+
+      if (stopBtn && stopInput) {
+        stopBtn.addEventListener('click', function () {
+          const val = parseFloat(stopInput.value);
+          if (isNaN(val) || val < 0 || val > 16) {
+            showToast('Enter a stop value between 0 and 16 bar', 'warning');
+            stopInput.value = autoSaveStopThreshold;
+            return;
+          }
+          if (val >= autoSaveStartThreshold) {
+            showToast('Stop must be less than Start', 'warning');
+            stopInput.value = autoSaveStopThreshold;
+            return;
+          }
+          autoSaveStopThreshold = val;
+          saveAutoSaveThresholds();
+
+          stopBtn.textContent = 'Saved';
+          setTimeout(() => { stopBtn.textContent = 'Set'; }, 900);
+        });
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       setControlsEnabled(false);
       updateBattery(null);
@@ -3883,40 +3981,39 @@
         currentPressure = Math.max(0, parseFloat(pressureStr));
 
         // --- Auto Save (Advanced Settings): only applies when Free Running is OFF ---
-        // Rising through ~1 bar (coming up from ~0) -> auto-clear the graph and start recording.
+        // Rising through the start threshold (coming up from ~0) -> auto-clear the graph and start recording.
         // Recording only auto-stops once pressure has peaked somewhere in the ~7-12 bar test
-        // zone and then falls back down near 0 bar again (a small dip that never reaches the
-        // high zone will NOT stop recording).
+        // zone and then falls back down below the stop threshold again (a small dip that never
+        // reaches the high zone will NOT stop recording). Start/stop thresholds are user-configurable
+        // in the Advanced panel; the high-zone requirement is fixed.
         if (autoSave && !freeRunning) {
-          const AUTO_SAVE_START_THRESHOLD = 1.0;  // rising through this starts recording
           const AUTO_SAVE_HIGH_THRESHOLD = 7.0;   // must reach at least this high to arm the auto-stop
-          const AUTO_SAVE_STOP_THRESHOLD = 0.5;   // once armed, falling back below this stops recording
 
-          const wasBelowStart = previousPressure < AUTO_SAVE_START_THRESHOLD;
-          const isAtOrAboveStart = currentPressure >= AUTO_SAVE_START_THRESHOLD;
+          const wasBelowStart = previousPressure < autoSaveStartThreshold;
+          const isAtOrAboveStart = currentPressure >= autoSaveStartThreshold;
 
           if (!autoSaveTriggered && wasBelowStart && isAtOrAboveStart) {
-            // Crossed 0 -> 1 bar: clear the graph and start fresh
+            // Crossed below -> above the start threshold: clear the graph and start fresh
             clearGraphData();
             autoSaveTriggered = true;
             autoSaveHighReached = false;
             paused = false;
             updatePauseResumeButtonUI();
-            console.log(`Auto Save: pressure crossed ${AUTO_SAVE_START_THRESHOLD} bar - graph cleared and recording started`);
+            console.log(`Auto Save: pressure crossed ${autoSaveStartThreshold} bar - graph cleared and recording started`);
           } else if (autoSaveTriggered) {
             // While recording, remember once we've passed through the high-pressure test zone
             if (!autoSaveHighReached && currentPressure >= AUTO_SAVE_HIGH_THRESHOLD) {
               autoSaveHighReached = true;
-              console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar - armed to stop on return to ~0 bar`);
+              console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar - armed to stop on return to threshold`);
             }
 
             // Only auto-stop once we've been through the high zone AND pressure has come back down
-            if (autoSaveHighReached && !paused && currentPressure < AUTO_SAVE_STOP_THRESHOLD) {
+            if (autoSaveHighReached && !paused && currentPressure < autoSaveStopThreshold) {
               paused = true;
               autoSaveTriggered = false;
               autoSaveHighReached = false;
               updatePauseResumeButtonUI();
-              console.log(`Auto Save: pressure returned below ${AUTO_SAVE_STOP_THRESHOLD} bar after peaking - recording stopped`);
+              console.log(`Auto Save: pressure returned below ${autoSaveStopThreshold} bar after peaking - recording stopped`);
             }
           }
         }
