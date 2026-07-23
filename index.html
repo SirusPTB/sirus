@@ -1913,7 +1913,7 @@
               </td>
             </tr>
 
-            <tr title="When on, recording stops automatically this many seconds after the high-pressure peak, instead of using the pressure return-to-zero above">
+            <tr title="When on, recording stops automatically this many seconds after it starts, instead of using the pressure return-to-zero above">
               <td class="label-cell"><label for="autoStopTimeToggle">Auto stop timer:</label></td>
               <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
                 <div class="toggle-switch toggle-switch-sm" id="autoStopTimeToggle" role="switch" aria-checked="false" tabindex="0">
@@ -1922,7 +1922,7 @@
                 <input type="number" id="autoStopTimeInput" class="control-input" min="1" max="3600" step="1" value="30"
                   style="text-align:right !important; padding-right:6px !important;">
                 <button id="setAutoStopTimeButton" class="adv-btn control-btn">Set</button>
-                <span class="input-hint" aria-hidden="true">sec after peak</span>
+                <span class="input-hint" aria-hidden="true">sec after start</span>
               </td>
             </tr>
 
@@ -1998,8 +1998,8 @@
     let autoSaveHighReached = false; // whether pressure has reached the high-pressure zone during the current recording (armed to stop on return to zero)
     let autoSaveStartThreshold = 1.0; // bar - user-configurable: rising through this starts auto-record
     let autoSaveStopThreshold = 0.5;  // bar - user-configurable: once armed, falling below this stops auto-record
-    let autoStopTimeEnabled = false;  // when true, auto-stop recording a fixed number of seconds after the peak, instead of using the pressure return-to-zero threshold
-    let autoStopTimeSeconds = 30;     // user-configurable: seconds after the high-pressure peak to auto-stop recording
+    let autoStopTimeEnabled = false;  // when true, auto-stop recording a fixed number of seconds after it starts, instead of using the pressure return-to-zero threshold
+    let autoStopTimeSeconds = 30;     // user-configurable: seconds after recording starts to auto-stop
     let autoStopTimerHandle = null;   // setTimeout handle for the pending auto-stop
     let currentTemp = 0, currentPressure = 0;
     const CHART_UPDATE_INTERVAL_MS = 1000; // cadence of the chart-update ticker (see setInterval near updateCharts)
@@ -4136,19 +4136,18 @@
             paused = false;
             updatePauseResumeButtonUI();
             console.log(`Auto Save: pressure crossed ${autoSaveStartThreshold} bar - graph cleared and recording started`);
+
+            // Countdown timer (if enabled) counts from the moment recording starts,
+            // not from the later high-pressure peak - this matches what's visible on the graph.
+            if (autoStopTimeEnabled) {
+              console.log(`Auto Save: starting ${autoStopTimeSeconds}s auto-stop timer`);
+              startAutoStopTimer();
+            }
           } else if (autoSaveTriggered) {
             // While recording, remember once we've passed through the high-pressure test zone
             if (!autoSaveHighReached && currentPressure >= AUTO_SAVE_HIGH_THRESHOLD) {
               autoSaveHighReached = true;
               console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar`);
-
-              // Stop condition after reaching the peak: either a fixed countdown timer
-              // ("Auto stop timer" in the Advanced panel) or the pressure return-to-zero
-              // threshold below - the two are mutually exclusive.
-              if (autoStopTimeEnabled) {
-                console.log(`Auto Save: starting ${autoStopTimeSeconds}s auto-stop timer`);
-                startAutoStopTimer();
-              }
             }
 
             // Pressure return-to-zero stop only applies when the countdown timer is not in use
