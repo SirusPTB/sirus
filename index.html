@@ -1913,14 +1913,16 @@
               </td>
             </tr>
 
-            <tr title="When on, recording stops automatically at the time set here instead of using the pressure return-to-zero above">
-              <td class="label-cell"><label for="autoStopTimeToggle">Auto stop at time:</label></td>
+            <tr title="When on, recording stops automatically this many seconds after the high-pressure peak, instead of using the pressure return-to-zero above">
+              <td class="label-cell"><label for="autoStopTimeToggle">Auto stop timer:</label></td>
               <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
                 <div class="toggle-switch toggle-switch-sm" id="autoStopTimeToggle" role="switch" aria-checked="false" tabindex="0">
                   <div class="toggle-slider">OFF</div>
                 </div>
-                <input type="time" id="autoStopTimeInput" class="control-input" style="text-align:right !important; padding-right:6px !important;">
+                <input type="number" id="autoStopTimeInput" class="control-input" min="1" max="3600" step="1" value="30"
+                  style="text-align:right !important; padding-right:6px !important;">
                 <button id="setAutoStopTimeButton" class="adv-btn control-btn">Set</button>
+                <span class="input-hint" aria-hidden="true">sec after peak</span>
               </td>
             </tr>
 
@@ -1996,9 +1998,9 @@
     let autoSaveHighReached = false; // whether pressure has reached the high-pressure zone during the current recording (armed to stop on return to zero)
     let autoSaveStartThreshold = 1.0; // bar - user-configurable: rising through this starts auto-record
     let autoSaveStopThreshold = 0.5;  // bar - user-configurable: once armed, falling below this stops auto-record
-    let autoStopTimeEnabled = false;  // when true, auto-stop recording at a specific time instead of using the pressure return-to-zero threshold
-    let autoStopTimeValue = "";       // "HH:MM" (24h) - user-configurable time of day to auto-stop recording
-    let autoStopTimeTriggeredDate = null; // date string (YYYY-MM-DD) recording was last auto-stopped by time, so it only fires once per day
+    let autoStopTimeEnabled = false;  // when true, auto-stop recording a fixed number of seconds after the peak, instead of using the pressure return-to-zero threshold
+    let autoStopTimeSeconds = 30;     // user-configurable: seconds after the high-pressure peak to auto-stop recording
+    let autoStopTimerHandle = null;   // setTimeout handle for the pending auto-stop
     let currentTemp = 0, currentPressure = 0;
     const CHART_UPDATE_INTERVAL_MS = 1000; // cadence of the chart-update ticker (see setInterval near updateCharts)
     let maxTemp = null, maxPressure = null; // null = no reading yet since last clear
@@ -3329,8 +3331,10 @@
       }
       const savedStopTimeEnabled = localStorage.getItem('autoStopTimeEnabled');
       if (savedStopTimeEnabled === 'true') autoStopTimeEnabled = true;
-      const savedStopTimeValue = localStorage.getItem('autoStopTimeValue');
-      if (savedStopTimeValue) autoStopTimeValue = savedStopTimeValue;
+      const savedStopTimeSeconds = parseInt(localStorage.getItem('autoStopTimeSeconds'));
+      if (!isNaN(savedStopTimeSeconds) && savedStopTimeSeconds >= 1 && savedStopTimeSeconds <= 3600) {
+        autoStopTimeSeconds = savedStopTimeSeconds;
+      }
     } catch (e) {
       console.log('Error reading auto record thresholds from localStorage', e);
     }
@@ -3347,30 +3351,32 @@
     function saveAutoStopTimeSettings() {
       try {
         localStorage.setItem('autoStopTimeEnabled', autoStopTimeEnabled ? 'true' : 'false');
-        localStorage.setItem('autoStopTimeValue', autoStopTimeValue);
+        localStorage.setItem('autoStopTimeSeconds', String(autoStopTimeSeconds));
       } catch (e) {
         console.log('Could not save auto stop-at-time settings', e);
       }
     }
 
-    // "YYYY-MM-DD" for the local date, used to make sure the time-based auto-stop only fires once per day
-    function getLocalDateString() {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    // Starts a countdown that stops recording after autoStopTimeSeconds
+    function startAutoStopTimer() {
+      cancelAutoStopTimer();
+      autoStopTimerHandle = setTimeout(() => {
+        autoStopTimerHandle = null;
+        if (!paused) {
+          paused = true;
+          autoSaveTriggered = false;
+          autoSaveHighReached = false;
+          updatePauseResumeButtonUI();
+          console.log(`Auto Save: ${autoStopTimeSeconds}s timer elapsed after peak - recording stopped`);
+        }
+      }, autoStopTimeSeconds * 1000);
     }
 
-    // True once local clock time reaches/passes the configured stop time (HH:MM), and it hasn't already fired today
-    function isAutoStopTimeReached() {
-      if (!autoStopTimeValue) return false;
-      const todayStr = getLocalDateString();
-      if (autoStopTimeTriggeredDate === todayStr) return false; // already stopped once today
-
-      const [h, m] = autoStopTimeValue.split(':').map(Number);
-      if (isNaN(h) || isNaN(m)) return false;
-
-      const now = new Date();
-      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
-      return now >= target;
+    function cancelAutoStopTimer() {
+      if (autoStopTimerHandle) {
+        clearTimeout(autoStopTimerHandle);
+        autoStopTimerHandle = null;
+      }
     }
 
     // Initialize input values and wire up Set buttons
@@ -3425,7 +3431,7 @@
         });
       }
 
-      // --- Auto stop at time ---
+      // --- Auto stop timer (seconds after peak) ---
       const stopTimeToggle = document.getElementById('autoStopTimeToggle');
       const stopTimeInput = document.getElementById('autoStopTimeInput');
       const stopTimeBtn = document.getElementById('setAutoStopTimeButton');
@@ -3444,18 +3450,14 @@
         }
       }
 
-      if (stopTimeInput) stopTimeInput.value = autoStopTimeValue;
+      if (stopTimeInput) stopTimeInput.value = autoStopTimeSeconds;
       updateAutoStopTimeToggleUI();
 
       if (stopTimeToggle) {
         stopTimeToggle.addEventListener('click', function () {
           if (stopTimeToggle.classList.contains('disabled')) return;
-          if (!autoStopTimeEnabled && !autoStopTimeValue) {
-            showToast('Set a stop time first', 'warning');
-            return;
-          }
           autoStopTimeEnabled = !autoStopTimeEnabled;
-          autoStopTimeTriggeredDate = null; // reset so a freshly-enabled toggle can fire today
+          if (!autoStopTimeEnabled) cancelAutoStopTimer(); // turning off cancels any pending countdown
           saveAutoStopTimeSettings();
           updateAutoStopTimeToggleUI();
         });
@@ -3469,13 +3471,13 @@
 
       if (stopTimeBtn && stopTimeInput) {
         stopTimeBtn.addEventListener('click', function () {
-          const val = stopTimeInput.value;
-          if (!val) {
-            showToast('Choose a time to enable auto stop', 'warning');
+          const val = parseInt(stopTimeInput.value);
+          if (isNaN(val) || val < 1 || val > 3600) {
+            showToast('Enter a time between 1 and 3600 sec', 'warning');
+            stopTimeInput.value = autoStopTimeSeconds;
             return;
           }
-          autoStopTimeValue = val;
-          autoStopTimeTriggeredDate = null; // allow it to fire today if the new time hasn't passed yet
+          autoStopTimeSeconds = val;
           saveAutoStopTimeSettings();
 
           stopTimeBtn.textContent = 'Saved';
@@ -3635,6 +3637,7 @@
         paused = !freeRunning;
         autoSaveTriggered = false; // Auto Save only applies in record mode; reset trigger state on mode switch
         autoSaveHighReached = false;
+        cancelAutoStopTimer();
 
         // Free Running and Auto Save are mutually exclusive
         if (freeRunning && autoSave) {
@@ -3674,6 +3677,7 @@
         localStorage.setItem("autoSaveMode", autoSave ? "true" : "false");
         autoSaveTriggered = false; // reset so the next rise through the start threshold can trigger cleanly
         autoSaveHighReached = false;
+        cancelAutoStopTimer();
         updateAutoSaveToggleUI();
 
         // Free Running and Auto Save are mutually exclusive
@@ -3710,6 +3714,7 @@
       maxTemp = null; maxPressure = null;
       autoSaveTriggered = false;
       autoSaveHighReached = false;
+      cancelAutoStopTimer();
 
       [tempChart, pressureChart, combinedChart].forEach(chart => {
         chart.data.labels = [];
@@ -3775,6 +3780,7 @@
         }
         autoSaveTriggered = false;
         autoSaveHighReached = false;
+        cancelAutoStopTimer();
         paused = false;
         updatePauseResumeButtonUI();
       }
@@ -4134,23 +4140,19 @@
             // While recording, remember once we've passed through the high-pressure test zone
             if (!autoSaveHighReached && currentPressure >= AUTO_SAVE_HIGH_THRESHOLD) {
               autoSaveHighReached = true;
-              console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar - armed to stop on return to threshold`);
+              console.log(`Auto Save: pressure reached ${AUTO_SAVE_HIGH_THRESHOLD} bar`);
+
+              // Stop condition after reaching the peak: either a fixed countdown timer
+              // ("Auto stop timer" in the Advanced panel) or the pressure return-to-zero
+              // threshold below - the two are mutually exclusive.
+              if (autoStopTimeEnabled) {
+                console.log(`Auto Save: starting ${autoStopTimeSeconds}s auto-stop timer`);
+                startAutoStopTimer();
+              }
             }
 
-            // Stop condition: either the pressure return-to-zero threshold (default) or,
-            // when "Auto stop at time" is enabled in the Advanced panel, a specific
-            // time of day instead - the two are mutually exclusive.
-            if (autoStopTimeEnabled) {
-              if (autoSaveHighReached && !paused && isAutoStopTimeReached()) {
-                paused = true;
-                autoSaveTriggered = false;
-                autoSaveHighReached = false;
-                autoStopTimeTriggeredDate = getLocalDateString();
-                updatePauseResumeButtonUI();
-                console.log(`Auto Save: reached auto-stop time ${autoStopTimeValue} - recording stopped`);
-              }
-            } else if (autoSaveHighReached && !paused && currentPressure < autoSaveStopThreshold) {
-              // Only auto-stop once we've been through the high zone AND pressure has come back down
+            // Pressure return-to-zero stop only applies when the countdown timer is not in use
+            if (!autoStopTimeEnabled && autoSaveHighReached && !paused && currentPressure < autoSaveStopThreshold) {
               paused = true;
               autoSaveTriggered = false;
               autoSaveHighReached = false;
