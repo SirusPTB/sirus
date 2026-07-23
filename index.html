@@ -399,10 +399,6 @@
       font-size: 9px;
     }
 
-    .toggle-switch-sm.active .toggle-slider {
-      transform: translateX(20px);
-    }
-
     #autoStopTimeToggle {
       background-color: var(--bg-toggle-inactive);
     }
@@ -430,6 +426,12 @@
 
     .toggle-switch.active .toggle-slider {
       transform: translateX(30px);
+    }
+
+    /* Small toggle variant needs a smaller travel distance; must come after the
+       base rule above (and match its specificity) so it isn't overridden by it. */
+    .toggle-switch.toggle-switch-sm.active .toggle-slider {
+      transform: translateX(20px);
     }
 
     /* Modal styles */
