@@ -3088,10 +3088,7 @@
       if (!lastDevice || !navigator.bluetooth) return;
 
       function offerManualReconnect() {
-        console.log("Offering manual tap-to-reconnect toast for", lastDevice);
-        showToast("Tap to reconnect to " + lastDevice, 'warning', 8000, () => {
-          connectToDevice();
-        });
+        console.log("Auto-reconnect unavailable for", lastDevice, "- user can press Connect manually.");
       }
 
       // Try getDevices() first (Chrome 117+) — truly silent reconnect
@@ -3104,7 +3101,6 @@
             return;
           }
           console.log("Silent auto-connect to", found.name);
-          showToast("Connecting to " + found.name + "…", 'warning', 3000);
           const btn = document.getElementById("connectButton");
           if (btn) { btn.textContent = "Connecting..."; btn.className = "connecting"; }
           intentionalDisconnect = false;
