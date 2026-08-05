@@ -723,7 +723,10 @@
     input#sleepTimeInput.control-input,
     input#pressureCalibrationInput.control-input,
     input#sleepTimeInput,
-    input#pressureCalibrationInput {
+    input#pressureCalibrationInput,
+    input#autoSaveStartInput,
+    input#autoSaveStopInput,
+    input#autoStopTimeInput {
       text-align: right !important;
       padding-right: 6px !important;
       direction: ltr !important;
@@ -731,7 +734,10 @@
     }
 
     input[type="number"]#sleepTimeInput,
-    input[type="number"]#pressureCalibrationInput {
+    input[type="number"]#pressureCalibrationInput,
+    input[type="number"]#autoSaveStartInput,
+    input[type="number"]#autoSaveStopInput,
+    input[type="number"]#autoStopTimeInput {
       -moz-appearance: textfield !important;
       text-align: right !important;
     }
@@ -946,6 +952,24 @@
     }
 
 
+    /* --- Removed up/down arrows for auto record start/stop and auto stop timer inputs --- */
+    input#autoSaveStartInput::-webkit-outer-spin-button,
+    input#autoSaveStartInput::-webkit-inner-spin-button,
+    input#autoSaveStopInput::-webkit-outer-spin-button,
+    input#autoSaveStopInput::-webkit-inner-spin-button,
+    input#autoStopTimeInput::-webkit-outer-spin-button,
+    input#autoStopTimeInput::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input#autoSaveStartInput,
+    input#autoSaveStopInput,
+    input#autoStopTimeInput {
+      -moz-appearance: textfield;
+    }
+
+
     /* Make chart area 90% of page width */
     #splitView>div,
     #combinedView>div,
@@ -961,7 +985,10 @@
     /* Narrower inputs for advanced panel */
     #sleepTimeInput,
     #pressureCalibrationInput,
-    #chartResetInput {
+    #chartResetInput,
+    #autoSaveStartInput,
+    #autoSaveStopInput,
+    #autoStopTimeInput {
       width: 80px !important;
       min-width: 0 !important;
       box-sizing: border-box !important;
