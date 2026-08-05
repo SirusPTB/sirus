@@ -680,6 +680,15 @@
       margin-right: 8px;
     }
 
+    /* Fixed-width slot in front of every Set/Zero button so they all line
+       up in the same column, whether the row has an input, a toggle, or
+       nothing (Zero) before its button. */
+    .adv-table .control-cell .pre-btn-slot {
+      display: inline-flex;
+      align-items: center;
+      width: 138px;
+    }
+
     /* Make the three "Set" buttons (and Zero) narrower — place this AFTER the existing adv-table rules */
     #advanceContent button.adv-btn.control-btn,
     #advanceContent button[id^="set"],
@@ -843,6 +852,10 @@
       .adv-table .control-cell {
         display: flex;
         gap: 8px;
+      }
+
+      .adv-table .control-cell .pre-btn-slot {
+        width: auto;
       }
 
       .adv-table .control-cell input.control-input {
@@ -1863,6 +1876,7 @@
             <tr>
               <td class="label-cell"><label for="zeroPressureButton">Zero pressure:</label></td>
               <td class="control-cell" style="display:flex;align-items:center;gap:8px;">
+                <span class="pre-btn-slot"></span>
                 <button id="zeroPressureButton" class="adv-btn control-btn" disabled
                   style="width:auto;min-width:36px;padding:6px 8px;">Zero</button>
               </td>
@@ -1871,8 +1885,10 @@
             <tr>
               <td class="label-cell"><label for="sleepTimeInput">Device sleep time (min):</label></td>
               <td class="control-cell">
-                <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5"
-                  style="text-align: right !important; padding-right:6px !important;">
+                <span class="pre-btn-slot">
+                  <input type="number" id="sleepTimeInput" class="control-input" min="1" max="60" value="5"
+                    style="text-align: right !important; padding-right:6px !important;">
+                </span>
                 <button id="setSleepTimeButton" class="adv-btn control-btn" disabled>Set</button>
                 <span class="input-hint" aria-hidden="true">(1 → 60 min)</span>
               </td>
@@ -1880,8 +1896,10 @@
             <tr>
               <td class="label-cell"><label for="pressureCalibrationInput">Pressure calibration:</label></td>
               <td class="control-cell">
-                <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5"
-                  placeholder="0.00" style="text-align: right !important; padding-right:6px !important;">
+                <span class="pre-btn-slot">
+                  <input type="number" id="pressureCalibrationInput" class="control-input" step="0.01" min="-5" max="5"
+                    placeholder="0.00" style="text-align: right !important; padding-right:6px !important;">
+                </span>
                 <button id="setPressureCalibrationButton" class="adv-btn control-btn" disabled>Set</button>
                 <span class="input-hint" aria-hidden="true">(-5 → +5)</span>
               </td>
@@ -1889,8 +1907,10 @@
             <tr>
               <td class="label-cell"><label for="chartResetInput">Chart reset (data points):</label></td>
               <td class="control-cell">
-                <input type="number" id="chartResetInput" class="control-input" min="5" max="240" value="50"
-                  style="text-align: right !important; padding-right:6px !important;">
+                <span class="pre-btn-slot">
+                  <input type="number" id="chartResetInput" class="control-input" min="5" max="240" value="50"
+                    style="text-align: right !important; padding-right:6px !important;">
+                </span>
                 <button id="setChartResetButton" class="adv-btn control-btn">Set</button>
                 <span class="input-hint" aria-hidden="true">(5 → 240 pts)</span>
               </td>
@@ -1899,8 +1919,10 @@
             <tr>
               <td class="label-cell"><label for="autoSaveStartInput">Auto record start (bar):</label></td>
               <td class="control-cell">
-                <input type="number" id="autoSaveStartInput" class="control-input" step="0.1" min="0.1" max="16" value="1.0"
-                  style="text-align: right !important; padding-right:6px !important;">
+                <span class="pre-btn-slot">
+                  <input type="number" id="autoSaveStartInput" class="control-input" step="0.1" min="0.1" max="16" value="1.0"
+                    style="text-align: right !important; padding-right:6px !important;">
+                </span>
                 <button id="setAutoSaveStartButton" class="adv-btn control-btn">Set</button>
                 <span class="input-hint" aria-hidden="true">rising edge starts recording</span>
               </td>
@@ -1908,8 +1930,10 @@
             <tr>
               <td class="label-cell"><label for="autoSaveStopInput">Auto record stop (bar):</label></td>
               <td class="control-cell">
-                <input type="number" id="autoSaveStopInput" class="control-input" step="0.1" min="0" max="16" value="0.5"
-                  style="text-align: right !important; padding-right:6px !important;">
+                <span class="pre-btn-slot">
+                  <input type="number" id="autoSaveStopInput" class="control-input" step="0.1" min="0" max="16" value="0.5"
+                    style="text-align: right !important; padding-right:6px !important;">
+                </span>
                 <button id="setAutoSaveStopButton" class="adv-btn control-btn">Set</button>
                 <span class="input-hint" aria-hidden="true">return-to-zero stops recording</span>
               </td>
