@@ -10,7 +10,7 @@ const REQUIRED_URLS = [
 ];
 
 const OPTIONAL_URLS = [
-  './favicon.ico',
+  './favicon.png',
   './sirusscreen1.png',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
