@@ -1,8 +1,8 @@
 {
-  "name": "SirusPTB",
-  "short_name": "SirusPTB",
-  "description": "SirusPTB Progressive Web App",
-  "start_url": "./main.html",
+  "name": "LVR-1",
+  "short_name": "LVR-1",
+  "description": "LVR-1 Progressive Web App",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#121212",
@@ -10,7 +10,7 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "./favicon.ico",
+      "src": "./favicon.png",
       "sizes": "48x48",
       "type": "image/x-icon"
     },
