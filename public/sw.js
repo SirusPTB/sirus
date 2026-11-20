@@ -1,4 +1,4 @@
-const SW_VERSION = '2026-06-08-01';
+const SW_VERSION = '2026-11-20-01';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
 // Keep this list small and only include files that definitely exist beside main.html.

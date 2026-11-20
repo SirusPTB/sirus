@@ -1456,6 +1456,23 @@
         .reset-scale-btn:hover {
             background: #555;
         }
+
+        /* LVR-1 idle star-field screensaver */
+        #starfieldSaver {
+            position: fixed;
+            inset: 0;
+            z-index: 20000;
+            display: none;
+            background: #000;
+            touch-action: manipulation;
+            cursor: none;
+        }
+        #starfieldSaver.active { display: block; }
+        #starfieldSaver canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
@@ -3853,6 +3870,150 @@
     </script>
 
     <div id="toastContainer"></div>
+
+
+    <script>
+    (() => {
+        const IDLE_DELAY = 60000;
+        const saver = document.createElement('div');
+        saver.id = 'starfieldSaver';
+        saver.setAttribute('aria-hidden', 'true');
+        const canvas = document.createElement('canvas');
+        saver.appendChild(canvas);
+        document.body.appendChild(saver);
+
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let width = 0, height = 0, stars = [];
+        let idleTimer = null, animationFrame = null, lastFrame = 0;
+        let active = false;
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            stars = Array.from({ length: Math.max(65, Math.min(180, Math.round(width * height / 8500))) }, () => makeStar(true));
+        }
+
+        function makeStar(randomDepth) {
+            return {
+                x: (Math.random() - 0.5) * width,
+                y: (Math.random() - 0.5) * height,
+                z: randomDepth ? Math.random() * 0.95 + 0.05 : 1,
+                speed: 0.00012 + Math.random() * 0.00035,
+                twinkle: Math.random() * Math.PI * 2,
+                bright: Math.random() < 0.09
+            };
+        }
+
+        function drawFrame(timestamp) {
+            if (!active || document.hidden) {
+                animationFrame = null;
+                return;
+            }
+            const dt = Math.min(40, timestamp - (lastFrame || timestamp));
+            lastFrame = timestamp;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            const cx = width / 2, cy = height / 2;
+            for (let i = 0; i < stars.length; i++) {
+                const s = stars[i];
+                s.z -= s.speed * dt;
+                s.twinkle += dt * (s.bright ? 0.004 : 0.0015);
+                if (s.z <= 0.015) {
+                    stars[i] = makeStar(false);
+                    continue;
+                }
+                const scale = 1 / s.z;
+                const x = cx + s.x * scale;
+                const y = cy + s.y * scale;
+                if (x < -3 || x > width + 3 || y < -3 || y > height + 3) {
+                    stars[i] = makeStar(false);
+                    continue;
+                }
+                const size = Math.min(2.6, (s.bright ? 1.35 : 0.55) * scale);
+                const pulse = 0.65 + 0.35 * Math.sin(s.twinkle);
+                const alpha = Math.min(1, (s.bright ? 0.9 : 0.58) * pulse);
+                ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(0.35, size), 0, Math.PI * 2);
+                ctx.fill();
+                if (s.bright && size > 1.5) {
+                    ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.35})`;
+                    ctx.lineWidth = 0.6;
+                    ctx.beginPath();
+                    ctx.moveTo(x - size * 2.2, y); ctx.lineTo(x + size * 2.2, y);
+                    ctx.moveTo(x, y - size * 2.2); ctx.lineTo(x, y + size * 2.2);
+                    ctx.stroke();
+                }
+            }
+            animationFrame = requestAnimationFrame(drawFrame);
+        }
+
+        function shotIsRunning() {
+            return typeof state !== 'undefined' && !!state.shotRunning;
+        }
+
+        function dashboardIsActive() {
+            const main = document.getElementById('mainPage');
+            return !main || main.classList.contains('active');
+        }
+
+        function stopSaver() {
+            if (!active) return;
+            active = false;
+            saver.classList.remove('active');
+            if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+            lastFrame = 0;
+        }
+
+        function startSaver() {
+            if (active || document.hidden || shotIsRunning() || !dashboardIsActive()) return;
+            active = true;
+            saver.classList.add('active');
+            lastFrame = 0;
+            animationFrame = requestAnimationFrame(drawFrame);
+        }
+
+        function resetIdleTimer() {
+            stopSaver();
+            clearTimeout(idleTimer);
+            if (document.hidden) return;
+            idleTimer = setTimeout(startSaver, IDLE_DELAY);
+        }
+
+        // User interaction dismisses the saver and restarts the idle countdown.
+        ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(type => {
+            window.addEventListener(type, resetIdleTimer, { capture: true, passive: true });
+        });
+        window.addEventListener('resize', resize, { passive: true });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopSaver();
+                clearTimeout(idleTimer);
+            } else {
+                resetIdleTimer();
+            }
+        });
+
+        // Never cover an active shot; if a shot begins while idle, keep the dashboard visible.
+        setInterval(() => {
+            if (shotIsRunning()) {
+                stopSaver();
+                clearTimeout(idleTimer);
+            } else if (!active && !idleTimer && !document.hidden) {
+                resetIdleTimer();
+            }
+        }, 1000);
+
+        resize();
+        resetIdleTimer();
+    })();
+    </script>
 
 </body>
 
