@@ -1,11 +1,11 @@
-const SW_VERSION = '2026-11-20-05';
+const SW_VERSION = '2026-11-20-07';
 const CACHE_NAME = 'sirusptb-' + SW_VERSION;
 
 // Keep this list small and only include files that definitely exist beside main.html.
 // Optional files are attempted separately and will not break service-worker install if missing.
 const REQUIRED_URLS = [
   './',
-  './main.html',
+  './index.html',
   './manifest.json'
 ];
 
