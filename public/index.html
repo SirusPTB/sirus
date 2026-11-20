@@ -1691,6 +1691,28 @@
             </div>
 
             <div class="settings-row">
+                <div class="settings-label">Screensaver Timeout</div>
+                <div class="settings-controls">
+                    <select id="screensaverTimeoutInput" onchange="setSaverTimeout(this.value)" style="
+                        background: #2a2a2a;
+                        color: #fff;
+                        border: 2px solid #444;
+                        border-radius: 8px;
+                        padding: 0.7rem 1rem;
+                        font-size: 1.4rem;
+                        cursor: pointer;
+                    ">
+                        <option value="1">1 min</option>
+                        <option value="5">5 min</option>
+                        <option value="10">10 min</option>
+                        <option value="15">15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="60">1 hour</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-row">
                 <div class="settings-label">Graph Reset</div>
                 <div class="settings-controls">
                     <select id="graphResetSelect" onchange="setGraphResetTime(this.value)" style="
@@ -2039,6 +2061,51 @@
                 updateBLEUI();
                 return false;
             }
+        }
+
+        // Restore a previously authorised Web Bluetooth device after a PWA reload.
+        // getDevices() does not show a permission prompt; it only returns devices
+        // the user has already selected for this origin.
+        async function autoReconnectPreviouslyPairedDevice() {
+            if (!navigator.bluetooth || typeof navigator.bluetooth.getDevices !== 'function') {
+                console.log('Automatic BLE restore is not supported by this browser.');
+                return false;
+            }
+            if (state.bleConnected || isConnecting) return state.bleConnected;
+
+            try {
+                const devices = await navigator.bluetooth.getDevices();
+                const device = devices.find(d => d.name === CONSTANTS.BLE.DEVICE_NAME);
+                if (!device) {
+                    console.log('No previously authorised LVR-1 device found; waiting for manual connection.');
+                    return false;
+                }
+
+                state.bleDevice = device;
+                device.removeEventListener('gattserverdisconnected', handleDisconnect);
+                device.addEventListener('gattserverdisconnected', handleDisconnect);
+
+                // A short retry window allows the ESP32 BLE advertising/server to
+                // settle while the PWA is being restored after an update.
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                    if (state.bleConnected) return true;
+                    console.log(`Automatic LVR-1 reconnect attempt ${attempt}/3`);
+                    isConnecting = true;
+                    const connected = await connectBLE();
+                    isConnecting = false;
+                    if (connected) {
+                        reconnectAttempts = 0;
+                        console.log('LVR-1 automatically reconnected after page load/update.');
+                        return true;
+                    }
+                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+            } catch (err) {
+                console.warn('Could not restore previously authorised BLE device:', err);
+            } finally {
+                isConnecting = false;
+            }
+            return false;
         }
 
         function disconnectBLE() {
@@ -3745,12 +3812,63 @@
         updateBLEUI();
         drawMiniGraph();
 
-        // Register Service Worker for PWA
+        // After a normal launch or service-worker update reload, silently restore
+        // the last LVR-1 device the user previously authorised in Chrome.
+        window.setTimeout(() => {
+            autoReconnectPreviouslyPairedDevice();
+        }, 900);
+
+        // Register the PWA service worker and actively check for updates.
+        // A new version is applied automatically, but never reload in the middle of a shot.
         if ('serviceWorker' in navigator) {
+            let updateReloadPending = false;
+            let updateReloadStarted = false;
+            let updateReloadWatchdog = null;
+
+            function reloadForServiceWorkerUpdate() {
+                updateReloadPending = true;
+                if (updateReloadStarted) return;
+
+                const shotActive = () => typeof state !== 'undefined' && !!state.shotRunning;
+                if (shotActive()) {
+                    if (updateReloadWatchdog === null) {
+                        updateReloadWatchdog = window.setInterval(() => {
+                            if (!shotActive()) {
+                                clearInterval(updateReloadWatchdog);
+                                updateReloadWatchdog = null;
+                                reloadForServiceWorkerUpdate();
+                            }
+                        }, 1000);
+                    }
+                    return;
+                }
+
+                updateReloadStarted = true;
+                // Prevent a repeated reload if the browser restores this page from history.
+                try { sessionStorage.setItem('lvr1-sw-reload', '1'); } catch (e) {}
+                window.location.reload();
+            }
+
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                // The controller changes only when a newly installed worker takes control.
+                reloadForServiceWorkerUpdate();
+            });
+
             window.addEventListener('load', function () {
-                navigator.serviceWorker.register('sw.js')
-                    .then(function (registration) {
+                navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+                    .then(async function (registration) {
                         console.log('Service Worker registered with scope:', registration.scope);
+                        try {
+                            // Force a network update check on every page/PWA launch.
+                            await registration.update();
+                        } catch (error) {
+                            console.log('Service Worker update check unavailable:', error);
+                        }
+
+                        // Also check periodically while the PWA remains open.
+                        window.setInterval(() => {
+                            if (!document.hidden) registration.update().catch(() => {});
+                        }, 5 * 60 * 1000);
                     })
                     .catch(function (error) {
                         console.log('Service Worker registration failed:', error);
@@ -3874,7 +3992,51 @@
 
     <script>
     (() => {
-        const IDLE_DELAY = 60000;
+        const DEFAULT_IDLE_DELAY = 60; // seconds (1 minute)
+        const MIN_IDLE_DELAY = 60; // 1 minute
+        const MAX_IDLE_DELAY = 3600; // 60 minutes
+        let idleDelaySeconds = DEFAULT_IDLE_DELAY;
+        try {
+            // Keep compatibility with previously saved timeout values (stored in seconds).
+            const savedTimeout = Number(localStorage.getItem('screensaverTimeoutSeconds'));
+            if (Number.isFinite(savedTimeout) && savedTimeout >= 5 && savedTimeout <= MAX_IDLE_DELAY) {
+                idleDelaySeconds = Math.max(MIN_IDLE_DELAY, Math.min(MAX_IDLE_DELAY,
+                    Math.round(savedTimeout / 60) * 60));
+            }
+        } catch (e) {
+            console.warn('Could not load screensaver timeout setting:', e);
+        }
+
+        const timeoutInput = document.getElementById('screensaverTimeoutInput');
+        if (timeoutInput) {
+            const savedMinutes = Math.round(idleDelaySeconds / 60);
+            const choices = [1, 5, 10, 15, 30, 60];
+            timeoutInput.value = String(choices.reduce((best, n) => Math.abs(n - savedMinutes) < Math.abs(best - savedMinutes) ? n : best, choices[0]));
+            idleDelaySeconds = Number(timeoutInput.value) * 60;
+        }
+
+        window.setSaverTimeout = function (value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) {
+                if (timeoutInput) {
+            const savedMinutes = Math.round(idleDelaySeconds / 60);
+            const choices = [1, 5, 10, 15, 30, 60];
+            timeoutInput.value = String(choices.reduce((best, n) => Math.abs(n - savedMinutes) < Math.abs(best - savedMinutes) ? n : best, choices[0]));
+            idleDelaySeconds = Number(timeoutInput.value) * 60;
+        }
+                return;
+            }
+            const minutes = Math.max(1, Math.min(60, Math.round(parsed)));
+            const selectedMinutes = [1, 5, 10, 15, 30, 60].reduce((best, n) => Math.abs(n - minutes) < Math.abs(best - minutes) ? n : best, 1);
+            idleDelaySeconds = selectedMinutes * 60;
+            if (timeoutInput) timeoutInput.value = String(selectedMinutes);
+            try {
+                localStorage.setItem('screensaverTimeoutSeconds', String(idleDelaySeconds));
+            } catch (e) {
+                console.warn('Could not save screensaver timeout setting:', e);
+            }
+            resetIdleTimer();
+        };
         const saver = document.createElement('div');
         saver.id = 'starfieldSaver';
         saver.setAttribute('aria-hidden', 'true');
@@ -3981,9 +4143,15 @@
 
         function resetIdleTimer() {
             stopSaver();
-            clearTimeout(idleTimer);
-            if (document.hidden) return;
-            idleTimer = setTimeout(startSaver, IDLE_DELAY);
+            if (idleTimer !== null) clearTimeout(idleTimer);
+            idleTimer = null;
+            if (document.hidden || shotIsRunning()) return;
+            idleTimer = setTimeout(() => {
+                // Clear the handle before attempting to start. If a shot is
+                // active or another page is open, the watchdog can schedule again.
+                idleTimer = null;
+                startSaver();
+            }, idleDelaySeconds * 1000);
         }
 
         // User interaction dismisses the saver and restarts the idle countdown.
@@ -3994,7 +4162,8 @@
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 stopSaver();
-                clearTimeout(idleTimer);
+                if (idleTimer !== null) clearTimeout(idleTimer);
+                idleTimer = null;
             } else {
                 resetIdleTimer();
             }
@@ -4003,9 +4172,13 @@
         // Never cover an active shot; if a shot begins while idle, keep the dashboard visible.
         setInterval(() => {
             if (shotIsRunning()) {
+                // A shot always takes priority over the screensaver.
                 stopSaver();
-                clearTimeout(idleTimer);
-            } else if (!active && !idleTimer && !document.hidden) {
+                if (idleTimer !== null) clearTimeout(idleTimer);
+                idleTimer = null;
+            } else if (!active && idleTimer === null && !document.hidden) {
+                // Restart the full inactivity period after the shot has ended,
+                // including when the original timeout expired during the shot.
                 resetIdleTimer();
             }
         }, 1000);
